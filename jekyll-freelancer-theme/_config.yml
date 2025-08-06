@@ -65,7 +65,7 @@ exclude_from_localization: ["assets", "_site", "vendor"]
 
 
 # Ensure each language has its own URL structure
-permalink: /:lang/:title/
+permalink: /:lang/:title.html
 
 defaults:
   - scope:
