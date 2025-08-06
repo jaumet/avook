@@ -1,0 +1,23 @@
+login:
+  title: "Login"
+  email_label: "Email Address"
+  email_placeholder: "Email Address"
+  email_required: "Please enter your email address."
+  password_label: "Password"
+  password_placeholder: "Password"
+  password_required: "Please enter your password."
+  submit_button: "Login"
+register:
+  title: "Register"
+  email_label: "Email Address"
+  email_placeholder: "Email Address"
+  email_required: "Please enter your email address."
+  password_label: "Password"
+  password_placeholder: "Password"
+  password_required: "Please enter your password."
+  submit_button: "Register"
+user:
+  title: "User Area"
+  owned_books: "Owned Books"
+  borrowed_books: "Borrowed Books"
+  lent_books: "Lent Books"

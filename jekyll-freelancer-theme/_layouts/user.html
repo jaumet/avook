@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+{% include head.html %}
+
+<body id="page-top" class="index">
+  {% include nav.html %}
+  <section>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-12 text-center">
+          <h2>{{ site.data[page.lang].user.title }}</h2>
+          <hr class="star-primary">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-lg-12">
+          <button id="logoutButton" class="btn btn-danger btn-lg">Logout</button>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-lg-12">
+          <h3>{{ site.data[page.lang].user.owned_books }}</h3>
+          <ul id="owned-books"></ul>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-lg-12">
+          <h3>{{ site.data[page.lang].user.borrowed_books }}</h3>
+          <ul id="borrowed-books"></ul>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-lg-12">
+          <h3>{{ site.data[page.lang].user.lent_books }}</h3>
+          <ul id="lent-books"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+  {% include footer.html %}
+  {% include modals.html %}
+  {% include js.html %}
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      var token = localStorage.getItem("token");
+      if (!token) {
+        window.location.href = "/login.html";
+      }
+
+      document.getElementById("logoutButton").addEventListener("click", function() {
+        localStorage.removeItem("token");
+        window.location.href = "/login.html";
+      });
+
+      var qrs = ["project-1", "project-2", "project-3", "project-4", "project-5", "project-6"];
+      var ownedBooks = document.getElementById("owned-books");
+      var borrowedBooks = document.getElementById("borrowed-books");
+      var lentBooks = document.getElementById("lent-books");
+
+      qrs.forEach(function(qr) {
+        fetch("/api/v1/abook/" + qr + "/status", {
+          headers: {
+            "Authorization": "Bearer " + token
+          }
+        }).then(function(response) {
+          if (response.ok) {
+            return response.json();
+          } else {
+            throw new Error("Failed to fetch book status.");
+          }
+        }).then(function(data) {
+          var li = document.createElement("li");
+          li.textContent = data.qr;
+          if (data.owner_email === "{{ site.email }}") {
+            ownedBooks.appendChild(li);
+          }
+          if (data.borrower_email === "{{ site.email }}") {
+            borrowedBooks.appendChild(li);
+          }
+          if (data.owner_email === "{{ site.email }}" && data.borrower_email) {
+            lentBooks.appendChild(li);
+          }
+        }).catch(function(error) {
+          console.error(error);
+        });
+      });
+    });
+  </script>
+</body>
+
+</html>

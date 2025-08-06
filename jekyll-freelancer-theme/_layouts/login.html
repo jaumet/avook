@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+{% include head.html %}
+
+<body id="page-top" class="index">
+  {% include nav.html %}
+  <section>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-12 text-center">
+          <h2>{{ site.data[page.lang].login.title }}</h2>
+          <hr class="star-primary">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-lg-8 col-lg-offset-2">
+          <form name="sentMessage" id="loginForm" novalidate>
+            <div class="row control-group">
+              <div class="form-group col-xs-12 floating-label-form-group controls">
+                <label>{{ site.data[page.lang].login.email_label }}</label>
+                <input type="email" class="form-control" placeholder="{{ site.data[page.lang].login.email_placeholder }}" id="email" required data-validation-required-message="{{ site.data[page.lang].login.email_required }}">
+                <p class="help-block text-danger"></p>
+              </div>
+            </div>
+            <div class="row control-group">
+              <div class="form-group col-xs-12 floating-label-form-group controls">
+                <label>{{ site.data[page.lang].login.password_label }}</label>
+                <input type="password" class="form-control" placeholder="{{ site.data[page.lang].login.password_placeholder }}" id="password" required data-validation-required-message="{{ site.data[page.lang].login.password_required }}">
+                <p class="help-block text-danger"></p>
+              </div>
+            </div>
+            <br>
+            <div id="success"></div>
+            <div class="row">
+              <div class="form-group col-xs-12">
+                <button type="submit" class="btn btn-success btn-lg">{{ site.data[page.lang].login.submit_button }}</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+  {% include footer.html %}
+  {% include modals.html %}
+  {% include js.html %}
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+      var email = document.getElementById("email").value;
+      var password = document.getElementById("password").value;
+      var data = new FormData();
+      data.append("username", email);
+      data.append("password", password);
+      fetch("/api/v1/login", {
+        method: "POST",
+        body: data
+      }).then(function(response) {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error("Login failed.");
+        }
+      }).then(function(data) {
+        localStorage.setItem("token", data.access_token);
+        window.location.href = "/user.html";
+      }).catch(function(error) {
+        console.error(error);
+        var success = document.getElementById("success");
+        success.innerHTML = "<div class='alert alert-danger'>Login failed. Please check your credentials.</div>";
+      });
+    });
+  </script>
+</body>
+
+</html>
