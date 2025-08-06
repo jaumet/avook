@@ -108,6 +108,9 @@ nav:
     contact: "Contacte"
     description: "Audiovook: un sistema únic que fa tangibles els audiollibres. Gaudeix dels avantatges del paper i del digital: no pesa, ocupa molt poc espai, però es pot tocar, comprar, regalar i compartir."
     versioaudio: "T'ho expliquem de viva veu"
+    login: "Login"
+    register: "Registre"
+    user: "Usuari"
   es:
     description: "Audiovook: un sistema único que hace tangibles los audiolibros. Disfruta de las ventajas del papel y de lo digital: no pesa, casi no ocupa espacio, pero se puede tocar, comprar, regalar y compartir."
     skills: "... intenso como la música, real como un libro."
@@ -116,7 +119,10 @@ nav:
     how: "Cómo funciona"
     about: "Sobre nosotros"
     contact: "Contacto"
-    versioaudio: "Te contamos todo en audio"  
+    versioaudio: "Te contamos todo en audio"
+    login: "Login"
+    register: "Registro"
+    user: "Usuario"
   en:
     description: "Audiovook: a unique system that makes audiobooks tangible. Enjoy the advantages of paper and digital: it doesn't weigh, it doesn't take up space, but it can be touched, bought, given and shared."
     skills: "... intense as music, real as a book."
@@ -126,6 +132,9 @@ nav:
     about: "About us"
     contact: "Contact"
     versioaudio: "Listen to this web and more"
+    login: "Login"
+    register: "Register"
+    user: "User"
 
 og: 
   ca: 

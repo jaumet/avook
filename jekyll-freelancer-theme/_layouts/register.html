@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+{% include head.html %}
+
+<body id="page-top" class="index">
+  {% include nav.html %}
+  <section>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-12 text-center">
+          <h2>{{ site.data[page.lang].register.title }}</h2>
+          <hr class="star-primary">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-lg-8 col-lg-offset-2">
+          <form name="sentMessage" id="registerForm" novalidate>
+            <div class="row control-group">
+              <div class="form-group col-xs-12 floating-label-form-group controls">
+                <label>{{ site.data[page.lang].register.email_label }}</label>
+                <input type="email" class="form-control" placeholder="{{ site.data[page.lang].register.email_placeholder }}" id="email" required data-validation-required-message="{{ site.data[page.lang].register.email_required }}">
+                <p class="help-block text-danger"></p>
+              </div>
+            </div>
+            <div class="row control-group">
+              <div class="form-group col-xs-12 floating-label-form-group controls">
+                <label>{{ site.data[page.lang].register.password_label }}</label>
+                <input type="password" class="form-control" placeholder="{{ site.data[page.lang].register.password_placeholder }}" id="password" required data-validation-required-message="{{ site.data[page.lang].register.password_required }}">
+                <p class="help-block text-danger"></p>
+              </div>
+            </div>
+            <br>
+            <div id="success"></div>
+            <div class="row">
+              <div class="form-group col-xs-12">
+                <button type="submit" class="btn btn-success btn-lg">{{ site.data[page.lang].register.submit_button }}</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+  {% include footer.html %}
+  {% include modals.html %}
+  {% include js.html %}
+  <script>
+    document.getElementById("registerForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+      var email = document.getElementById("email").value;
+      var password = document.getElementById("password").value;
+      fetch("/api/v1/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password
+        })
+      }).then(function(response) {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error("Registration failed.");
+        }
+      }).then(function(data) {
+        var success = document.getElementById("success");
+        success.innerHTML = "<div class='alert alert-success'>Registration successful! You can now log in.</div>";
+      }).catch(function(error) {
+        console.error(error);
+        var success = document.getElementById("success");
+        success.innerHTML = "<div class='alert alert-danger'>Registration failed. Please try again.</div>";
+      });
+    });
+  </script>
+</body>
+
+</html>

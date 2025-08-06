@@ -1,0 +1,23 @@
+login:
+  title: "Iniciar Sessió"
+  email_label: "Correu Electrònic"
+  email_placeholder: "Correu Electrònic"
+  email_required: "Si us plau, introdueix el teu correu electrònic."
+  password_label: "Contrasenya"
+  password_placeholder: "Contrasenya"
+  password_required: "Si us plau, introdueix la teva contrasenya."
+  submit_button: "Iniciar Sessió"
+register:
+  title: "Registrar-se"
+  email_label: "Correu Electrònic"
+  email_placeholder: "Correu Electrònic"
+  email_required: "Si us plau, introdueix el teu correu electrònic."
+  password_label: "Contrasenya"
+  password_placeholder: "Contrasenya"
+  password_required: "Si us plau, introdueix la teva contrasenya."
+  submit_button: "Registrar-se"
+user:
+  title: "Àrea d'Usuari"
+  owned_books: "Llibres Propis"
+  borrowed_books: "Llibres en Préstec"
+  lent_books: "Llibres Prestadora"

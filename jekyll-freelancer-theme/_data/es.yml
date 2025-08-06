@@ -1,0 +1,23 @@
+login:
+  title: "Iniciar Sesión"
+  email_label: "Correo Electrónico"
+  email_placeholder: "Correo Electrónico"
+  email_required: "Por favor, introduce tu correo electrónico."
+  password_label: "Contraseña"
+  password_placeholder: "Contraseña"
+  password_required: "Por favor, introduce tu contraseña."
+  submit_button: "Iniciar Sesión"
+register:
+  title: "Registrarse"
+  email_label: "Correo Electrónico"
+  email_placeholder: "Correo Electrónico"
+  email_required: "Por favor, introduce tu correo electrónico."
+  password_label: "Contraseña"
+  password_placeholder: "Contraseña"
+  password_required: "Por favor, introduce tu contraseña."
+  submit_button: "Registrarse"
+user:
+  title: "Área de Usuario"
+  owned_books: "Libros Propios"
+  borrowed_books: "Libros Prestados"
+  lent_books: "Libros en Préstamo"
