@@ -1,0 +1,13 @@
+---
+layout: default
+modal-id: 5
+lang: "ca"
+title: Esnaneja el QR
+date: 2024-01-05
+img: 2-how-it-works.jpg
+alt: image-alt
+project-date: gener 2025
+client: Start Bootstrap
+category: Web Development
+description: Ja tens la targeta? Fantàstic! Agafa el teu telèfon, obre l’aplicació de càmera i apunta al codi QR. En només uns segons, s’obrirà l’enllaç que et dona accés a l’audiollibre. Sense complicacions ni instal·lacions addicionals, podràs començar a escoltar-lo quan vulguis, on siguis, de forma ràpida i senzilla. Així d’intuïtiu! Fes el primer pas sonor avui!
+---

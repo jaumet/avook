@@ -1,0 +1,13 @@
+---
+layout: default
+modal-id: 1
+lang: "ca"
+title: D'un en un, com amb els llibres
+date: 2024-01-01
+img: 6-how-it-works.jpg
+alt: image-alt
+project-date: gener 2025
+client: Start Bootstrap
+category: Web Development
+description: Amb Audiovook gaudeixes de cada títol de forma individual, igual que amb un llibre físic. Si el deixes a algú, ja no el pots escoltar fins que deixi de tenir-lo. No cal esperar que te'l tornin, només desactives l'accés i recuperes la teva escolta. Una experiència justa, simple i flexible.
+---

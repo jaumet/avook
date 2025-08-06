@@ -1,0 +1,13 @@
+---
+layout: default
+modal-id: 6
+lang: "en"
+title: Get a card
+date: 2024-01-06
+img: 1-how-it-works.jpg
+alt: image-alt
+project-date: January 2025
+client: Here client
+category: Here category
+description: With Audiovook, you have access to a vast catalog of audiobooks through physical cards with an integrated QR code. You can find these cards in bookstores, specialized shops, and also purchase them online from our website. Once you have one, you're just a step away from entering a world full of sound stories. Start today!
+---

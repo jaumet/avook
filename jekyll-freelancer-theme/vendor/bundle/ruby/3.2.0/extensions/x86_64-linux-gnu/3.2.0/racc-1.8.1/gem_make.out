@@ -1,0 +1,18 @@
+current directory: /home/jaume/Dropbox/1-projectes/00-00-PhAB-Physical-Audio-Book/0-0-LAUNCH-PLAN/2-TECH-and-DESIGN/2-3-WEB-DESIGN/WEB/Jekyyl/jekyll-freelancer-theme/vendor/bundle/ruby/3.2.0/gems/racc-1.8.1/ext/racc/cparse
+/usr/bin/ruby3.2 -I/usr/lib/ruby/vendor_ruby extconf.rb
+creating Makefile
+
+current directory: /home/jaume/Dropbox/1-projectes/00-00-PhAB-Physical-Audio-Book/0-0-LAUNCH-PLAN/2-TECH-and-DESIGN/2-3-WEB-DESIGN/WEB/Jekyyl/jekyll-freelancer-theme/vendor/bundle/ruby/3.2.0/gems/racc-1.8.1/ext/racc/cparse
+make DESTDIR\= sitearchdir\=./.gem.20241209-5200-zb4umx sitelibdir\=./.gem.20241209-5200-zb4umx clean
+
+current directory: /home/jaume/Dropbox/1-projectes/00-00-PhAB-Physical-Audio-Book/0-0-LAUNCH-PLAN/2-TECH-and-DESIGN/2-3-WEB-DESIGN/WEB/Jekyyl/jekyll-freelancer-theme/vendor/bundle/ruby/3.2.0/gems/racc-1.8.1/ext/racc/cparse
+make DESTDIR\= sitearchdir\=./.gem.20241209-5200-zb4umx sitelibdir\=./.gem.20241209-5200-zb4umx
+compiling cparse.c
+linking shared-object racc/cparse.so
+
+current directory: /home/jaume/Dropbox/1-projectes/00-00-PhAB-Physical-Audio-Book/0-0-LAUNCH-PLAN/2-TECH-and-DESIGN/2-3-WEB-DESIGN/WEB/Jekyyl/jekyll-freelancer-theme/vendor/bundle/ruby/3.2.0/gems/racc-1.8.1/ext/racc/cparse
+make DESTDIR\= sitearchdir\=./.gem.20241209-5200-zb4umx sitelibdir\=./.gem.20241209-5200-zb4umx install
+/usr/bin/install -c -m 0755 cparse.so ./.gem.20241209-5200-zb4umx/racc
+
+current directory: /home/jaume/Dropbox/1-projectes/00-00-PhAB-Physical-Audio-Book/0-0-LAUNCH-PLAN/2-TECH-and-DESIGN/2-3-WEB-DESIGN/WEB/Jekyyl/jekyll-freelancer-theme/vendor/bundle/ruby/3.2.0/gems/racc-1.8.1/ext/racc/cparse
+make DESTDIR\= sitearchdir\=./.gem.20241209-5200-zb4umx sitelibdir\=./.gem.20241209-5200-zb4umx clean

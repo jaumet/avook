@@ -1,0 +1,1 @@
+{"timestamp":"2025-01-10 04:43:48.750","source":"SocketAuthority.js:145","message":"[SocketAuthority] Socket 7PS7QfEX7b2fup6TAAAJ disconnected from client \"root\" after 3284618433ms (Reason: transport close)","levelName":"INFO","level":2}

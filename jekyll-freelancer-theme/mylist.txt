@@ -1,0 +1,80 @@
+catalog.html
+_config.yml
+feed.xml
+index.html
+style.css
+-- css:
+-- font-awesome
+
+img:
+-- how-it-works
+-- logo-v0.svg
+-- portfolio
+-- profile.png
+
+_includes:
+-- about.html
+-- contact_disqus.html
+-- contact.html
+-- contact_static.html
+-- css
+-- footer.html
+-- head_catalog.html
+-- header.html
+-- head.html
+-- how-it-works.html
+-- js_disqus.html
+-- js.html
+-- modals.html
+-- nav.html
+-- portfolio_grid.html
+
+js:
+-- bootstrap.js
+-- bootstrap.min.js
+-- cbpAnimatedHeader.js
+-- cbpAnimatedHeader.min.js
+-- classie.js
+-- contact_me.js
+-- contact_me_static.js
+-- freelancer.js
+-- jqBootstrapValidation.js
+-- jquery-1.11.0.js
+-- jquery.easing.min.js
+
+_layouts:
+-- default.html
+-- frame.html
+-- style.css
+
+mail:
+-- contact_me.php
+
+_posts:
+-- 2024-01-01-project-1.markdown
+-- 2024-01-02-project-2.markdown
+-- 2024-01-03-project-3.markdown
+-- 2024-01-03-project-4.markdown
+-- 2024-01-05-project-5.markdown
+-- 2024-01-06-project-6.markdown
+
+_site:
+-- 0.2.0
+-- catalog.html
+-- css
+
+feed.xml
+img
+index.html
+js
+mail
+style.css
+videos
+
+vendor:
+-- bundle
+
+videos:
+-- audiovook-head.mp4
+-- zaudiovook-head.mp4
+-- zzaudiovook-head.mp4

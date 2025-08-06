@@ -1,0 +1,13 @@
+---
+layout: default
+modal-id: 2
+lang: "es"
+title: Compártelos, regálalos
+date: 2024-01-02
+img: 5-how-it-works.jpg
+alt: image-alt
+project-date: enero 2025
+client: Start Bootstrap
+category: Desarrollo Web
+description: En Audiovook, la lectura sonora también es compartir. Puedes entregar una tarjeta a un amigo para que descubra una historia o simplemente pasarle el QR. Sin complicaciones, sin condiciones. Así se enriquece la comunidad lectora, haciendo circular los relatos de un oído a otro. Regala la experiencia auditiva y haz crecer la pasión por escuchar historias. Con cada intercambio, sumas complicidades.
+---

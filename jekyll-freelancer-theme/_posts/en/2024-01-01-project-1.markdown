@@ -1,0 +1,11 @@
+---
+title: One by one, just like books
+date: 2024-01-01
+lang: "en"
+img: 6-how-it-works.jpg
+alt: image-alt
+project-date: gener 2025
+client: Start Bootstrap
+category: Web Development
+description: With Audiovook, you enjoy each title individually, just like a physical book. If you lend it to someone, you can't listen to it until they no longer have it. No need to wait for its return—just deactivate access and regain your listening. A fair, simple, and flexible experience.
+---

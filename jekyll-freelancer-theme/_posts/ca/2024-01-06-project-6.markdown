@@ -1,0 +1,13 @@
+---
+layout: default
+modal-id: 6
+lang: "ca"
+title: Aconsegueix una targeta
+date: 2024-01-06
+img: 1-how-it-works.jpg
+alt: image-alt
+project-date: gener 2025
+client: Aqi client
+category: Aqui catagoria
+description: Amb Audiovook tens accés a un ampli catàleg d’audiollibres gràcies a targetes físiques amb un codi QR integrat. Pots trobar aquestes targetes a llibreries, botigues especialitzades i també adquirir-les en línia des del nostre web. Un cop en tinguis una, estaràs a un pas d’entrar en un món ple d’històries sonores. Comença avui mateix!
+---

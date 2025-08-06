@@ -1,0 +1,13 @@
+---
+layout: default
+modal-id: 6
+lang: "es"
+title: Consigue una tarjeta
+date: 2024-01-06
+img: 1-how-it-works.jpg
+alt: image-alt
+project-date: enero 2025
+client: Aquí cliente
+category: Aquí categoría
+description: Con Audiovook tienes acceso a un amplio catálogo de audiolibros gracias a tarjetas físicas con un código QR integrado. Puedes encontrar estas tarjetas en librerías, tiendas especializadas y también adquirirlas en línea desde nuestra web. Una vez tengas una, estarás a un paso de entrar en un mundo lleno de historias sonoras. ¡Empieza hoy mismo!
+---

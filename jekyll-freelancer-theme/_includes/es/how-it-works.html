@@ -1,0 +1,33 @@
+{% assign current_lang = "es" %}  <!-- Hardcoded for Spanish -->
+
+<section id="portfolio">
+  <div class="container portfolio-flex-grid">
+    <div class="row">
+      <div class="col-lg-12 text-center">
+        <h2 class="darkblue">¿Cómo funciona?</h2>
+        <hr class="star-primary">
+        <p>&nbsp;</p>
+        <p class="darkblue"><i>(haz clic en las imágenes para saber más)</i></p>
+        <p>&nbsp;</p>
+      </div>
+    </div>
+    <div class="portfolio-flex-row">
+    {% for post in site.posts %}
+      {% if post.lang == current_lang %}
+        <div class="portfolio-flex-item portfolio-item">
+          <p class="darkblue">{{ post.title }}</p>
+          <a href="#portfolioModal-{{ post.modal-id }}" class="portfolio-link" data-toggle="modal">
+            <div class="caption">
+              <div class="caption-content">
+                <i class="fa fa-search-plus fa-3x"></i>
+                <h3>{{ post.title }}</h3>
+              </div>
+            </div>
+            <img src="img/how-it-works/{{ post.img }}" class="img-responsive" alt="{{ post.alt }}">
+          </a>
+        </div>
+      {% endif %}
+    {% endfor %}
+    </div>
+  </div>
+</section>

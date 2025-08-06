@@ -1,0 +1,143 @@
+# Site settings
+title: Audiovook.com
+logo: "img/logo-v0.svg"
+email: jaume@nualart.cat
+url: https://github.com/jaumet/customizetion-of-the-original-freelancer-theme
+keywords: "audiobook, read, listen to"
+meta_author: "Nu a l'art"
+ 
+
+# Google webmaster tools
+google_verify:
+
+# https://ssl.bing.com/webmaster/configure/verify/ownership Option 2 content= goes here
+bing_verify:
+
+# Contact form:
+# - static : pass through formspree.io to validate email sending
+# - disqus : replace contact form by disqus thread
+# - comment the line below if you want to stick with the default PHP contact form
+contact: static
+
+# If you use disqus you need disqus shortname
+# https://help.disqus.com/customer/portal/articles/466208
+disqus_shortname: myshortname
+
+# Color settings (hex-codes without the leading hash-tag)
+color:
+  primary: #f7836a 
+  primary-rgb: "2,39,96" #"128,179,255"
+  secondary: #021d60 #0d0e37
+  secondary-dark: #021d60 
+
+# Footer settings
+footer:
+  copyright: "Nu a l'art"
+  location: internet
+  social: Around the Web
+  credits: "Powered by"
+
+# Social networks usernames (many more available: google-plus, flickr, dribbble, pinterest, instagram, tumblr, linkedin, etc.)
+social:
+  - title: facebook
+    url: http://facebook.com/
+  - title: instagram
+    url: http://instagram.com/
+  - title: tiktok
+    url: http://tiktok.com/
+
+# Postal address (add as many lines as necessary)
+address:
+  - line: EU - UK 
+  - line: 
+
+# Credits content
+credits: "Nu a l'art"
+
+# Build settings
+markdown: kramdown
+permalink: pretty
+
+# Multilingual settings
+languages: ["ca", "es", "en"]  # Catalan (default), Spanish, English
+default_lang: "ca"
+exclude_from_localization: ["assets", "_site", "vendor"]
+
+
+# Ensure each language has its own URL structure
+permalink: /:lang/:title/
+
+defaults:
+  - scope:
+      path: "_posts/ca/*"
+      type: "posts"
+    values:
+      lang: "ca"
+      permalink: "/ca/:title/"
+
+  - scope:
+      path: "_posts/es/*"
+      type: "posts"
+    values:
+      lang: "es"
+      permalink: "/es/:title/"
+
+  - scope:
+      path: "_posts/en/*"
+      type: "posts"
+    values:
+      lang: "en"
+      permalink: "/en/:title/"
+
+# Definició de les col·leccions
+# collections:
+#   posts:
+#     output: true
+#     permalink: "/:title/"  # Afegim 'lang' i 'title' a la URL
+
+
+
+# Navegation  variables:
+nav:
+  ca:
+    player: "Reproductor"
+    skills: "... intens com la música, real com un llibre."
+    skills2: "L'audiollibre tangible. l'àudio que toques, comparteixes, regales i, sobretot, escoltes."
+    how: "Com funciona"
+    about: "Sobre nosaltres"
+    contact: "Contacte"
+    description: "Audiovook: un sistema únic que fa tangibles els audiollibres. Gaudeix dels avantatges del paper i del digital: no pesa, ocupa molt poc espai, però es pot tocar, comprar, regalar i compartir."
+    versioaudio: "T'ho expliquem de viva veu"
+  es:
+    description: "Audiovook: un sistema único que hace tangibles los audiolibros. Disfruta de las ventajas del papel y de lo digital: no pesa, casi no ocupa espacio, pero se puede tocar, comprar, regalar y compartir."
+    skills: "... intenso como la música, real como un libro."
+    skills2: "El audiolibro tangible. el audio que tocas, compartes, regalas y, sobre todo, escuchas."
+    player: "Reproductor"
+    how: "Cómo funciona"
+    about: "Sobre nosotros"
+    contact: "Contacto"
+    versioaudio: "Te contamos todo en audio"  
+  en:
+    description: "Audiovook: a unique system that makes audiobooks tangible. Enjoy the advantages of paper and digital: it doesn't weigh, it doesn't take up space, but it can be touched, bought, given and shared."
+    skills: "... intense as music, real as a book."
+    skills2: "The tangible audiobook. the audio you touch, share, give and, above all, listen to."
+    player: "Player"
+    how: "How it works"
+    about: "About us"
+    contact: "Contact"
+    versioaudio: "Listen to this web and more"
+
+og: 
+  ca: 
+    title: "audiovook.com - els audiollibres que es poden tocar"
+    description: "Troba'ls a les llibreries i altres botigues,, ecolta'ls,regala'ls i
+comparteix-los"
+  es:
+    title: "audiovook.com - los audiolibros que se pueden tocar"
+    descrptio: "Encuentralos en librerías y otros comercios, escúchalos, regálalos y compártelos"
+  en:
+    title: "audiovook.com - the digital books that you can touch"
+    description: "Find them in bookstores and other shops, listen to them, gift them, and share them."
+
+exclude_from_localization:
+  - catalog.html

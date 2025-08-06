@@ -1,0 +1,34 @@
+{"timestamp":"2025-07-24 17:57:30.232","source":"Server.js:219","message":"=== Starting Server ===","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:30.234","source":"Server.js:142","message":"[Server] Init v2.26.3","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:30.234","source":"Server.js:143","message":"[Server] Node.js Version: v20.19.4","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:30.234","source":"Server.js:144","message":"[Server] Platform: linux","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:30.235","source":"Server.js:145","message":"[Server] Arch: x64","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:30.241","source":"Database.js:171","message":"[Database] absdatabase.sqlite not found at /config/absdatabase.sqlite","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:30.241","source":"Database.js:217","message":"[Database] Initializing db at \"/config/absdatabase.sqlite\"","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:30.293","source":"Database.js:292","message":"[Database] Loading extension /usr/local/lib/nusqlite3/libnusqlite3.so","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:30.293","source":"Database.js:300","message":"[Database] Successfully loaded extension /usr/local/lib/nusqlite3/libnusqlite3.so","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:30.294","source":"Database.js:269","message":"[Database] Db supports unaccent and unicode foldings","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:30.294","source":"Database.js:273","message":"[Database] Db connection was successful","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:30.350","source":"MigrationManager.js:71","message":"[MigrationManager] Database is new. Skipping migrations.","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:31.013","source":"Database.js:201","message":"[Database] Db initialized with models: user, session, apiKey, library, libraryFolder, book, podcast, podcastEpisode, libraryItem, mediaProgress, series, bookSeries, author, bookAuthor, collection, collectionBook, playlist, playlistMediaItem, device, playbackSession, feed, feedEpisode, setting, customMetadataProvider, mediaItemShare","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:31.015","source":"Database.js:865","message":"[Database] Adding trigger update_library_items_title","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:31.024","source":"Database.js:865","message":"[Database] Adding trigger update_library_items_title_ignore_prefix","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:31.030","source":"Database.js:865","message":"[Database] Adding trigger update_library_items_title_from_podcasts_title","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:31.040","source":"Database.js:865","message":"[Database] Adding trigger update_library_items_title_ignore_prefix_from_podcasts_title_ignore_prefix","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:31.046","source":"Database.js:903","message":"[Database] Adding trigger update_library_items_author_names_on_book_authors_insert","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:31.054","source":"Database.js:903","message":"[Database] Adding trigger update_library_items_author_names_on_book_authors_delete","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:31.063","source":"Database.js:928","message":"[Database] Adding trigger update_library_items_author_names_on_authors_update","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:31.153","source":"Database.js:207","message":"[Database] running ANALYZE","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:31.161","source":"Database.js:209","message":"[Database] ANALYZE completed","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:31.162","source":"TokenManager.js:42","message":"[TokenManager] JWT secret key not found, generating one","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:31.179","source":"LogManager.js:66","message":"[LogManager] Init current daily log filename: 2025-07-24.txt","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:31.196","source":"BackupManager.js:285","message":"[BackupManager] 0 Backups Found","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:31.197","source":"BackupManager.js:72","message":"[BackupManager] Auto Backups are disabled","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:31.253","source":"Server.js:419","message":"Listening on port :80","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:42.094","source":"SocketAuthority.js:175","message":"[SocketAuthority] Socket Connected to /audiobookshelf/socket.io OQ9PY_2JydcwEbPDAAAB","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:42.110","source":"SocketAuthority.js:248","message":"Cannot validate socket - invalid token","levelName":"ERROR","level":4}
+{"timestamp":"2025-07-24 17:57:42.198","source":"SocketAuthority.js:195","message":"[SocketAuthority] Unauth socket OQ9PY_2JydcwEbPDAAAB disconnected (Reason: transport close)","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:43.816","source":"TokenManager.js:342","message":"[TokenManager] Invalid refresh token format: invalid signature","levelName":"ERROR","level":4}
+{"timestamp":"2025-07-24 17:57:52.823","source":"Server.js:428","message":"[Server] Initializing new server","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:56.670","source":"LocalAuthStrategy.js:88","message":"[LocalAuth] User \"root\" logged in from ip ::ffff:172.17.0.1","levelName":"INFO","level":2}
+{"timestamp":"2025-07-24 17:57:57.067","source":"SocketAuthority.js:175","message":"[SocketAuthority] Socket Connected to /audiobookshelf/socket.io ksio0OlT3UVJfxpQAAAD","levelName":"INFO","level":2}

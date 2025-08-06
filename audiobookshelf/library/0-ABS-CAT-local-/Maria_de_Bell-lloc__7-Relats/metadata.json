@@ -1,0 +1,68 @@
+{
+  "tags": [],
+  "chapters": [
+    {
+      "id": 0,
+      "start": 0,
+      "end": 2592.182857,
+      "title": "01 - Testa-Fort"
+    },
+    {
+      "id": 1,
+      "start": 2592.182857,
+      "end": 3873.2016329999997,
+      "title": "02 - Los quatre dons"
+    },
+    {
+      "id": 2,
+      "start": 3873.2016329999997,
+      "end": 4717.374694,
+      "title": "03 - La pesca del fluix"
+    },
+    {
+      "id": 3,
+      "start": 4717.374694,
+      "end": 5140.506123,
+      "title": "04 - Una vetllada de Nadal"
+    },
+    {
+      "id": 4,
+      "start": 5140.506123,
+      "end": 6029.191837,
+      "title": "05 - La batalla dels morts"
+    },
+    {
+      "id": 5,
+      "start": 6029.191837,
+      "end": 6835.983674,
+      "title": "06 - Lo salt de la núvia"
+    },
+    {
+      "id": 6,
+      "start": 6835.983674,
+      "end": 7597.531429000001,
+      "title": "07 - Tentació"
+    }
+  ],
+  "title": "Llegendes catalanes i altres narracions",
+  "subtitle": null,
+  "authors": [
+    "Maria del Pilar Maspons i Labrós"
+  ],
+  "narrators": [],
+  "series": [
+    "0-ABS-CAT-local-"
+  ],
+  "genres": [
+    "Speech"
+  ],
+  "publishedYear": null,
+  "publishedDate": null,
+  "publisher": null,
+  "description": "https://archive.org/details/ddv_2201_librivox",
+  "isbn": null,
+  "asin": null,
+  "language": null,
+  "explicit": false,
+  "abridged": false
+}

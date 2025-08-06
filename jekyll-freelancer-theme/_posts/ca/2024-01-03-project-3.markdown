@@ -1,0 +1,13 @@
+---
+layout: default
+modal-id: 3
+lang: "ca"
+title: Emporta-te'ls a tot arreu.
+date: 2024-01-03
+img: 4-how-it-works.jpg
+alt: image-alt
+project-date: gener 2025
+client: Start Bootstrap
+category: Web Development
+description: Les targetes Audiovook són lleugeres i no ocupen espai. Pots endur-te mitja dotzena de títols a la butxaca o tenir-los activats al teu dispositiu. Si ho prefereixes, sempre podràs utilitzar la targeta per activar nous dispositius o bé col·leccionar-les com una biblioteca en miniatura. Així, tens la lectura auditiva sempre a mà. Fes-ne la teva col·lecció i gaudeix-ne allà on siguis..
+---

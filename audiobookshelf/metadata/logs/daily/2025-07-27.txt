@@ -1,0 +1,5 @@
+{"timestamp":"2025-07-27 00:30:00.608","source":"PlaybackSessionManager.js:489","message":"[PlaybackSessionManager] Closing stale session \"La Punyalada. Novela Montanyenca\" (c120c408-d18c-44ee-acb4-162ee4aaabfc) last updated at Fri Jul 25 2025 07:11:27 GMT+0200 (Central European Summer Time)","levelName":"INFO","level":2}
+{"timestamp":"2025-07-27 00:30:00.628","source":"Stream.js:352","message":"Closing Stream c120c408-d18c-44ee-acb4-162ee4aaabfc","levelName":"INFO","level":2}
+{"timestamp":"2025-07-27 00:30:00.660","source":"Stream.js:360","message":"Deleted session data /metadata/streams/c120c408-d18c-44ee-acb4-162ee4aaabfc","levelName":"INFO","level":2}
+{"timestamp":"2025-07-27 12:53:41.935","source":"SocketAuthority.js:202","message":"[SocketAuthority] Socket Nhkn3Ic6_WDw9VepAAAD disconnected from client \"root\" after 194530542ms (Reason: transport close)","levelName":"INFO","level":2}
+{"timestamp":"2025-07-27 12:53:43.871","source":"SocketAuthority.js:175","message":"[SocketAuthority] Socket Connected to /audiobookshelf/socket.io pETzMshiEmEQUJcJAAAF","levelName":"INFO","level":2}

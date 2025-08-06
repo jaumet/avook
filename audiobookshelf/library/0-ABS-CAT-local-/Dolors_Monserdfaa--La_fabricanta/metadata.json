@@ -1,0 +1,128 @@
+{
+  "tags": [],
+  "chapters": [
+    {
+      "id": 0,
+      "start": 0,
+      "end": 259.918367,
+      "title": "00 - Dues Paraules"
+    },
+    {
+      "id": 1,
+      "start": 259.918367,
+      "end": 1750.72653,
+      "title": "01 - L'Euterpe"
+    },
+    {
+      "id": 2,
+      "start": 1750.72653,
+      "end": 3488.86204,
+      "title": "02 - L'Antonieta Corominas"
+    },
+    {
+      "id": 3,
+      "start": 3488.86204,
+      "end": 4748.042448,
+      "title": "03 - A la iglèsia de Sant Pere"
+    },
+    {
+      "id": 4,
+      "start": 4748.042448,
+      "end": 6386.024489,
+      "title": "04 - El dinar de casa mossèn Vicens"
+    },
+    {
+      "id": 5,
+      "start": 6386.024489,
+      "end": 8535.719183000001,
+      "title": "05 - Confidències"
+    },
+    {
+      "id": 6,
+      "start": 8535.719183000001,
+      "end": 10407.288163000001,
+      "title": "06 - Lo Joan Pere Grau"
+    },
+    {
+      "id": 7,
+      "start": 10407.288163000001,
+      "end": 11836.473469,
+      "title": "07 - Dissencions"
+    },
+    {
+      "id": 8,
+      "start": 11836.473469,
+      "end": 13120.182857,
+      "title": "08 - El casament de l'Antonieta"
+    },
+    {
+      "id": 9,
+      "start": 13120.182857,
+      "end": 14630.29551,
+      "title": "09 - L'ideal de la Florentina"
+    },
+    {
+      "id": 10,
+      "start": 14630.29551,
+      "end": 16302.915918,
+      "title": "10 - Catorze anys després"
+    },
+    {
+      "id": 11,
+      "start": 16302.915918,
+      "end": 18392.163265,
+      "title": "11 - Il·lusions i realitats"
+    },
+    {
+      "id": 12,
+      "start": 18392.163265,
+      "end": 19517.309387,
+      "title": "12 - El primer balanç"
+    },
+    {
+      "id": 13,
+      "start": 19517.309387,
+      "end": 21046.204081,
+      "title": "13 - De velers a fabricants"
+    },
+    {
+      "id": 14,
+      "start": 21046.204081,
+      "end": 22297.835101,
+      "title": "14 - Intimitats"
+    },
+    {
+      "id": 15,
+      "start": 22297.835101,
+      "end": 23502.524081,
+      "title": "15 - La vetlla"
+    },
+    {
+      "id": 16,
+      "start": 23502.524081,
+      "end": 25303.039999,
+      "title": "16 - El pla de l'Antonieta"
+    }
+  ],
+  "title": "La fabricanta",
+  "subtitle": null,
+  "authors": [
+    "Dolors Monserdà"
+  ],
+  "narrators": [],
+  "series": [
+    "0-ABS-CAT-local-"
+  ],
+  "genres": [
+    "speech"
+  ],
+  "publishedYear": null,
+  "publishedDate": null,
+  "publisher": null,
+  "description": "https://archive.org/details/fabricanta_2303_librivox",
+  "isbn": null,
+  "asin": null,
+  "language": null,
+  "explicit": false,
+  "abridged": false
+}

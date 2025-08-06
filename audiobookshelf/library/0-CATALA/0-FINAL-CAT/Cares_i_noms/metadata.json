@@ -1,0 +1,144 @@
+{
+  "tags": [],
+  "chapters": [
+    {
+      "id": 0,
+      "start": 0,
+      "end": 77.688163,
+      "title": "00--presentacio-Cares-i-noms-J.Nualart"
+    },
+    {
+      "id": 1,
+      "start": 77.688163,
+      "end": 145.92000000000002,
+      "title": "01-Marc-Sempere"
+    },
+    {
+      "id": 2,
+      "start": 145.92000000000002,
+      "end": 166.42612200000002,
+      "title": "02-Daniel_betoret"
+    },
+    {
+      "id": 3,
+      "start": 166.42612200000002,
+      "end": 198.70612200000002,
+      "title": "03-Xavier-Carrasco-Nualart"
+    },
+    {
+      "id": 4,
+      "start": 198.70612200000002,
+      "end": 222.007346,
+      "title": "04-Amelia-S-Nascimento-da-Silva"
+    },
+    {
+      "id": 5,
+      "start": 222.007346,
+      "end": 237.367346,
+      "title": "05-Joan-Llorens"
+    },
+    {
+      "id": 6,
+      "start": 237.367346,
+      "end": 259.832652,
+      "title": "06-Senem-Tuzen"
+    },
+    {
+      "id": 7,
+      "start": 259.832652,
+      "end": 306.043264,
+      "title": "07-Montse-Vives"
+    },
+    {
+      "id": 8,
+      "start": 306.043264,
+      "end": 438.42726400000004,
+      "title": "08-JoanSoler"
+    },
+    {
+      "id": 9,
+      "start": 438.42726400000004,
+      "end": 478.96326400000004,
+      "title": "09-Nefer-Vives"
+    },
+    {
+      "id": 10,
+      "start": 478.96326400000004,
+      "end": 568.0512640000001,
+      "title": "10-Toni-Biosca"
+    },
+    {
+      "id": 11,
+      "start": 568.0512640000001,
+      "end": 717.451264,
+      "title": "11-Tomas-Mestra"
+    },
+    {
+      "id": 12,
+      "start": 717.451264,
+      "end": 830.011264,
+      "title": "12-Elena-Candela5"
+    },
+    {
+      "id": 13,
+      "start": 830.011264,
+      "end": 895.795264,
+      "title": "13-Jordi-Vaya"
+    },
+    {
+      "id": 14,
+      "start": 895.795264,
+      "end": 1067.524244,
+      "title": "14-Miquel-Ninyerola"
+    },
+    {
+      "id": 15,
+      "start": 1067.524244,
+      "end": 1199.2122439999998,
+      "title": "15-Griselda-Casadella"
+    },
+    {
+      "id": 16,
+      "start": 1199.2122439999998,
+      "end": 1227.3642439999999,
+      "title": "16-Corina-Rojas"
+    },
+    {
+      "id": 17,
+      "start": 1227.3642439999999,
+      "end": 1240.8762439999998,
+      "title": "17-Ivan-Pizarro-Canto"
+    },
+    {
+      "id": 18,
+      "start": 1240.8762439999998,
+      "end": 1364.0682439999998,
+      "title": "18-Aina-Girpert"
+    },
+    {
+      "id": 19,
+      "start": 1364.0682439999998,
+      "end": 1391.3082439999998,
+      "title": "19-MariaRosa-Vilaplana-Mata"
+    }
+  ],
+  "title": "Cares_i_noms",
+  "subtitle": null,
+  "authors": [
+    "0-Catala"
+  ],
+  "narrators": [],
+  "series": [
+    "0-FINAL-CAT"
+  ],
+  "genres": [],
+  "publishedYear": null,
+  "publishedDate": null,
+  "publisher": null,
+  "description": null,
+  "isbn": null,
+  "asin": null,
+  "language": "ca",
+  "explicit": false,
+  "abridged": false
+}

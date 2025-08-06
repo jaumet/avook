@@ -1,0 +1,81 @@
+{% assign current_lang = page.lang | default: "ca" %}
+
+<!-- Navigation -->
+<nav class="navbar navbar-default navbar-fixed-top">
+  <div class="container-fluid">
+    <!-- Brand and toggle for mobile -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-content">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="/#page-top">
+        <img src="{{ site.logo }}" alt="Logo" style="height: 40px; margin-right: 10px;">
+        {{ site.title }}
+      </a>
+    </div>
+
+    <!-- Navbar content -->
+    <div class="collapse navbar-collapse" id="navbar-content">
+      <ul class="nav navbar-nav navbar-right">
+        <li><a href="/catalog.html">{{ site.nav[current_lang].player }}</a></li>
+        <li><a href="/{{ current_lang }}/#portfolio">{{ site.nav[current_lang].how }}</a></li>
+        <li><a href="/{{ current_lang }}/#about">{{ site.nav[current_lang].about }}</a></li>
+        <li><a href="/{{ current_lang }}/#contact">{{ site.nav[current_lang].contact }}</a></li>
+
+        <!-- Language Links (Tiny Size) -->
+        <li class="lang-option {% if current_lang == 'ca' %}active{% endif %}">
+          <a href="/ca{{ page.url | remove_first: '/' | replace_first: current_lang, '' }}">CA</a>
+        </li>
+        <li class="lang-option {% if current_lang == 'es' %}active{% endif %}">
+          <a href="/es{{ page.url | remove_first: '/' | replace_first: current_lang, '' }}">ES</a>
+        </li>
+        <li class="lang-option {% if current_lang == 'en' %}active{% endif %}">
+          <a href="/en{{ page.url | remove_first: '/' | replace_first: current_lang, '' }}">EN</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- CSS Fixes -->
+<style>
+  /* Remove horizontal overflow */
+  html, body {
+    overflow-x: hidden;
+  }
+
+  /* Navbar adjustments */
+  .navbar {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .navbar-collapse {
+    width: 100%;
+  }
+
+  /* Small Language Links */
+  .lang-option a {
+    font-size: 10px;  /* Make them very small */
+    padding: 5px 8px; /* Adjust padding */
+    text-transform: uppercase;
+    display: inline-block;
+    color: #333;
+  }
+
+  .lang-option.active a {
+    font-weight: bold;
+    color: #007bff;
+  }
+
+  /* Ensure languages stay aligned */
+  @media (max-width: 767px) {
+    .navbar-nav {
+      width: 100%;
+    }
+  }
+</style>

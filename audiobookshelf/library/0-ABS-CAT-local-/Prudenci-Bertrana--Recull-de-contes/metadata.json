@@ -1,0 +1,74 @@
+{
+  "tags": [],
+  "chapters": [
+    {
+      "id": 0,
+      "start": 0,
+      "end": 164.702041,
+      "title": "01 - Un albat que passa"
+    },
+    {
+      "id": 1,
+      "start": 164.702041,
+      "end": 767.190204,
+      "title": "02 - Caminar amb la lluna"
+    },
+    {
+      "id": 2,
+      "start": 767.190204,
+      "end": 1292.042449,
+      "title": "03 - Una agonia"
+    },
+    {
+      "id": 3,
+      "start": 1292.042449,
+      "end": 1645.609796,
+      "title": "04 - La joguina terrible"
+    },
+    {
+      "id": 4,
+      "start": 1645.609796,
+      "end": 2669.818776,
+      "title": "05 - La figuera dels somnis"
+    },
+    {
+      "id": 5,
+      "start": 2669.818776,
+      "end": 3111.4710210000003,
+      "title": "06 - Un bibliotecari i els clàssics castellans"
+    },
+    {
+      "id": 6,
+      "start": 3111.4710210000003,
+      "end": 5195.311021,
+      "title": "07 - El meu amic Pellini"
+    },
+    {
+      "id": 7,
+      "start": 5195.311021,
+      "end": 5851.350205000001,
+      "title": "08 - El pintor Alonso de Guzmán"
+    }
+  ],
+  "title": "Recull de contes",
+  "subtitle": null,
+  "authors": [
+    "Prudenci Bertrana"
+  ],
+  "narrators": [],
+  "series": [
+    "0-ABS-CAT-local-"
+  ],
+  "genres": [
+    "speech"
+  ],
+  "publishedYear": null,
+  "publishedDate": null,
+  "publisher": null,
+  "description": "https://archive.org/details/reculldecontes_2205_librivox",
+  "isbn": null,
+  "asin": null,
+  "language": null,
+  "explicit": false,
+  "abridged": false
+}

@@ -1,0 +1,13 @@
+---
+layout: default
+modal-id: 4
+lang: "en"
+title: Listen to all the stories
+date: 2024-01-04
+img: 3-how-it-works.jpg
+alt: image-alt
+project-date: January 2025
+client: Start Bootstrap
+category: Web Development
+description: By registering with Audiovook, you'll have a personal library of audiobooks always available. You can resume listening where you left off, manage your favorite titles, and discover new stories to expand your literary sound universe. Enjoy a listening experience tailored to you and share the passion for reading with the entire community. A world of opportunities awaits.
+---

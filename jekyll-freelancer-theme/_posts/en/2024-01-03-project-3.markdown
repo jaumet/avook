@@ -1,0 +1,13 @@
+---
+layout: default
+modal-id: 3
+lang: "en"
+title: Take them everywhere
+date: 2024-01-03
+img: 4-how-it-works.jpg
+alt: image-alt
+project-date: January 2025
+client: Start Bootstrap
+category: Web Development
+description: Audiovook cards are lightweight and take up no space. You can carry half a dozen titles in your pocket or have them activated on your device. If you prefer, you can always use the card to activate new devices or collect them like a miniature library. This way, you always have audio reading at hand. Build your collection and enjoy it wherever you are.
+---

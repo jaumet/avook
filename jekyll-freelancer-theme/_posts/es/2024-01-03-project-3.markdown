@@ -1,0 +1,13 @@
+---
+layout: default
+modal-id: 3
+lang: "es"
+title: Llévalos a todas partes
+date: 2024-01-03
+img: 4-how-it-works.jpg
+alt: image-alt
+project-date: enero 2025
+client: Start Bootstrap
+category: Desarrollo Web
+description: Las tarjetas Audiovook son ligeras y no ocupan espacio. Puedes llevarte media docena de títulos en el bolsillo o tenerlos activados en tu dispositivo. Si lo prefieres, siempre podrás utilizar la tarjeta para activar nuevos dispositivos o coleccionarlas como una biblioteca en miniatura. Así, tendrás la lectura auditiva siempre a mano. Crea tu colección y disfrútala donde quieras.
+---

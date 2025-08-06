@@ -1,0 +1,48 @@
+version: "3.9"
+
+services:
+  jekyll:
+    image: jekyll/jekyll:4.2.2
+    command: jekyll serve --livereload --watch --drafts
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./jekyll-freelancer-theme:/srv/jekyll
+
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    ports:
+      - "13378:80"
+    volumes:
+      - ./audiobookshelf/library:/audiobooks
+      - ./audiobookshelf/config:/config
+      - ./audiobookshelf/metadata:/metadata
+
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=avook
+      - POSTGRES_PASSWORD=avookpass
+      - POSTGRES_DB=avook
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  middleware:
+    build: ./middleware
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./middleware:/code    # mounting
+    environment:
+      - PYTHONPATH=/code  # app + tests per hot‑reload i pytest
+    command: >
+      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload >
+      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  dbdata:

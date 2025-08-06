@@ -1,0 +1,158 @@
+{
+  "tags": [],
+  "chapters": [
+    {
+      "id": 0,
+      "start": 0,
+      "end": 286.066939,
+      "title": "00 - Pròleg"
+    },
+    {
+      "id": 1,
+      "start": 286.066939,
+      "end": 1649.6326530000001,
+      "title": "01 - Estat actual de la nació espanyola"
+    },
+    {
+      "id": 2,
+      "start": 1649.6326530000001,
+      "end": 4501.681633,
+      "title": "02 - Lo carácter castellá"
+    },
+    {
+      "id": 3,
+      "start": 4501.681633,
+      "end": 7629.531429000001,
+      "title": "03 - Lo carácter catalá"
+    },
+    {
+      "id": 4,
+      "start": 7629.531429000001,
+      "end": 9300.244898,
+      "title": "04 - Lo Renaixement"
+    },
+    {
+      "id": 5,
+      "start": 9300.244898,
+      "end": 12305.841633,
+      "title": "05 - Agravis y reclamacions"
+    },
+    {
+      "id": 6,
+      "start": 12305.841633,
+      "end": 13820.57796,
+      "title": "06 - Fonaments científichs del particularisme. Generalitats"
+    },
+    {
+      "id": 7,
+      "start": 13820.57796,
+      "end": 14934.831021,
+      "title": "07 - Tendencia científica actual"
+    },
+    {
+      "id": 8,
+      "start": 14934.831021,
+      "end": 16875.128164,
+      "title": "08 - La llibertat"
+    },
+    {
+      "id": 9,
+      "start": 16875.128164,
+      "end": 18169.103674,
+      "title": "09 - La igualtat"
+    },
+    {
+      "id": 10,
+      "start": 18169.103674,
+      "end": 19767.510205000002,
+      "title": "10 - Dimensions del estat"
+    },
+    {
+      "id": 11,
+      "start": 19767.510205000002,
+      "end": 22174.981225000003,
+      "title": "11 - L'estat compost"
+    },
+    {
+      "id": 12,
+      "start": 22174.981225000003,
+      "end": 23462.112654000004,
+      "title": "12 - Flexibilitat del particularisme"
+    },
+    {
+      "id": 13,
+      "start": 23462.112654000004,
+      "end": 24460.460409000003,
+      "title": "13 - Divisió de la soberanía"
+    },
+    {
+      "id": 14,
+      "start": 24460.460409000003,
+      "end": 26553.051429000003,
+      "title": "14 - Ventatjas positivas del estat compost"
+    },
+    {
+      "id": 15,
+      "start": 26553.051429000003,
+      "end": 27162.383674000004,
+      "title": "15 - Lo criteri historich"
+    },
+    {
+      "id": 16,
+      "start": 27162.383674000004,
+      "end": 28758.073470000003,
+      "title": "16 - Solucions monarquicas. L'imperi britanich"
+    },
+    {
+      "id": 17,
+      "start": 28758.073470000003,
+      "end": 30836.140409000003,
+      "title": "17 - Alemania, Austria-Hungria, Suècia y Noruega"
+    },
+    {
+      "id": 18,
+      "start": 30836.140409000003,
+      "end": 32419.317552000004,
+      "title": "18 - Solucions republicanas. Los Estats Units de America"
+    },
+    {
+      "id": 19,
+      "start": 32419.317552000004,
+      "end": 33586.54694000001,
+      "title": "19 - Suissa, republicas hispano-americanas"
+    },
+    {
+      "id": 20,
+      "start": 33586.54694000001,
+      "end": 34453.18530700001,
+      "title": "20 - Solucions espanyolas"
+    },
+    {
+      "id": 21,
+      "start": 34453.18530700001,
+      "end": 35337.325715000006,
+      "title": "21 - Solucions catalanas"
+    }
+  ],
+  "title": "Lo Catalanisme",
+  "subtitle": null,
+  "authors": [
+    "Valentí Almirall i Llozer"
+  ],
+  "narrators": [],
+  "series": [
+    "0-ABS-CAT-local-"
+  ],
+  "genres": [
+    "speech"
+  ],
+  "publishedYear": null,
+  "publishedDate": null,
+  "publisher": null,
+  "description": "https://archive.org/details/locatalanisme_2110_librivox",
+  "isbn": null,
+  "asin": null,
+  "language": null,
+  "explicit": false,
+  "abridged": false
+}

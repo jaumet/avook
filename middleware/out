@@ -1,0 +1,319 @@
+[1m============================= test session starts ==============================[0m
+platform linux -- Python 3.12.11, pytest-8.4.1, pluggy-1.6.0
+rootdir: /code
+plugins: anyio-4.9.0
+[1mcollecting ... [0m[1mcollecting 0 items                                                             [0m[1mcollected 2 items                                                              [0m
+
+tests/test_status.py 2025-08-02 18:04:29,434 INFO sqlalchemy.engine.Engine select pg_catalog.version()
+2025-08-02 18:04:29,434 INFO sqlalchemy.engine.Engine [raw sql] {}
+2025-08-02 18:04:29,435 INFO sqlalchemy.engine.Engine select current_schema()
+2025-08-02 18:04:29,435 INFO sqlalchemy.engine.Engine [raw sql] {}
+2025-08-02 18:04:29,436 INFO sqlalchemy.engine.Engine show standard_conforming_strings
+2025-08-02 18:04:29,436 INFO sqlalchemy.engine.Engine [raw sql] {}
+2025-08-02 18:04:29,437 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-08-02 18:04:29,442 INFO sqlalchemy.engine.Engine SELECT "user".id, "user".email, "user".password_hash 
+FROM "user" 
+WHERE "user".email = %(email_1)s
+2025-08-02 18:04:29,443 INFO sqlalchemy.engine.Engine [generated in 0.00025s] {'email_1': 'user@test.com'}
+2025-08-02 18:04:29,444 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-08-02 18:04:29,450 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-08-02 18:04:29,450 INFO sqlalchemy.engine.Engine SELECT "user".id, "user".email, "user".password_hash 
+FROM "user" 
+WHERE "user".email = %(email_1)s
+2025-08-02 18:04:29,450 INFO sqlalchemy.engine.Engine [cached since 0.007893s ago] {'email_1': 'user@test.com'}
+🧪 login intent: email='user@test.com' password_hash='$2b$12$Ys4QY5e2sJ0LLGM7qsAtV.nS5mI2IVJChP.fCBvEcZPKghu5L2p0a' id=UUID('03b91e38-9132-44c9-8ac1-a2fffcc4944f')
+2025-08-02 18:04:29,744 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-08-02 18:04:29,748 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-08-02 18:04:29,750 INFO sqlalchemy.engine.Engine SELECT "user".id AS user_id, "user".email AS user_email, "user".password_hash AS user_password_hash 
+FROM "user" 
+WHERE "user".id = %(pk_1)s::UUID
+2025-08-02 18:04:29,750 INFO sqlalchemy.engine.Engine [generated in 0.00019s] {'pk_1': '03b91e38-9132-44c9-8ac1-a2fffcc4944f'}
+2025-08-02 18:04:29,753 INFO sqlalchemy.engine.Engine SELECT claim.id, claim.qr, claim.claimed_at, claim.owner_email, claim.borrower_email, claim.lent_at, claim.returned_at, claim.status 
+FROM claim 
+WHERE claim.qr = %(qr_1)s
+2025-08-02 18:04:29,754 INFO sqlalchemy.engine.Engine [generated in 0.00029s] {'qr_1': 'QR-a2867d54-4a19-480d-a624-36fc5c1aa2b0'}
+2025-08-02 18:04:29,757 INFO sqlalchemy.engine.Engine INSERT INTO claim (qr, claimed_at, owner_email, borrower_email, lent_at, returned_at, status) VALUES (%(qr)s, %(claimed_at)s, %(owner_email)s, %(borrower_email)s, %(lent_at)s, %(returned_at)s, %(status)s) RETURNING claim.id
+2025-08-02 18:04:29,757 INFO sqlalchemy.engine.Engine [generated in 0.00033s] {'qr': 'QR-a2867d54-4a19-480d-a624-36fc5c1aa2b0', 'claimed_at': datetime.datetime(2025, 8, 2, 18, 4, 29, 755327, tzinfo=datetime.timezone.utc), 'owner_email': 'user@test.com', 'borrower_email': None, 'lent_at': None, 'returned_at': None, 'status': 1}
+2025-08-02 18:04:29,759 INFO sqlalchemy.engine.Engine COMMIT
+2025-08-02 18:04:29,760 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-08-02 18:04:29,762 INFO sqlalchemy.engine.Engine SELECT claim.id, claim.qr, claim.claimed_at, claim.owner_email, claim.borrower_email, claim.lent_at, claim.returned_at, claim.status 
+FROM claim 
+WHERE claim.id = %(pk_1)s
+2025-08-02 18:04:29,762 INFO sqlalchemy.engine.Engine [generated in 0.00027s] {'pk_1': 124}
+2025-08-02 18:04:29,764 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-08-02 18:04:29,767 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-08-02 18:04:29,768 INFO sqlalchemy.engine.Engine SELECT "user".id AS user_id, "user".email AS user_email, "user".password_hash AS user_password_hash 
+FROM "user" 
+WHERE "user".id = %(pk_1)s::UUID
+2025-08-02 18:04:29,768 INFO sqlalchemy.engine.Engine [cached since 0.01788s ago] {'pk_1': '03b91e38-9132-44c9-8ac1-a2fffcc4944f'}
+🧪 user rebut a status: <class 'app.models.User'> email='user@test.com' password_hash='$2b$12$Ys4QY5e2sJ0LLGM7qsAtV.nS5mI2IVJChP.fCBvEcZPKghu5L2p0a' id=UUID('03b91e38-9132-44c9-8ac1-a2fffcc4944f')
+2025-08-02 18:04:29,769 INFO sqlalchemy.engine.Engine SELECT claim.id, claim.qr, claim.claimed_at, claim.owner_email, claim.borrower_email, claim.lent_at, claim.returned_at, claim.status 
+FROM claim 
+WHERE claim.qr = %(qr_1)s
+2025-08-02 18:04:29,770 INFO sqlalchemy.engine.Engine [cached since 0.01636s ago] {'qr_1': 'QR-a2867d54-4a19-480d-a624-36fc5c1aa2b0'}
+2025-08-02 18:04:29,771 INFO sqlalchemy.engine.Engine ROLLBACK
+[32m.[0m2025-08-02 18:04:29,776 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-08-02 18:04:29,776 INFO sqlalchemy.engine.Engine SELECT "user".id, "user".email, "user".password_hash 
+FROM "user" 
+WHERE "user".email = %(email_1)s
+2025-08-02 18:04:29,776 INFO sqlalchemy.engine.Engine [cached since 0.3338s ago] {'email_1': 'owner@test.com'}
+2025-08-02 18:04:29,777 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-08-02 18:04:29,781 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-08-02 18:04:29,782 INFO sqlalchemy.engine.Engine SELECT "user".id, "user".email, "user".password_hash 
+FROM "user" 
+WHERE "user".email = %(email_1)s
+2025-08-02 18:04:29,782 INFO sqlalchemy.engine.Engine [cached since 0.34s ago] {'email_1': 'owner@test.com'}
+🧪 login intent: email='owner@test.com' password_hash='$2b$12$MKHqUXNh0dQIXR.PoMS9eOValp9yK4n8tc5V8J8FCxPLEBcf19aii' id=UUID('32ef8b40-821e-4609-bfde-c85456d39c38')
+2025-08-02 18:04:30,033 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-08-02 18:04:30,036 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-08-02 18:04:30,036 INFO sqlalchemy.engine.Engine SELECT "user".id, "user".email, "user".password_hash 
+FROM "user" 
+WHERE "user".email = %(email_1)s
+2025-08-02 18:04:30,036 INFO sqlalchemy.engine.Engine [cached since 0.5938s ago] {'email_1': 'borrower@test.com'}
+2025-08-02 18:04:30,037 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-08-02 18:04:30,041 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-08-02 18:04:30,041 INFO sqlalchemy.engine.Engine SELECT "user".id AS user_id, "user".email AS user_email, "user".password_hash AS user_password_hash 
+FROM "user" 
+WHERE "user".id = %(pk_1)s::UUID
+2025-08-02 18:04:30,041 INFO sqlalchemy.engine.Engine [cached since 0.2913s ago] {'pk_1': '32ef8b40-821e-4609-bfde-c85456d39c38'}
+2025-08-02 18:04:30,043 INFO sqlalchemy.engine.Engine SELECT claim.id, claim.qr, claim.claimed_at, claim.owner_email, claim.borrower_email, claim.lent_at, claim.returned_at, claim.status 
+FROM claim 
+WHERE claim.qr = %(qr_1)s
+2025-08-02 18:04:30,043 INFO sqlalchemy.engine.Engine [cached since 0.2896s ago] {'qr_1': 'QR-4e451b10-c5bf-4a30-900d-e9aad7386261'}
+2025-08-02 18:04:30,044 INFO sqlalchemy.engine.Engine INSERT INTO claim (qr, claimed_at, owner_email, borrower_email, lent_at, returned_at, status) VALUES (%(qr)s, %(claimed_at)s, %(owner_email)s, %(borrower_email)s, %(lent_at)s, %(returned_at)s, %(status)s) RETURNING claim.id
+2025-08-02 18:04:30,044 INFO sqlalchemy.engine.Engine [cached since 0.2873s ago] {'qr': 'QR-4e451b10-c5bf-4a30-900d-e9aad7386261', 'claimed_at': datetime.datetime(2025, 8, 2, 18, 4, 30, 44124, tzinfo=datetime.timezone.utc), 'owner_email': 'owner@test.com', 'borrower_email': None, 'lent_at': None, 'returned_at': None, 'status': 1}
+2025-08-02 18:04:30,045 INFO sqlalchemy.engine.Engine COMMIT
+2025-08-02 18:04:30,048 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-08-02 18:04:30,048 INFO sqlalchemy.engine.Engine SELECT claim.id, claim.qr, claim.claimed_at, claim.owner_email, claim.borrower_email, claim.lent_at, claim.returned_at, claim.status 
+FROM claim 
+WHERE claim.id = %(pk_1)s
+2025-08-02 18:04:30,048 INFO sqlalchemy.engine.Engine [cached since 0.2862s ago] {'pk_1': 125}
+2025-08-02 18:04:30,050 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-08-02 18:04:30,054 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-08-02 18:04:30,054 INFO sqlalchemy.engine.Engine SELECT "user".id AS user_id, "user".email AS user_email, "user".password_hash AS user_password_hash 
+FROM "user" 
+WHERE "user".id = %(pk_1)s::UUID
+2025-08-02 18:04:30,054 INFO sqlalchemy.engine.Engine [cached since 0.3044s ago] {'pk_1': '32ef8b40-821e-4609-bfde-c85456d39c38'}
+2025-08-02 18:04:30,056 INFO sqlalchemy.engine.Engine SELECT claim.id, claim.qr, claim.claimed_at, claim.owner_email, claim.borrower_email, claim.lent_at, claim.returned_at, claim.status 
+FROM claim 
+WHERE claim.qr = %(qr_1)s
+2025-08-02 18:04:30,056 INFO sqlalchemy.engine.Engine [cached since 0.303s ago] {'qr_1': 'QR-4e451b10-c5bf-4a30-900d-e9aad7386261'}
+2025-08-02 18:04:30,059 INFO sqlalchemy.engine.Engine UPDATE claim SET borrower_email=%(borrower_email)s, lent_at=%(lent_at)s, status=%(status)s WHERE claim.id = %(claim_id)s
+2025-08-02 18:04:30,059 INFO sqlalchemy.engine.Engine [generated in 0.00025s] {'borrower_email': 'borrower@test.com', 'lent_at': datetime.datetime(2025, 8, 2, 18, 4, 30, 57501, tzinfo=datetime.timezone.utc), 'status': 2, 'claim_id': 125}
+2025-08-02 18:04:30,060 INFO sqlalchemy.engine.Engine COMMIT
+2025-08-02 18:04:30,061 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-08-02 18:04:30,061 INFO sqlalchemy.engine.Engine SELECT claim.id, claim.qr, claim.claimed_at, claim.owner_email, claim.borrower_email, claim.lent_at, claim.returned_at, claim.status 
+FROM claim 
+WHERE claim.id = %(pk_1)s
+2025-08-02 18:04:30,062 INFO sqlalchemy.engine.Engine [cached since 0.2996s ago] {'pk_1': 125}
+2025-08-02 18:04:30,063 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-08-02 18:04:30,067 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-08-02 18:04:30,067 INFO sqlalchemy.engine.Engine SELECT "user".id AS user_id, "user".email AS user_email, "user".password_hash AS user_password_hash 
+FROM "user" 
+WHERE "user".id = %(pk_1)s::UUID
+2025-08-02 18:04:30,067 INFO sqlalchemy.engine.Engine [cached since 0.3172s ago] {'pk_1': '32ef8b40-821e-4609-bfde-c85456d39c38'}
+🧪 user rebut a status: <class 'app.models.User'> email='owner@test.com' password_hash='$2b$12$MKHqUXNh0dQIXR.PoMS9eOValp9yK4n8tc5V8J8FCxPLEBcf19aii' id=UUID('32ef8b40-821e-4609-bfde-c85456d39c38')
+2025-08-02 18:04:30,069 INFO sqlalchemy.engine.Engine SELECT claim.id, claim.qr, claim.claimed_at, claim.owner_email, claim.borrower_email, claim.lent_at, claim.returned_at, claim.status 
+FROM claim 
+WHERE claim.qr = %(qr_1)s
+2025-08-02 18:04:30,069 INFO sqlalchemy.engine.Engine [cached since 0.316s ago] {'qr_1': 'QR-4e451b10-c5bf-4a30-900d-e9aad7386261'}
+2025-08-02 18:04:30,070 INFO sqlalchemy.engine.Engine ROLLBACK
+[31mF[0m
+
+=================================== FAILURES ===================================
+[31m[1m____________________________ test_abook_status_lent ____________________________[0m
+
+    [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_abook_status_lent[39;49;00m():[90m[39;49;00m
+        qr = [33mf[39;49;00m[33m"[39;49;00m[33mQR-[39;49;00m[33m{[39;49;00muuid.uuid4()[33m}[39;49;00m[33m"[39;49;00m[90m[39;49;00m
+        client.post([33m"[39;49;00m[33m/api/v1/register[39;49;00m[33m"[39;49;00m, json={[33m"[39;49;00m[33memail[39;49;00m[33m"[39;49;00m: [33m"[39;49;00m[33mowner@test.com[39;49;00m[33m"[39;49;00m, [33m"[39;49;00m[33mpassword[39;49;00m[33m"[39;49;00m: [33m"[39;49;00m[33msecret[39;49;00m[33m"[39;49;00m})[90m[39;49;00m
+        owner_login = client.post([33m"[39;49;00m[33m/api/v1/login[39;49;00m[33m"[39;49;00m, data={[33m"[39;49;00m[33musername[39;49;00m[33m"[39;49;00m: [33m"[39;49;00m[33mowner@test.com[39;49;00m[33m"[39;49;00m, [33m"[39;49;00m[33mpassword[39;49;00m[33m"[39;49;00m: [33m"[39;49;00m[33msecret[39;49;00m[33m"[39;49;00m})[90m[39;49;00m
+        owner_token = owner_login.json()[[33m"[39;49;00m[33maccess_token[39;49;00m[33m"[39;49;00m][90m[39;49;00m
+        owner_headers = {[33m"[39;49;00m[33mAuthorization[39;49;00m[33m"[39;49;00m: [33mf[39;49;00m[33m"[39;49;00m[33mBearer [39;49;00m[33m{[39;49;00mowner_token[33m}[39;49;00m[33m"[39;49;00m}[90m[39;49;00m
+    [90m[39;49;00m
+        client.post([33m"[39;49;00m[33m/api/v1/register[39;49;00m[33m"[39;49;00m, json={[33m"[39;49;00m[33memail[39;49;00m[33m"[39;49;00m: [33m"[39;49;00m[33mborrower@test.com[39;49;00m[33m"[39;49;00m, [33m"[39;49;00m[33mpassword[39;49;00m[33m"[39;49;00m: [33m"[39;49;00m[33msecret[39;49;00m[33m"[39;49;00m})[90m[39;49;00m
+    [90m[39;49;00m
+        client.post([33mf[39;49;00m[33m"[39;49;00m[33m/api/v1/claim/[39;49;00m[33m{[39;49;00mqr[33m}[39;49;00m[33m"[39;49;00m, params={[33m"[39;49;00m[33mowner_email[39;49;00m[33m"[39;49;00m: [33m"[39;49;00m[33mowner@test.com[39;49;00m[33m"[39;49;00m}, headers=owner_headers)[90m[39;49;00m
+        lend = client.post([33mf[39;49;00m[33m"[39;49;00m[33m/api/v1/lend/[39;49;00m[33m{[39;49;00mqr[33m}[39;49;00m[33m"[39;49;00m, params={[33m"[39;49;00m[33mborrower_email[39;49;00m[33m"[39;49;00m: [33m"[39;49;00m[33mborrower@test.com[39;49;00m[33m"[39;49;00m}, headers=owner_headers)[90m[39;49;00m
+        [94massert[39;49;00m lend.status_code == [94m200[39;49;00m[90m[39;49;00m
+    [90m[39;49;00m
+>       status = client.get([33mf[39;49;00m[33m"[39;49;00m[33m/api/v1/abook/[39;49;00m[33m{[39;49;00mqr[33m}[39;49;00m[33m/status[39;49;00m[33m"[39;49;00m, headers=owner_headers)[90m[39;49;00m
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+
+[1m[31mtests/test_status.py[0m:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+[1m[31m/usr/local/lib/python3.12/site-packages/starlette/testclient.py[0m:479: in get
+    [0m[94mreturn[39;49;00m [96msuper[39;49;00m().get([90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/httpx/_client.py[0m:1053: in get
+    [0m[94mreturn[39;49;00m [96mself[39;49;00m.request([90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/starlette/testclient.py[0m:451: in request
+    [0m[94mreturn[39;49;00m [96msuper[39;49;00m().request([90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/httpx/_client.py[0m:825: in request
+    [0m[94mreturn[39;49;00m [96mself[39;49;00m.send(request, auth=auth, follow_redirects=follow_redirects)[90m[39;49;00m
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/httpx/_client.py[0m:914: in send
+    [0mresponse = [96mself[39;49;00m._send_handling_auth([90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/httpx/_client.py[0m:942: in _send_handling_auth
+    [0mresponse = [96mself[39;49;00m._send_handling_redirects([90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/httpx/_client.py[0m:979: in _send_handling_redirects
+    [0mresponse = [96mself[39;49;00m._send_single_request(request)[90m[39;49;00m
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/httpx/_client.py[0m:1014: in _send_single_request
+    [0mresponse = transport.handle_request(request)[90m[39;49;00m
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/starlette/testclient.py[0m:354: in handle_request
+    [0m[94mraise[39;49;00m exc[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/starlette/testclient.py[0m:351: in handle_request
+    [0mportal.call([96mself[39;49;00m.app, scope, receive, send)[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/anyio/from_thread.py[0m:290: in call
+    [0m[94mreturn[39;49;00m cast(T_Retval, [96mself[39;49;00m.start_task_soon(func, *args).result())[90m[39;49;00m
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/concurrent/futures/_base.py[0m:456: in result
+    [0m[94mreturn[39;49;00m [96mself[39;49;00m.__get_result()[90m[39;49;00m
+           ^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/concurrent/futures/_base.py[0m:401: in __get_result
+    [0m[94mraise[39;49;00m [96mself[39;49;00m._exception[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/anyio/from_thread.py[0m:221: in _call_func
+    [0mretval = [94mawait[39;49;00m retval_or_awaitable[90m[39;49;00m
+             ^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/fastapi/applications.py[0m:1054: in __call__
+    [0m[94mawait[39;49;00m [96msuper[39;49;00m().[92m__call__[39;49;00m(scope, receive, send)[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/starlette/applications.py[0m:113: in __call__
+    [0m[94mawait[39;49;00m [96mself[39;49;00m.middleware_stack(scope, receive, send)[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/starlette/middleware/errors.py[0m:186: in __call__
+    [0m[94mraise[39;49;00m exc[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/starlette/middleware/errors.py[0m:164: in __call__
+    [0m[94mawait[39;49;00m [96mself[39;49;00m.app(scope, receive, _send)[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/starlette/middleware/exceptions.py[0m:63: in __call__
+    [0m[94mawait[39;49;00m wrap_app_handling_exceptions([96mself[39;49;00m.app, conn)(scope, receive, send)[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/starlette/_exception_handler.py[0m:53: in wrapped_app
+    [0m[94mraise[39;49;00m exc[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/starlette/_exception_handler.py[0m:42: in wrapped_app
+    [0m[94mawait[39;49;00m app(scope, receive, sender)[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/starlette/routing.py[0m:716: in __call__
+    [0m[94mawait[39;49;00m [96mself[39;49;00m.middleware_stack(scope, receive, send)[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/starlette/routing.py[0m:736: in app
+    [0m[94mawait[39;49;00m route.handle(scope, receive, send)[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/starlette/routing.py[0m:290: in handle
+    [0m[94mawait[39;49;00m [96mself[39;49;00m.app(scope, receive, send)[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/starlette/routing.py[0m:78: in app
+    [0m[94mawait[39;49;00m wrap_app_handling_exceptions(app, request)(scope, receive, send)[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/starlette/_exception_handler.py[0m:53: in wrapped_app
+    [0m[94mraise[39;49;00m exc[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/starlette/_exception_handler.py[0m:42: in wrapped_app
+    [0m[94mawait[39;49;00m app(scope, receive, sender)[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/starlette/routing.py[0m:75: in app
+    [0mresponse = [94mawait[39;49;00m f(request)[90m[39;49;00m
+               ^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/fastapi/routing.py[0m:302: in app
+    [0mraw_response = [94mawait[39;49;00m run_endpoint_function([90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/fastapi/routing.py[0m:215: in run_endpoint_function
+    [0m[94mreturn[39;49;00m [94mawait[39;49;00m run_in_threadpool(dependant.call, **values)[90m[39;49;00m
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/starlette/concurrency.py[0m:38: in run_in_threadpool
+    [0m[94mreturn[39;49;00m [94mawait[39;49;00m anyio.to_thread.run_sync(func)[90m[39;49;00m
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/anyio/to_thread.py[0m:56: in run_sync
+    [0m[94mreturn[39;49;00m [94mawait[39;49;00m get_async_backend().run_sync_in_worker_thread([90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/anyio/_backends/_asyncio.py[0m:2470: in run_sync_in_worker_thread
+    [0m[94mreturn[39;49;00m [94mawait[39;49;00m future[90m[39;49;00m
+           ^^^^^^^^^^^^[90m[39;49;00m
+[1m[31m/usr/local/lib/python3.12/site-packages/anyio/_backends/_asyncio.py[0m:967: in run
+    [0mresult = context.run(func, *args)[90m[39;49;00m
+             ^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mapp/api/v1.py[0m:174: in abook_status
+    [0m[33m"[39;49;00m[33mstatus_label[39;49;00m[33m"[39;49;00m: get_status_label(claim.status, claim.lent_at),[90m[39;49;00m
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+status = 2, lent_at = datetime.datetime(2025, 8, 2, 18, 4, 30, 57501)
+
+    [0m[94mdef[39;49;00m[90m [39;49;00m[92mget_status_label[39;49;00m(status: [96mint[39;49;00m, lent_at: datetime | [94mNone[39;49;00m = [94mNone[39;49;00m) -> [96mstr[39;49;00m:[90m[39;49;00m
+        [94mmatch[39;49;00m status:[90m[39;49;00m
+            [94mcase[39;49;00m [94m0[39;49;00m: [94mreturn[39;49;00m [33m"[39;49;00m[33mNo reclamat[39;49;00m[33m"[39;49;00m[90m[39;49;00m
+            [94mcase[39;49;00m [94m1[39;49;00m: [94mreturn[39;49;00m [33m"[39;49;00m[33mReclamat[39;49;00m[33m"[39;49;00m[90m[39;49;00m
+            [94mcase[39;49;00m [94m2[39;49;00m:[90m[39;49;00m
+                [94mif[39;49;00m lent_at:[90m[39;49;00m
+>                   delta = datetime.now(timezone.utc) - lent_at[90m[39;49;00m
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE                   TypeError: can't subtract offset-naive and offset-aware datetimes[0m
+
+[1m[31mapp/api/v1.py[0m:151: TypeError
+------------------------------ Captured log call -------------------------------
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:2698 BEGIN (implicit)
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 SELECT "user".id, "user".email, "user".password_hash 
+FROM "user" 
+WHERE "user".email = %(email_1)s
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 [cached since 0.3338s ago] {'email_1': 'owner@test.com'}
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:2701 ROLLBACK
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:2698 BEGIN (implicit)
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 SELECT "user".id, "user".email, "user".password_hash 
+FROM "user" 
+WHERE "user".email = %(email_1)s
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 [cached since 0.34s ago] {'email_1': 'owner@test.com'}
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:2701 ROLLBACK
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:2698 BEGIN (implicit)
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 SELECT "user".id, "user".email, "user".password_hash 
+FROM "user" 
+WHERE "user".email = %(email_1)s
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 [cached since 0.5938s ago] {'email_1': 'borrower@test.com'}
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:2701 ROLLBACK
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:2698 BEGIN (implicit)
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 SELECT "user".id AS user_id, "user".email AS user_email, "user".password_hash AS user_password_hash 
+FROM "user" 
+WHERE "user".id = %(pk_1)s::UUID
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 [cached since 0.2913s ago] {'pk_1': '32ef8b40-821e-4609-bfde-c85456d39c38'}
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 SELECT claim.id, claim.qr, claim.claimed_at, claim.owner_email, claim.borrower_email, claim.lent_at, claim.returned_at, claim.status 
+FROM claim 
+WHERE claim.qr = %(qr_1)s
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 [cached since 0.2896s ago] {'qr_1': 'QR-4e451b10-c5bf-4a30-900d-e9aad7386261'}
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 INSERT INTO claim (qr, claimed_at, owner_email, borrower_email, lent_at, returned_at, status) VALUES (%(qr)s, %(claimed_at)s, %(owner_email)s, %(borrower_email)s, %(lent_at)s, %(returned_at)s, %(status)s) RETURNING claim.id
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 [cached since 0.2873s ago] {'qr': 'QR-4e451b10-c5bf-4a30-900d-e9aad7386261', 'claimed_at': datetime.datetime(2025, 8, 2, 18, 4, 30, 44124, tzinfo=datetime.timezone.utc), 'owner_email': 'owner@test.com', 'borrower_email': None, 'lent_at': None, 'returned_at': None, 'status': 1}
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:2704 COMMIT
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:2698 BEGIN (implicit)
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 SELECT claim.id, claim.qr, claim.claimed_at, claim.owner_email, claim.borrower_email, claim.lent_at, claim.returned_at, claim.status 
+FROM claim 
+WHERE claim.id = %(pk_1)s
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 [cached since 0.2862s ago] {'pk_1': 125}
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:2701 ROLLBACK
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:2698 BEGIN (implicit)
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 SELECT "user".id AS user_id, "user".email AS user_email, "user".password_hash AS user_password_hash 
+FROM "user" 
+WHERE "user".id = %(pk_1)s::UUID
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 [cached since 0.3044s ago] {'pk_1': '32ef8b40-821e-4609-bfde-c85456d39c38'}
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 SELECT claim.id, claim.qr, claim.claimed_at, claim.owner_email, claim.borrower_email, claim.lent_at, claim.returned_at, claim.status 
+FROM claim 
+WHERE claim.qr = %(qr_1)s
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 [cached since 0.303s ago] {'qr_1': 'QR-4e451b10-c5bf-4a30-900d-e9aad7386261'}
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 UPDATE claim SET borrower_email=%(borrower_email)s, lent_at=%(lent_at)s, status=%(status)s WHERE claim.id = %(claim_id)s
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 [generated in 0.00025s] {'borrower_email': 'borrower@test.com', 'lent_at': datetime.datetime(2025, 8, 2, 18, 4, 30, 57501, tzinfo=datetime.timezone.utc), 'status': 2, 'claim_id': 125}
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:2704 COMMIT
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:2698 BEGIN (implicit)
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 SELECT claim.id, claim.qr, claim.claimed_at, claim.owner_email, claim.borrower_email, claim.lent_at, claim.returned_at, claim.status 
+FROM claim 
+WHERE claim.id = %(pk_1)s
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 [cached since 0.2996s ago] {'pk_1': 125}
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:2701 ROLLBACK
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:2698 BEGIN (implicit)
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 SELECT "user".id AS user_id, "user".email AS user_email, "user".password_hash AS user_password_hash 
+FROM "user" 
+WHERE "user".id = %(pk_1)s::UUID
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 [cached since 0.3172s ago] {'pk_1': '32ef8b40-821e-4609-bfde-c85456d39c38'}
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 SELECT claim.id, claim.qr, claim.claimed_at, claim.owner_email, claim.borrower_email, claim.lent_at, claim.returned_at, claim.status 
+FROM claim 
+WHERE claim.qr = %(qr_1)s
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:1842 [cached since 0.316s ago] {'qr_1': 'QR-4e451b10-c5bf-4a30-900d-e9aad7386261'}
+[32mINFO    [0m sqlalchemy.engine.Engine:base.py:2701 ROLLBACK
+[33m=============================== warnings summary ===============================[0m
+../usr/local/lib/python3.12/site-packages/passlib/utils/__init__.py:854
+  /usr/local/lib/python3.12/site-packages/passlib/utils/__init__.py:854: DeprecationWarning: 'crypt' is deprecated and slated for removal in Python 3.13
+    from crypt import crypt as _crypt
+
+tests/test_status.py::test_abook_status_claimed
+tests/test_status.py::test_abook_status_lent
+  /code/app/auth.py:25: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+[36m[1m=========================== short test summary info ============================[0m
+[31mFAILED[0m tests/test_status.py::[1mtest_abook_status_lent[0m - TypeError: can't subtract offset-naive and offset-aware datetimes
+[31m=================== [31m[1m1 failed[0m, [32m1 passed[0m, [33m3 warnings[0m[31m in 1.98s[0m[31m ====================[0m

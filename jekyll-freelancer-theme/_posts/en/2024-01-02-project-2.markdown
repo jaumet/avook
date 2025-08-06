@@ -1,0 +1,13 @@
+---
+layout: default
+modal-id: 2
+lang: "en"
+title: Share them, gift them
+date: 2024-01-02
+img: 5-how-it-works.jpg
+alt: image-alt
+project-date: January 2025
+client: Start Bootstrap
+category: Web Development
+description: At Audiovook, sound reading is also about sharing. You can lend a card to a friend to discover a story or simply pass them the QR code. No complications, no conditions. This enriches the reading community, making stories circula
+---

@@ -1,0 +1,13 @@
+---
+layout: default
+modal-id: 5
+lang: "es"
+title: Escanea el QR
+date: 2024-01-05
+img: 2-how-it-works.jpg
+alt: image-alt
+project-date: enero 2025
+client: Start Bootstrap
+category: Desarrollo Web
+description: ¿Ya tienes la tarjeta? ¡Fantástico! Toma tu teléfono, abre la aplicación de cámara y apunta al código QR. En solo unos segundos, se abrirá el enlace que te da acceso al audiolibro. Sin complicaciones ni instalaciones adicionales, podrás empezar a escucharlo cuando quieras, donde estés, de forma rápida y sencilla. ¡Así de intuitivo! Da tu primer paso sonoro hoy.
+---

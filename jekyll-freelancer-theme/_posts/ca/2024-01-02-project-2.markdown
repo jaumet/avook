@@ -1,0 +1,13 @@
+---
+layout: default
+modal-id: 2
+lang: "ca"
+title: Comparteix-los, regala'ls
+date: 2024-01-02
+img: 5-how-it-works.jpg
+alt: image-alt
+project-date: gener 2025
+client: Start Bootstrap
+category: Web Development
+description: A Audiovook, la lectura sonora també és compartir. Pots cedir una targeta a un amic perquè descobreixi una història o simplement passar-li el QR. Sense complicacions, sense condicions. Així s'enriqueix la comunitat lectora, fent circular els relats d'una orella a l'altra. Regala l'experiència auditiva i fes créixer la passió per escoltar històries. Amb cada intercanvi, sumes complicitats.
+---

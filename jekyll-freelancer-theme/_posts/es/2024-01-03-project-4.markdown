@@ -1,0 +1,13 @@
+---
+layout: default
+modal-id: 4
+lang: "es"
+title: Escucha todas las historias
+date: 2024-01-04
+img: 3-how-it-works.jpg
+alt: image-alt
+project-date: enero 2025
+client: Start Bootstrap
+category: Desarrollo Web
+description: Registrándote en Audiovook, tendrás una biblioteca personal de audiolibros siempre disponible. Podrás retomar la escucha donde la dejaste, gestionar tus títulos favoritos y descubrir nuevos relatos para ampliar tu universo literario sonoro. Disfruta de una experiencia auditiva adaptada a ti y comparte la pasión por la lectura con toda la comunidad. Un mundo de oportunidades te espera.
+---

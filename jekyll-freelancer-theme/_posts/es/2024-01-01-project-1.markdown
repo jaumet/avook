@@ -1,0 +1,13 @@
+---
+layout: default
+modal-id: 1
+lang: "es"
+title: Uno a uno, como con los libros
+date: 2024-01-01
+img: 6-how-it-works.jpg
+alt: image-alt
+project-date: enero 2025
+client: Start Bootstrap
+category: Desarrollo Web
+description: Con Audiovook disfrutas de cada título de forma individual, igual que con un libro físico. Si se lo prestas a alguien, ya no podrás escucharlo hasta que deje de tenerlo. No es necesario esperar a que te lo devuelvan, simplemente desactivas el acceso y recuperas tu escucha. Una experiencia justa, simple y flexible.
+---

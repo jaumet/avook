@@ -1,0 +1,108 @@
+{
+  "tags": [],
+  "chapters": [
+    {
+      "id": 0,
+      "start": 0,
+      "end": 2587.08,
+      "title": "10 of 14"
+    },
+    {
+      "id": 1,
+      "start": 2587.08,
+      "end": 5219.592000000001,
+      "title": "12 of 14"
+    },
+    {
+      "id": 2,
+      "start": 5219.592000000001,
+      "end": 7831.5493750000005,
+      "title": "03 of 14"
+    },
+    {
+      "id": 3,
+      "start": 7831.5493750000005,
+      "end": 10366.158188000001,
+      "title": "04 of 14"
+    },
+    {
+      "id": 4,
+      "start": 10366.158188000001,
+      "end": 13009.566188,
+      "title": "01 of 14"
+    },
+    {
+      "id": 5,
+      "start": 13009.566188,
+      "end": 15638.718188,
+      "title": "02 of 14"
+    },
+    {
+      "id": 6,
+      "start": 15638.718188,
+      "end": 17917.110188,
+      "title": "05 of 14"
+    },
+    {
+      "id": 7,
+      "start": 17917.110188,
+      "end": 20155.590188,
+      "title": "06 of 14"
+    },
+    {
+      "id": 8,
+      "start": 20155.590188,
+      "end": 22639.374187999998,
+      "title": "07 of 14"
+    },
+    {
+      "id": 9,
+      "start": 22639.374187999998,
+      "end": 25034.622187999998,
+      "title": "08 of 14"
+    },
+    {
+      "id": 10,
+      "start": 25034.622187999998,
+      "end": 27656.646188,
+      "title": "09 of 14"
+    },
+    {
+      "id": 11,
+      "start": 27656.646188,
+      "end": 30348.750187999998,
+      "title": "11 of 14"
+    },
+    {
+      "id": 12,
+      "start": 30348.750187999998,
+      "end": 32566.614188,
+      "title": "13 of 14"
+    },
+    {
+      "id": 13,
+      "start": 32566.614188,
+      "end": 34688.958188,
+      "title": "14 of 14"
+    }
+  ],
+  "title": "1984",
+  "subtitle": null,
+  "authors": [
+    "George Orwell"
+  ],
+  "narrators": [],
+  "series": [],
+  "genres": [
+    "Speech"
+  ],
+  "publishedYear": "1949",
+  "publishedDate": null,
+  "publisher": "HarperCollins",
+  "description": "Unabridged (B)",
+  "isbn": "9780547249643",
+  "asin": null,
+  "language": null,
+  "explicit": false,
+  "abridged": false
+}

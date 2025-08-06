@@ -1,0 +1,86 @@
+{
+  "tags": [],
+  "chapters": [
+    {
+      "id": 0,
+      "start": 0,
+      "end": 2924.669388,
+      "title": "01 - Capítol I"
+    },
+    {
+      "id": 1,
+      "start": 2924.669388,
+      "end": 6662.217143,
+      "title": "02 - Capítol II"
+    },
+    {
+      "id": 2,
+      "start": 6662.217143,
+      "end": 8345.025306,
+      "title": "03 - Capítol III (primera part)"
+    },
+    {
+      "id": 3,
+      "start": 8345.025306,
+      "end": 10846.537143,
+      "title": "04 - Capítol III (segona part)"
+    },
+    {
+      "id": 4,
+      "start": 10846.537143,
+      "end": 14075.402449,
+      "title": "05 - Capítol IV"
+    },
+    {
+      "id": 5,
+      "start": 14075.402449,
+      "end": 16227.996734999999,
+      "title": "06 - Capítol V (primera part)"
+    },
+    {
+      "id": 6,
+      "start": 16227.996734999999,
+      "end": 18559.059591999998,
+      "title": "07 - Capítol V (segona part)"
+    },
+    {
+      "id": 7,
+      "start": 18559.059591999998,
+      "end": 22070.595919,
+      "title": "08 - Capítol VI"
+    },
+    {
+      "id": 8,
+      "start": 22070.595919,
+      "end": 26228.297143,
+      "title": "09 - Capítol VII"
+    },
+    {
+      "id": 9,
+      "start": 26228.297143,
+      "end": 29191.601633,
+      "title": "10 - Capítol VIII"
+    }
+  ],
+  "title": "La Xava",
+  "subtitle": null,
+  "authors": [
+    "Juli Vallmitjana"
+  ],
+  "narrators": [],
+  "series": [
+    "0-ABS-CAT-local-"
+  ],
+  "genres": [
+    "speech"
+  ],
+  "publishedYear": null,
+  "publishedDate": null,
+  "publisher": null,
+  "description": "https://archive.org/details/xava_2405_librivox",
+  "isbn": null,
+  "asin": null,
+  "language": null,
+  "explicit": false,
+  "abridged": false
+}

@@ -1,0 +1,74 @@
+{% assign current_lang = page.lang | default: "ca" %}
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>{{ site.title }}</title>
+  <meta name="viewport" content="width=device-width">
+  <meta name="description" content="{{ site.description }}">
+  <meta name="keywords" content="{{ site.keywords }}" />
+  
+  <link rel="canonical" href="{{ site.url }}{{ page.url | replace:'index.html','' }}">
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ site.baseurl }}/feed.xml">
+
+    <!-- Define the favicon -->
+  <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
+  <!-- Optionally, include the shortcut icon for older browsers -->
+  <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon">
+
+  <!-- ✅ Corrected CSS Paths -->
+  <link rel="stylesheet" href="{{ site.baseurl }}/style.css">
+  <link rel="stylesheet" href="{{ site.baseurl }}/css/font-awesome/css/all.min.css">
+  
+  <!-- ✅ Corrected Fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" type="text/css">
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Check if a language preference is already set in the URL
+    let currentPath = window.location.pathname;
+    let languageSet = currentPath.startsWith("/ca") || currentPath.startsWith("/es") || currentPath.startsWith("/en");
+
+    if (!languageSet) {
+      // Detect browser language
+      let userLang = navigator.language || navigator.userLanguage;
+      userLang = userLang.toLowerCase(); // Normalize the language code
+
+      // Define language redirection rules
+      let langRedirect;
+      if (userLang.startsWith("ca")) {
+        langRedirect = "/ca/";
+      } else if (userLang.startsWith("es")) {
+        langRedirect = "/es/";
+      } else {
+        langRedirect = "/en/";
+      }
+
+      // Redirect if not already on a language-specific page
+      window.location.replace(langRedirect);
+    }
+  });
+</script>
+
+  <!-- Títol de la pàgina -->
+  <meta property="og:title" content="{{ site.og[current_lang].title }}" />
+
+  <!-- Descripció del contingut -->
+  <meta property="og:description" content="{{ site.og[current_lang].title }}" />
+
+  <!-- URL de la pàgina web -->
+  <meta property="og:url" content="https://audiovook.com" />
+
+  <!-- Tipus de contingut -->
+  <meta property="og:type" content="website" />
+
+  <!-- Imatge representativa (ajusta la URL a la teva imatge) -->
+  <meta property="og:image" content="https://audiovook.com/img/og-image.jpg" />
+
+  <!-- Nom del lloc -->
+  <meta property="og:site_name" content="Audiovook" />
+
+  <!-- Localització (codi de la llengua, per exemple, català) -->
+  <meta property="og:locale" content="ca_ES" />
+
+</head>

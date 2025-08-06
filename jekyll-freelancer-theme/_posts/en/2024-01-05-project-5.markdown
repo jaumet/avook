@@ -1,0 +1,13 @@
+---
+layout: default
+modal-id: 5
+lang: "en"
+title: Scan the QR code
+date: 2024-01-05
+img: 2-how-it-works.jpg
+alt: image-alt
+project-date: January 2025
+client: Start Bootstrap
+category: Web Development
+description: Got your card? Fantastic! Grab your phone, open the camera app, and point it at the QR code. In just a few seconds, the link to your audiobook will open. No complications or additional installations—start listening whenever you want, wherever you are, quickly and easily. It’s that intuitive! Take your first audio step today!
+---

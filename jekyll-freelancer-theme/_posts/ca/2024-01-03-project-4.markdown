@@ -1,0 +1,13 @@
+---
+layout: default
+modal-id: 4
+lang: "ca"
+title: Escolta totes les històries
+date: 2024-01-04
+img: 3-how-it-works.jpg
+alt: image-alt
+project-date: gener 2025
+client: Start Bootstrap
+category: Web Development
+description: Registrant-te a Audiovook, tindràs una biblioteca personal d’audiollibres sempre disponible. Podràs reprendre l’escolta on la vas deixar, gestionar els teus títols favorits i descobrir nous relats per ampliar el teu univers literari sonor. Gaudeix d’una experiència auditiva adaptada a tu i comparteix la passió per la lectura amb tota la comunitat. Un món d’oportunitats 
+---

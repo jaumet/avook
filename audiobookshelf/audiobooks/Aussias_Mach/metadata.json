@@ -1,0 +1,68 @@
+{
+  "tags": [],
+  "chapters": [
+    {
+      "id": 0,
+      "start": 0,
+      "end": 150.83102,
+      "title": "01 - Així com cell qui en lo somni es delita"
+    },
+    {
+      "id": 1,
+      "start": 150.83102,
+      "end": 298.24,
+      "title": "02 - Quins tan segurs consells vas encercant"
+    },
+    {
+      "id": 2,
+      "start": 298.24,
+      "end": 451.60489800000005,
+      "title": "03 - Colguen les gents amb alegria festes"
+    },
+    {
+      "id": 3,
+      "start": 451.60489800000005,
+      "end": 599.353469,
+      "title": "04 - Lexant a part l'estil dels trobadors"
+    },
+    {
+      "id": 4,
+      "start": 599.353469,
+      "end": 752.953469,
+      "title": "05 - No em fall record de temps tan delitós"
+    },
+    {
+      "id": 5,
+      "start": 752.953469,
+      "end": 835.474285,
+      "title": "06 - Lo jorn ha por de perdre sa claror"
+    },
+    {
+      "id": 6,
+      "start": 835.474285,
+      "end": 1033.665305,
+      "title": "07 - Veles e vents han mos desigs complir"
+    }
+  ],
+  "title": "Alguns dels poemes d'Ausiàs March",
+  "subtitle": null,
+  "authors": [
+    "Ausiàs March"
+  ],
+  "narrators": [],
+  "series": [
+    "0-ABS-CAT-local-"
+  ],
+  "genres": [
+    "speech"
+  ],
+  "publishedYear": null,
+  "publishedDate": null,
+  "publisher": null,
+  "description": "https://archive.org/details/march_2108_librivox",
+  "isbn": null,
+  "asin": null,
+  "language": null,
+  "explicit": false,
+  "abridged": false
+}

@@ -1,0 +1,98 @@
+{
+  "tags": [],
+  "chapters": [
+    {
+      "id": 0,
+      "start": 0,
+      "end": 550.347755,
+      "title": "01 - Introducció"
+    },
+    {
+      "id": 1,
+      "start": 550.347755,
+      "end": 1764.231837,
+      "title": "02 - Cant primer: L'incendi dels Pirineus"
+    },
+    {
+      "id": 2,
+      "start": 1764.231837,
+      "end": 2677.96898,
+      "title": "03 - Cant segon: L'hort de les Hespèrides"
+    },
+    {
+      "id": 3,
+      "start": 2677.96898,
+      "end": 3389.518368,
+      "title": "04 - Cant tercer: Los atlants"
+    },
+    {
+      "id": 4,
+      "start": 3389.518368,
+      "end": 4129.332246,
+      "title": "05 - Cant quart: Gibraltar obert"
+    },
+    {
+      "id": 5,
+      "start": 4129.332246,
+      "end": 4663.379593,
+      "title": "06 - Cant cinquè: La catarata"
+    },
+    {
+      "id": 6,
+      "start": 4663.379593,
+      "end": 5897.900409,
+      "title": "07 - Cant sisè: Hesperis"
+    },
+    {
+      "id": 7,
+      "start": 5897.900409,
+      "end": 6741.760001,
+      "title": "08 - Cant setè: Cor d'illes gregues"
+    },
+    {
+      "id": 8,
+      "start": 6741.760001,
+      "end": 7643.872654,
+      "title": "09 - Cant vuitè: L'enfonsament"
+    },
+    {
+      "id": 9,
+      "start": 7643.872654,
+      "end": 8700.133878,
+      "title": "10 - Cant novè: La torre dels titans"
+    },
+    {
+      "id": 10,
+      "start": 8700.133878,
+      "end": 9799.314286,
+      "title": "11 - Cant desè: La nova Hespèrie"
+    },
+    {
+      "id": 11,
+      "start": 9799.314286,
+      "end": 10413.609796,
+      "title": "12 - Conclusió: Colom"
+    }
+  ],
+  "title": "L' Atlàntida",
+  "subtitle": null,
+  "authors": [
+    "Jacint Verdaguer i Santaló"
+  ],
+  "narrators": [],
+  "series": [
+    "0-ABS-CAT-local-"
+  ],
+  "genres": [
+    "speech"
+  ],
+  "publishedYear": null,
+  "publishedDate": null,
+  "publisher": null,
+  "description": "https://archive.org/details/atlantida_2305_librivox",
+  "isbn": null,
+  "asin": null,
+  "language": null,
+  "explicit": false,
+  "abridged": false
+}
