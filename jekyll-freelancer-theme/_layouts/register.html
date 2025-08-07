@@ -24,9 +24,26 @@
             </div>
             <div class="row control-group">
               <div class="form-group col-xs-12 floating-label-form-group controls">
+                <label>{{ site.data[page.lang].register.name_label }}</label>
+                <input type="text" class="form-control" placeholder="{{ site.data[page.lang].register.name_placeholder }}" id="name" required data-validation-required-message="{{ site.data[page.lang].register.name_required }}">
+                <p class="help-block text-danger"></p>
+              </div>
+            </div>
+            <div class="row control-group">
+              <div class="form-group col-xs-12 floating-label-form-group controls">
                 <label>{{ site.data[page.lang].register.password_label }}</label>
                 <input type="password" class="form-control" placeholder="{{ site.data[page.lang].register.password_placeholder }}" id="password" required data-validation-required-message="{{ site.data[page.lang].register.password_required }}">
                 <p class="help-block text-danger"></p>
+              </div>
+            </div>
+            <div class="row control-group">
+              <div class="form-group col-xs-12 floating-label-form-group controls">
+                <label>{{ site.data[page.lang].register.location_label }}</label>
+                <select class="form-control" id="location">
+                  {% for country in site.data.countries %}
+                    <option>{{ country.name }}</option>
+                  {% endfor %}
+                </select>
               </div>
             </div>
             <br>
