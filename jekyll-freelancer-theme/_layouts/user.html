@@ -43,13 +43,14 @@
   <script>
     document.addEventListener("DOMContentLoaded", function() {
       var token = localStorage.getItem("token");
+      var lang = window.location.pathname.split('/')[1];
       if (!token) {
-        window.location.href = "/{{ page.lang }}/login.html";
+        window.location.href = "/" + lang + "/login.html";
       }
 
       document.getElementById("logoutButton").addEventListener("click", function() {
         localStorage.removeItem("token");
-        window.location.href = "/{{ page.lang }}/login.html";
+        window.location.href = "/" + lang + "/login.html";
       });
 
       var qrs = ["project-1", "project-2", "project-3", "project-4", "project-5", "project-6"];
