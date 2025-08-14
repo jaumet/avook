@@ -66,7 +66,7 @@
       event.preventDefault();
       var email = document.getElementById("email").value;
       var password = document.getElementById("password").value;
-      fetch("/api/v1/register", {
+      fetch("http://localhost:8000/api/v1/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

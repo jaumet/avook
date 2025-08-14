@@ -58,7 +58,7 @@
       var lentBooks = document.getElementById("lent-books");
 
       qrs.forEach(function(qr) {
-        fetch("/api/v1/abook/" + qr + "/status", {
+        fetch("http://localhost:8000/api/v1/abook/" + qr + "/status", {
           headers: {
             "Authorization": "Bearer " + token
           }
