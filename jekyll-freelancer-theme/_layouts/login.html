@@ -57,7 +57,7 @@
       var data = new FormData();
       data.append("username", email);
       data.append("password", password);
-      fetch("/api/v1/login", {
+      fetch("http://localhost:8000/api/v1/login", {
         method: "POST",
         body: data
       }).then(function(response) {
