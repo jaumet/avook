@@ -68,7 +68,8 @@
         }
       }).then(function(data) {
         localStorage.setItem("token", data.access_token);
-        window.location.href = "/user.html";
+        var lang = window.location.pathname.split('/')[1];
+        window.location.href = "/" + lang + "/user.html";
       }).catch(function(error) {
         console.error(error);
         var success = document.getElementById("success");
