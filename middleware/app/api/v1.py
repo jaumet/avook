@@ -72,16 +72,16 @@ def login(
     return {"access_token": token, "token_type": "bearer"}
 
 @router.post("/register")
-def register(email: str = Body(...), password: str = Body(...), db: Session = Depends(get_session)):
+def register(email: str = Body(...), password: str = Body(...), name: str = Body(...), location: str = Body(...), db: Session = Depends(get_session)):
     existing = db.exec(select(User).where(User.email == email)).first()
     if existing:
         raise HTTPException(status_code=400, detail="Ja existeix un usuari amb aquest correu")
 
-    user = User(id=uuid4(), email=email, password_hash=hash_password(password))
+    user = User(id=uuid4(), email=email, password_hash=hash_password(password), name=name, location=location)
     db.add(user)
     db.commit()
     db.refresh(user)
-    return {"id": user.id, "email": user.email}
+    return {"id": user.id, "email": user.email, "name": user.name, "location": user.location}
 
 @router.post("/claim/{qr}")
 async def claim_qr(

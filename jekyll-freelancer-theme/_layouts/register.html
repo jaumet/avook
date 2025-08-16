@@ -17,15 +17,15 @@
           <form name="sentMessage" id="registerForm" novalidate>
             <div class="row control-group">
               <div class="form-group col-xs-12 floating-label-form-group controls">
-                <label>{{ site.data[page.lang].register.email_label }}</label>
-                <input type="email" class="form-control" placeholder="{{ site.data[page.lang].register.email_placeholder }}" id="email" required data-validation-required-message="{{ site.data[page.lang].register.email_required }}">
+                <label>{{ site.data[page.lang].register.name_label }}</label>
+                <input type="text" class="form-control" placeholder="{{ site.data[page.lang].register.name_placeholder }}" id="name" required data-validation-required-message="{{ site.data[page.lang].register.name_required }}">
                 <p class="help-block text-danger"></p>
               </div>
             </div>
             <div class="row control-group">
               <div class="form-group col-xs-12 floating-label-form-group controls">
-                <label>{{ site.data[page.lang].register.name_label }}</label>
-                <input type="text" class="form-control" placeholder="{{ site.data[page.lang].register.name_placeholder }}" id="name" required data-validation-required-message="{{ site.data[page.lang].register.name_required }}">
+                <label>{{ site.data[page.lang].register.email_label }}</label>
+                <input type="email" class="form-control" placeholder="{{ site.data[page.lang].register.email_placeholder }}" id="email" required data-validation-required-message="{{ site.data[page.lang].register.email_required }}">
                 <p class="help-block text-danger"></p>
               </div>
             </div>
@@ -64,16 +64,20 @@
   <script>
     document.getElementById("registerForm").addEventListener("submit", function(event) {
       event.preventDefault();
+      var name = document.getElementById("name").value;
       var email = document.getElementById("email").value;
       var password = document.getElementById("password").value;
+      var location = document.getElementById("location").value;
       fetch("http://localhost:8000/api/v1/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
+          name: name,
           email: email,
-          password: password
+          password: password,
+          location: location
         })
       }).then(function(response) {
         if (response.ok) {
