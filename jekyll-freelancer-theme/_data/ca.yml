@@ -29,6 +29,10 @@ errors:
   OPENING_PLAYER: "Obrint el reproductor... (l'enllaç caduca en {expires_in} segons)"
   NOT_ALLOWED_TO_PLAY: "No tens permís per reproduir aquest llibre."
   ACTIVE_SESSION_EXISTS: "Ja hi ha una sessió activa per a aquest llibre."
+  TITLE_NOT_FOUND: "Títol no trobat."
+  CARD_NOT_FOUND: "Targeta no trobada."
+  FORBIDDEN: "No tens permís per fer aquesta acció."
+  INVALID_STATE_TRANSITION: "Transició d'estat no vàlida."
 register:
   title: "Registrar-se"
   email_label: "Correu Electrònic"

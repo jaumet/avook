@@ -7,3 +7,4 @@ class User(SQLModel, table=True):
     password_hash: str
     name: str | None = Field(default=None)
     location: str | None = Field(default=None)
+    is_admin: bool = Field(default=False)
