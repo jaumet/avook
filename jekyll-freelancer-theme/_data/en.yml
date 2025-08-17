@@ -18,6 +18,14 @@ forgot_password:
   email_placeholder: "Email Address"
   email_required: "Please enter your email address."
   submit_button: "Reset Password"
+errors:
+  QR_NOT_FOUND: "QR code not found."
+  ALREADY_CLAIMED: "This card already has an owner."
+  NOT_OWNER: "This action is only for the owner."
+  ALREADY_LENT: "It is already on loan right now."
+  INVALID_BORROWER: "A valid email different from the owner's is required."
+  UNAUTHORIZED: "You must be logged in."
+  GENERIC_ERROR: "An error has occurred. Please try again."
 register:
   title: "Register"
   email_label: "Email Address"
