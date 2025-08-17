@@ -192,10 +192,32 @@
 
         if (statusData.can_play) {
           var playButton = document.createElement("button");
-          playButton.textContent = "Play (Pas 3)";
+          playButton.textContent = "Play";
           playButton.className = "btn btn-success";
+          playButton.onclick = function() { playBook(qr); };
           container.appendChild(playButton);
         }
+      }
+
+      function playBook(qr) {
+        var playButton = event.target;
+        playButton.textContent = "{{ site.data[page.lang].loading }}";
+        playButton.disabled = true;
+
+        fetch("http://localhost:8000/api/v1/abook/" + qr + "/play-auth", {
+          headers: { "Authorization": "Bearer " + token }
+        }).then(function(response) {
+          if (response.ok) return response.json();
+          return response.json().then(function(data) { throw new Error(data.detail); });
+        }).then(function(data) {
+          var message = "{{ site.data[page.lang].errors.OPENING_PLAYER }}".replace("{expires_in}", data.expires_in);
+          alert(message);
+          window.location.href = data.redirect_url;
+        }).catch(function(error) {
+          handleApiError(error);
+          playButton.textContent = "Play";
+          playButton.disabled = false;
+        });
       }
 
       function fetchBookStatus(qr) {

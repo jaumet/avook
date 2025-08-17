@@ -26,6 +26,9 @@ errors:
   INVALID_BORROWER: "Se requiere un correo electrónico válido y diferente al del propietario."
   UNAUTHORIZED: "Debes iniciar sesión."
   GENERIC_ERROR: "Ha ocurrido un error. Por favor, inténtalo de nuevo."
+  OPENING_PLAYER: "Abriendo el reproductor... (el enlace caduca en {expires_in} segundos)"
+  NOT_ALLOWED_TO_PLAY: "No tienes permiso para reproducir este libro."
+  ACTIVE_SESSION_EXISTS: "Ya hay una sesión activa para este libro."
 register:
   title: "Registrarse"
   email_label: "Correo Electrónico"
