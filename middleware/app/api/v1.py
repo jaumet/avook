@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 import hmac, hashlib, base64, os
 from uuid import uuid4
 from pydantic import BaseModel
-from app.models import ListeningProgress, Claim, PlaySession, User
+from app.models import ListeningProgress, Claim, PlaySession, User, Card
 from app.auth import create_access_token, get_current_user, verify_password, get_password_hash
 from app.db import get_session, get_user_by_email, hash_password
 from app.schemas import PlayAuthResponse  # ⬅️ assegura’t que aquest import funcioni
@@ -88,50 +88,53 @@ def read_users_me(current_user: User = Depends(get_current_user)):
     return current_user
 
 @router.post("/claim/{qr}")
-async def claim_qr(
+def claim_qr(
     qr: str,
-    owner_email: str,
     db: Session = Depends(get_session),
-    user_id: str = Depends(get_current_user),
+    user: User = Depends(get_current_user),
 ):
-    existing = db.exec(select(Claim).where(Claim.qr == qr)).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="QR ja reclamat")
-    claim = Claim(qr=qr, owner_email=owner_email)
-    db.add(claim)
+    card = db.get(Card, qr)
+    if not card:
+        raise HTTPException(status_code=404, detail="QR_NOT_FOUND")
+    if card.user_state != 0:
+        raise HTTPException(status_code=400, detail="ALREADY_CLAIMED")
+
+    card.owner_user_id = user.id
+    card.claimed_at = datetime.now(timezone.utc)
+    card.user_state = 1
+    db.add(card)
     db.commit()
-    db.refresh(claim)
-    return {"id": claim.id, "claimed_at": claim.claimed_at}
+    db.refresh(card)
+
+    owner = db.get(User, card.owner_user_id)
+    return {"qr": card.qr, "status": card.user_state, "owner_email": owner.email}
 
 @router.post("/lend/{qr}")
 def lend_book(
     qr: str,
-    # Allow the borrower's email to come from either the request body or a query parameter.
-    borrower_email: str | None = Body(None),
-    borrower_email_param: str | None = Query(None, alias="borrower_email"),
+    borrower_email: str = Body(embed=True),
     db: Session = Depends(get_session),
     user: User = Depends(get_current_user)
 ) -> dict:
-    # Determine the borrower email from body or query string.
-    email = borrower_email or borrower_email_param
-    if not email:
-        raise HTTPException(status_code=400, detail="borrower_email is required")
+    card = db.get(Card, qr)
+    if not card:
+        raise HTTPException(status_code=404, detail="QR_NOT_FOUND")
+    if card.owner_user_id != user.id:
+        raise HTTPException(status_code=403, detail="NOT_OWNER")
+    if card.user_state != 1:
+        raise HTTPException(status_code=400, detail="ALREADY_LENT")
 
-    claim = db.exec(select(Claim).where(Claim.qr == qr)).first()
-    if not claim:
-        raise HTTPException(status_code=404, detail="QR not claimed")
-    if claim.owner_email != user.email:
-        raise HTTPException(status_code=403, detail="You are not the owner")
-    if claim.status != 1:
-        raise HTTPException(status_code=400, detail="Book is not available for lending")
+    borrower = get_user_by_email(borrower_email, db)
+    if not borrower or borrower.id == user.id:
+        raise HTTPException(status_code=400, detail="INVALID_BORROWER")
 
-    claim.borrower_email = email
-    claim.lent_at = datetime.now(timezone.utc)
-    claim.status = 2
+    card.borrower_user_id = borrower.id
+    card.lent_at = datetime.now(timezone.utc)
+    card.user_state = 2
 
-    db.add(claim)
+    db.add(card)
     db.commit()
-    db.refresh(claim)
+    db.refresh(card)
     return {"ok": True, "msg": "Lent successfully"}
 
 @router.get("/abook/{qr}/play-auth", response_model=PlayAuthResponse)
@@ -140,52 +143,49 @@ def get_play_auth(
     db: Session = Depends(get_session),
     user: User = Depends(get_current_user)
 ) -> PlayAuthResponse:
-    """Determine whether a user can play an audiobook and return a signed URL.
+    card = db.get(Card, qr)
+    if not card:
+        raise HTTPException(status_code=404, detail="QR_NOT_FOUND")
 
-    This endpoint checks the claim associated with the QR code.  If the
-    requesting user is the owner or the current borrower, playback is
-    authorised.  A signed Audiobookshelf stream URL is returned along with
-    the current listening position.  Otherwise `can_play` is ``False`` and
-    the reason indicates why.
+    can_play = user.id == card.owner_user_id or user.id == card.borrower_user_id
+    if not can_play:
+        raise HTTPException(status_code=403, detail="NOT_ALLOWED_TO_PLAY")
 
-    Args:
-        qr: the QR code for the audiobook card.
-        db: database session dependency.
-        user: the authenticated user, injected via the dependency system.
+    # Check for active play sessions
+    active_session = db.exec(select(PlaySession).where(PlaySession.qr == qr, PlaySession.expires_at > datetime.now(timezone.utc))).first()
+    if active_session and active_session.device_id != str(user.id): # simple check, can be improved
+        raise HTTPException(status_code=409, detail="ACTIVE_SESSION_EXISTS")
 
-    Returns:
-        A `PlayAuthResponse` model.
-    """
-    claim = db.exec(select(Claim).where(Claim.qr == qr)).first()
-    if not claim:
-        raise HTTPException(status_code=404, detail="QR not claimed yet")
+    title = db.get(Title, card.title_id)
+    if not title:
+        raise HTTPException(status_code=404, detail="TITLE_NOT_FOUND")
 
-    # Determine playback permission and reason.
-    if claim.owner_email == user.email:
-        can_play = True
-        reason = "owner"
-    elif claim.borrower_email == user.email and claim.status == 2:
-        can_play = True
-        reason = "borrower"
-    else:
-        can_play = False
-        reason = "unauthorized"
-
-    # Fetch the last known listening progress for this QR/user.
     progress = db.exec(
         select(ListeningProgress)
         .where(ListeningProgress.user_id == user.id, ListeningProgress.qr == qr)
     ).first()
     start_position = progress.position if progress else 0.0
 
-    # When authorised, generate the signed playback URL.  Otherwise keep None.
-    signed_url = _generate_signed_url(qr, str(user.id)) if can_play else None
+    signed_url = _generate_signed_url(qr, str(user.id))
+
+    # Create a new play session
+    session_ttl = timedelta(hours=TTL_HOURS)
+    new_session = PlaySession(
+        qr=qr,
+        device_id=str(user.id),
+        issued_at=datetime.now(timezone.utc),
+        expires_at=datetime.now(timezone.utc) + session_ttl,
+    )
+    db.add(new_session)
+    db.commit()
 
     return PlayAuthResponse(
-        can_play=can_play,
-        reason=reason,
+        can_play=True,
+        reason="owner" if user.id == card.owner_user_id else "borrower",
         start_position=start_position,
         signed_url=signed_url,
+        redirect_url=f"https://{ABS_HOST}/#/book/{title.abs_share_code}?pt={signed_url.split('sig=')[1]}",
+        expires_in=int(session_ttl.total_seconds()),
     )
 
 
@@ -209,31 +209,21 @@ def stop_lend(
     db: Session = Depends(get_session),
     user: User = Depends(get_current_user),
 ):
-    """Terminate an active lending session and return the book to the owner.
+    card = db.get(Card, qr)
+    if not card:
+        raise HTTPException(status_code=404, detail="QR_NOT_FOUND")
+    if card.owner_user_id != user.id:
+        raise HTTPException(status_code=403, detail="NOT_OWNER")
+    if card.user_state != 2:
+        raise HTTPException(status_code=400, detail="Book is not on loan")
 
-    Only the owner of the claim may invoke this endpoint.  It clears the
-    borrower and resets the claim status to ``1`` (Reclamat).  If the book
-    is not currently lent out or the caller is not the owner, appropriate
-    HTTP errors are raised.
-    """
-    claim = db.exec(select(Claim).where(Claim.qr == qr)).first()
-    if not claim:
-        raise HTTPException(status_code=404, detail="QR inexistent")
-
-    # Ensure the authenticated user is the owner of the claim.
-    if user.email != claim.owner_email:
-        raise HTTPException(status_code=403, detail="Només el propietari pot fer stop-lend")
-
-    if not claim.borrower_email:
-        raise HTTPException(status_code=400, detail="Aquest llibre no està en préstec")
-
-    claim.borrower_email = None
-    claim.lent_at = None
-    claim.status = 1
-    db.add(claim)
+    card.borrower_user_id = None
+    card.lent_at = None
+    card.user_state = 1
+    db.add(card)
     db.commit()
-    db.refresh(claim)
-    return {"message": "Préstec aturat", "qr": claim.qr, "status": claim.status}
+    db.refresh(card)
+    return {"message": "Lend stopped", "qr": card.qr, "status": card.user_state}
 
 def get_status_label(status: int, lent_at: datetime | None = None) -> str:
     """Return a human‑readable label for a claim status.
@@ -263,21 +253,37 @@ def abook_status(
     db: Session = Depends(get_session),
     user: User = Depends(get_current_user),
 ):
-    print("🧪 user rebut a status:", type(user), user)
-    
-    claim = db.exec(select(Claim).where(Claim.qr == qr)).first()
-    if not claim:
-        raise HTTPException(status_code=404, detail="QR inexistent")
+    card = db.get(Card, qr)
+    if not card:
+        raise HTTPException(status_code=404, detail="QR_NOT_FOUND")
+
+    owner = db.get(User, card.owner_user_id) if card.owner_user_id else None
+    borrower = db.get(User, card.borrower_user_id) if card.borrower_user_id else None
+
+    can_claim = card.user_state == 0
+    can_lend = user.id == card.owner_user_id and card.user_state == 1
+    can_stop_lend = user.id == card.owner_user_id and card.user_state == 2
+    can_play = user.id == card.owner_user_id or user.id == card.borrower_user_id
+
+    progress = db.exec(
+        select(ListeningProgress)
+        .where(ListeningProgress.user_id == user.id, ListeningProgress.qr == qr)
+    ).first()
+    start_position = progress.position if progress else 0.0
 
     return {
-        "qr": claim.qr,
-        "status": claim.status,
-        "status_label": get_status_label(claim.status, claim.lent_at),
-        "owner_email": claim.owner_email,
-        "borrower_email": claim.borrower_email,
-        "claimed_at": claim.claimed_at,
-        "lent_at": claim.lent_at,
-        "returned_at": claim.returned_at,
+        "qr": card.qr,
+        "status": card.user_state,
+        "status_label": get_status_label(card.user_state),
+        "owner_email": owner.email if owner else None,
+        "borrower_email": borrower.email if borrower else None,
+        "claimed_at": card.claimed_at,
+        "lent_at": card.lent_at,
+        "can_claim": can_claim,
+        "can_lend": can_lend,
+        "can_stop_lend": can_stop_lend,
+        "can_play": can_play,
+        "start_position": start_position,
     }
 
 class ProgressData(BaseModel):
