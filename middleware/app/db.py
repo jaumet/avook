@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 from sqlmodel import SQLModel, create_engine, Session, select
 from passlib.context import CryptContext
-from app.models import User
+from app.models import User, Title, Card, Store, Batch, Claim, PlaySession, ListeningProgress
 
 # 🔧 Load .env i crea engine SQLModel
 load_dotenv("/code/.env")
