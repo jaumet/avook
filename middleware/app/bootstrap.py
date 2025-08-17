@@ -15,6 +15,7 @@ def create_dev_data():
             duration_sec=3600,
             price_retail=19.99,
             currency="USD",
+            abs_share_code="test-abs-code"
         )
         session.add(title1)
         session.commit()
@@ -47,7 +48,21 @@ def create_dev_data():
             store_id=store1.id,
             batch_id=batch1.id,
         )
+        card2 = Card(
+            qr="PA-DEV-0002",
+            title_id=title1.id,
+            store_id=store1.id,
+            batch_id=batch1.id,
+        )
+        card3 = Card(
+            qr="PA-DEV-0003",
+            title_id=title1.id,
+            store_id=store1.id,
+            batch_id=batch1.id,
+        )
         session.add(card1)
+        session.add(card2)
+        session.add(card3)
         session.commit()
 
 if __name__ == "__main__":

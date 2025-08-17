@@ -143,3 +143,35 @@ def delete_store(store_id: int, db: Session = Depends(get_session), admin: User 
 def read_batches(db: Session = Depends(get_session)):
     batches = db.exec(select(Batch)).all()
     return batches
+
+from fastapi.responses import StreamingResponse
+import io
+import csv
+
+@router.get("/titles/{title_id}/cards/export.csv")
+def export_cards_csv(title_id: int, batch: int = None, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+    query = select(Card).where(Card.title_id == title_id)
+    if batch:
+        query = query.where(Card.batch_id == batch)
+
+    cards = db.exec(query).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    writer.writerow(["qr", "title", "abs_share_code", "store", "retail_state", "notes"])
+
+    for card in cards:
+        title = db.get(Title, card.title_id)
+        store = db.get(Store, card.store_id) if card.store_id else None
+        writer.writerow([
+            card.qr,
+            title.title if title else "",
+            title.abs_share_code if title else "",
+            store.name if store else "",
+            card.retail_state,
+            card.notes
+        ])
+
+    output.seek(0)
+    return StreamingResponse(output, media_type="text/csv", headers={"Content-Disposition": f"attachment; filename=cards_export_{title_id}.csv"})
