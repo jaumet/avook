@@ -26,6 +26,9 @@ errors:
   INVALID_BORROWER: "A valid email different from the owner's is required."
   UNAUTHORIZED: "You must be logged in."
   GENERIC_ERROR: "An error has occurred. Please try again."
+  OPENING_PLAYER: "Opening player... (link expires in {expires_in} seconds)"
+  NOT_ALLOWED_TO_PLAY: "You are not allowed to play this book."
+  ACTIVE_SESSION_EXISTS: "There is already an active session for this book."
 register:
   title: "Register"
   email_label: "Email Address"
