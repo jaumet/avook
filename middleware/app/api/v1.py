@@ -83,6 +83,10 @@ def register(email: str = Body(...), password: str = Body(...), name: str = Body
     db.refresh(user)
     return {"id": user.id, "email": user.email, "name": user.name, "location": user.location}
 
+@router.get("/users/me")
+def read_users_me(current_user: User = Depends(get_current_user)):
+    return current_user
+
 @router.post("/claim/{qr}")
 async def claim_qr(
     qr: str,

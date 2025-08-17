@@ -17,6 +17,7 @@
           <button id="logoutButton" class="btn btn-danger btn-lg">Logout</button>
         </div>
       </div>
+      <div id="qr-specific-content"></div>
       <div class="row">
         <div class="col-lg-12">
           <h3>{{ site.data[page.lang].user.owned_books }}</h3>
@@ -53,13 +54,10 @@
         window.location.href = "/" + lang + "/login.html";
       });
 
-      var qrs = ["project-1", "project-2", "project-3", "project-4", "project-5", "project-6"];
-      var ownedBooks = document.getElementById("owned-books");
-      var borrowedBooks = document.getElementById("borrowed-books");
-      var lentBooks = document.getElementById("lent-books");
+      var currentUserEmail = "";
 
-      qrs.forEach(function(qr) {
-        fetch("http://localhost:8000/api/v1/abook/" + qr + "/status", {
+      function fetchCurrentUser() {
+        return fetch("http://localhost:8000/api/v1/users/me", {
           headers: {
             "Authorization": "Bearer " + token
           }
@@ -67,24 +65,178 @@
           if (response.ok) {
             return response.json();
           } else {
-            throw new Error("Failed to fetch book status.");
+            throw new Error("Failed to fetch user information.");
           }
         }).then(function(data) {
-          var li = document.createElement("li");
-          li.textContent = data.qr;
-          if (data.owner_email === "{{ site.email }}") {
-            ownedBooks.appendChild(li);
-          }
-          if (data.borrower_email === "{{ site.email }}") {
-            borrowedBooks.appendChild(li);
-          }
-          if (data.owner_email === "{{ site.email }}" && data.borrower_email) {
-            lentBooks.appendChild(li);
-          }
-        }).catch(function(error) {
-          console.error(error);
+          currentUserEmail = data.email;
         });
+      }
+
+      function renderBook(qr, statusData) {
+        var li = document.createElement("li");
+        li.innerHTML = `
+          <strong>${qr}</strong> - Status: ${statusData.status_label}
+          <div id="actions-${qr}"></div>
+        `;
+
+        if (statusData.owner_email === currentUserEmail) {
+          document.getElementById("owned-books").appendChild(li);
+          if (statusData.borrower_email) {
+            document.getElementById("lent-books").appendChild(li.cloneNode(true));
+          }
+        } else if (statusData.borrower_email === currentUserEmail) {
+          document.getElementById("borrowed-books").appendChild(li);
+        }
+
+        var actionsDiv = li.querySelector(`#actions-${qr}`);
+        if(actionsDiv) {
+            renderActions(actionsDiv, qr, statusData);
+        }
+      }
+
+      function stopLendBook(qr) {
+        if (confirm("Are you sure you want to stop lending this book?")) {
+          fetch("http://localhost:8000/api/v1/abook/" + qr + "/stop-lend", {
+            method: "POST",
+            headers: { "Authorization": "Bearer " + token }
+          }).then(function(response) {
+            if (response.ok) return response.json();
+            return response.json().then(function(data) { throw new Error(data.detail); });
+          }).then(function() {
+            alert("Lend stopped successfully!");
+            location.reload(); // Simple refresh for now
+          }).catch(function(error) {
+            handleApiError(error);
+          });
+        }
+      }
+
+      function handleApiError(error) {
+        var errorMessage = "{{ site.data[page.lang].errors.GENERIC_ERROR }}";
+        if (error.message) {
+            var errorKey = error.message.toUpperCase().replace(/ /g, '_');
+            var translatedError = "{{ site.data[page.lang].errors | jsonify }}";
+            var errors = JSON.parse(translatedError.replace(/'/g, '"'));
+            if (errors[errorKey]) {
+                errorMessage = errors[errorKey];
+            }
+        }
+        alert(errorMessage);
+      }
+
+      function claimBook(qr) {
+        fetch("http://localhost:8000/api/v1/claim/" + qr, {
+          method: "POST",
+          headers: { "Authorization": "Bearer " + token }
+        }).then(function(response) {
+          if (response.ok) return response.json();
+          return response.json().then(function(data) { throw new Error(data.detail); });
+        }).then(function() {
+          alert("Book claimed successfully!");
+          location.reload(); // Simple refresh for now
+        }).catch(function(error) {
+          handleApiError(error);
+        });
+      }
+
+      function lendBook(qr) {
+        var borrowerEmail = prompt("Enter the email of the person you want to lend the book to:");
+        if (borrowerEmail && borrowerEmail !== currentUserEmail) {
+          fetch("http://localhost:8000/api/v1/lend/" + qr, {
+            method: "POST",
+            headers: {
+              "Authorization": "Bearer " + token,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ borrower_email: borrowerEmail })
+          }).then(function(response) {
+            if (response.ok) return response.json();
+            return response.json().then(function(data) { throw new Error(data.detail); });
+          }).then(function() {
+            alert("Book lent successfully!");
+            location.reload(); // Simple refresh for now
+          }).catch(function(error) {
+            handleApiError(error);
+          });
+        } else {
+          alert("Invalid email or you cannot lend to yourself.");
+        }
+      }
+
+      function renderActions(container, qr, statusData) {
+        container.innerHTML = ''; // Clear previous actions
+
+        if (statusData.can_claim) {
+          var claimButton = document.createElement("button");
+          claimButton.textContent = "Claim";
+          claimButton.className = "btn btn-primary";
+          claimButton.onclick = function() { claimBook(qr); };
+          container.appendChild(claimButton);
+        }
+
+        if (statusData.can_lend) {
+          var lendButton = document.createElement("button");
+          lendButton.textContent = "Lend";
+          lendButton.className = "btn btn-info";
+          lendButton.onclick = function() { lendBook(qr); };
+          container.appendChild(lendButton);
+        }
+
+        if (statusData.can_stop_lend) {
+          var stopLendButton = document.createElement("button");
+          stopLendButton.textContent = "Stop Lend";
+          stopLendButton.className = "btn btn-warning";
+          stopLendButton.onclick = function() { stopLendBook(qr); };
+          container.appendChild(stopLendButton);
+        }
+
+        if (statusData.can_play) {
+          var playButton = document.createElement("button");
+          playButton.textContent = "Play (Pas 3)";
+          playButton.className = "btn btn-success";
+          container.appendChild(playButton);
+        }
+      }
+
+      function fetchBookStatus(qr) {
+          return fetch("http://localhost:8000/api/v1/abook/" + qr + "/status", {
+              headers: { "Authorization": "Bearer " + token }
+          }).then(function(response) {
+              if (response.ok) return response.json();
+              throw new Error("Failed to fetch book status.");
+          });
+      }
+
+      function processQr(qr) {
+        fetchBookStatus(qr).then(function(data) {
+            var qrSpecificContainer = document.getElementById("qr-specific-content");
+            if (qrSpecificContainer) {
+                var bookDetails = document.createElement('div');
+                bookDetails.innerHTML = `
+                    <h3>${qr}</h3>
+                    <p>Status: ${data.status_label}</p>
+                    <div id="actions-${qr}"></div>
+                `;
+                qrSpecificContainer.appendChild(bookDetails);
+                renderActions(bookDetails.querySelector(`#actions-${qr}`), qr, data);
+            } else {
+                renderBook(qr, data);
+            }
+        }).catch(console.error);
+      }
+
+      fetchCurrentUser().then(function() {
+        var urlParams = new URLSearchParams(window.location.search);
+        var qrParam = urlParams.get('qr');
+
+        if (qrParam) {
+            processQr(qrParam);
+        } else {
+            var qrs = ["project-1", "project-2", "project-3", "project-4", "project-5", "project-6"];
+            qrs.forEach(processQr);
+        }
       });
+
     });
   </script>
 </body>

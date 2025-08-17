@@ -18,6 +18,14 @@ forgot_password:
   email_placeholder: "Correu Electrònic"
   email_required: "Si us plau, introdueix el teu correu electrònic."
   submit_button: "Restablir Contrasenya"
+errors:
+  QR_NOT_FOUND: "Codi no trobat."
+  ALREADY_CLAIMED: "Aquesta targeta ja té propietari."
+  NOT_OWNER: "Aquesta acció és només per al propietari."
+  ALREADY_LENT: "Ja està en préstec ara mateix."
+  INVALID_BORROWER: "Cal un correu electrònic vàlid i diferent del propietari."
+  UNAUTHORIZED: "Cal iniciar sessió."
+  GENERIC_ERROR: "S'ha produït un error. Torna-ho a provar."
 register:
   title: "Registrar-se"
   email_label: "Correu Electrònic"

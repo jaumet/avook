@@ -18,6 +18,14 @@ forgot_password:
   email_placeholder: "Correo Electrónico"
   email_required: "Por favor, introduce tu correo electrónico."
   submit_button: "Restablecer Contraseña"
+errors:
+  QR_NOT_FOUND: "Código no encontrado."
+  ALREADY_CLAIMED: "Esta tarjeta ya tiene propietario."
+  NOT_OWNER: "Esta acción es solo para el propietario."
+  ALREADY_LENT: "Ya está en préstamo ahora mismo."
+  INVALID_BORROWER: "Se requiere un correo electrónico válido y diferente al del propietario."
+  UNAUTHORIZED: "Debes iniciar sesión."
+  GENERIC_ERROR: "Ha ocurrido un error. Por favor, inténtalo de nuevo."
 register:
   title: "Registrarse"
   email_label: "Correo Electrónico"
