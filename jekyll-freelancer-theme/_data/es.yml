@@ -29,6 +29,10 @@ errors:
   OPENING_PLAYER: "Abriendo el reproductor... (el enlace caduca en {expires_in} segundos)"
   NOT_ALLOWED_TO_PLAY: "No tienes permiso para reproducir este libro."
   ACTIVE_SESSION_EXISTS: "Ya hay una sesión activa para este libro."
+  TITLE_NOT_FOUND: "Título no encontrado."
+  CARD_NOT_FOUND: "Tarjeta no encontrada."
+  FORBIDDEN: "No tienes permiso para realizar esta acción."
+  INVALID_STATE_TRANSITION: "Transición de estado no válida."
 register:
   title: "Registrarse"
   email_label: "Correo Electrónico"

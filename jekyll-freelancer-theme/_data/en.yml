@@ -29,6 +29,10 @@ errors:
   OPENING_PLAYER: "Opening player... (link expires in {expires_in} seconds)"
   NOT_ALLOWED_TO_PLAY: "You are not allowed to play this book."
   ACTIVE_SESSION_EXISTS: "There is already an active session for this book."
+  TITLE_NOT_FOUND: "Title not found."
+  CARD_NOT_FOUND: "Card not found."
+  FORBIDDEN: "You don't have permission to perform this action."
+  INVALID_STATE_TRANSITION: "Invalid state transition."
 register:
   title: "Register"
   email_label: "Email Address"
