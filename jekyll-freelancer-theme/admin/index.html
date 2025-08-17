@@ -1,0 +1,39 @@
+---
+layout: default
+---
+<section>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12 text-center">
+        <h2>Admin Check</h2>
+        <hr class="star-primary">
+        <p id="admin-status">Checking...</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    var token = localStorage.getItem("token");
+    if (!token) {
+      document.getElementById("admin-status").textContent = "You are not logged in.";
+      return;
+    }
+
+    fetch("http://localhost:8000/api/v1/admin/ping", {
+      headers: {
+        "Authorization": "Bearer " + token
+      }
+    }).then(function(response) {
+      if (response.ok) {
+        document.getElementById("admin-status").textContent = "You are an admin ✅";
+      } else {
+        document.getElementById("admin-status").textContent = "You do not have admin permissions ❌";
+      }
+    }).catch(function(error) {
+      console.error(error);
+      document.getElementById("admin-status").textContent = "An error occurred.";
+    });
+  });
+</script>

@@ -1,13 +1,28 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
-from app.models import Title, User
+from app.models import Title, User, Card, Store, Batch
 from app.db import get_session
 from app.auth import get_current_admin_user
+from uuid import uuid4
+from fastapi.responses import StreamingResponse
+import io
+import csv
 
-router = APIRouter()
+router = APIRouter(
+    tags=["Admin"],
+    dependencies=[Depends(get_current_admin_user)]
+)
+
+@router.get("/")
+def admin_root():
+    return {"status": "Admin section"}
+
+@router.get("/ping")
+def admin_ping():
+    return {"ok": True}
 
 @router.post("/titles", response_model=Title)
-def create_title(title: Title, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def create_title(title: Title, db: Session = Depends(get_session)):
     db.add(title)
     db.commit()
     db.refresh(title)
@@ -29,7 +44,7 @@ def read_title(title_id: int, db: Session = Depends(get_session)):
     return title
 
 @router.put("/titles/{title_id}", response_model=Title)
-def update_title(title_id: int, title: Title, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def update_title(title_id: int, title: Title, db: Session = Depends(get_session)):
     db_title = db.get(Title, title_id)
     if not db_title:
         raise HTTPException(status_code=404, detail="Title not found")
@@ -41,11 +56,8 @@ def update_title(title_id: int, title: Title, db: Session = Depends(get_session)
     db.refresh(db_title)
     return db_title
 
-from app.models import Card
-from uuid import uuid4
-
 @router.post("/titles/{title_id}/cards/batch", response_model=list[Card])
-def create_cards_batch(title_id: int, qty: int, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def create_cards_batch(title_id: int, qty: int, db: Session = Depends(get_session)):
     title = db.get(Title, title_id)
     if not title:
         raise HTTPException(status_code=404, detail="Title not found")
@@ -80,7 +92,7 @@ def read_cards(title: int = None, store: int = None, user_state: int = None, ret
     return cards
 
 @router.put("/cards/{qr}", response_model=Card)
-def update_card(qr: str, card: Card, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def update_card(qr: str, card: Card, db: Session = Depends(get_session)):
     db_card = db.get(Card, qr)
     if not db_card:
         raise HTTPException(status_code=404, detail="Card not found")
@@ -94,10 +106,8 @@ def update_card(qr: str, card: Card, db: Session = Depends(get_session), admin: 
     db.refresh(db_card)
     return db_card
 
-from app.models import Store, Batch
-
 @router.post("/stores", response_model=Store)
-def create_store(store: Store, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def create_store(store: Store, db: Session = Depends(get_session)):
     db.add(store)
     db.commit()
     db.refresh(store)
@@ -116,7 +126,7 @@ def read_store(store_id: int, db: Session = Depends(get_session)):
     return store
 
 @router.put("/stores/{store_id}", response_model=Store)
-def update_store(store_id: int, store: Store, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def update_store(store_id: int, store: Store, db: Session = Depends(get_session)):
     db_store = db.get(Store, store_id)
     if not db_store:
         raise HTTPException(status_code=404, detail="Store not found")
@@ -131,7 +141,7 @@ def update_store(store_id: int, store: Store, db: Session = Depends(get_session)
     return db_store
 
 @router.delete("/stores/{store_id}")
-def delete_store(store_id: int, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def delete_store(store_id: int, db: Session = Depends(get_session)):
     store = db.get(Store, store_id)
     if not store:
         raise HTTPException(status_code=404, detail="Store not found")
@@ -144,12 +154,8 @@ def read_batches(db: Session = Depends(get_session)):
     batches = db.exec(select(Batch)).all()
     return batches
 
-from fastapi.responses import StreamingResponse
-import io
-import csv
-
 @router.get("/titles/{title_id}/cards/export.csv")
-def export_cards_csv(title_id: int, batch: int = None, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def export_cards_csv(title_id: int, batch: int = None, db: Session = Depends(get_session)):
     query = select(Card).where(Card.title_id == title_id)
     if batch:
         query = query.where(Card.batch_id == batch)
