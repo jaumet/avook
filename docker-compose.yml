@@ -40,9 +40,7 @@ services:
       - ./middleware:/code    # mounting
     environment:
       - PYTHONPATH=/code  # app + tests per hot‑reload i pytest
-    command: >
-      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload >
-      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:
   dbdata:
