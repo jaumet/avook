@@ -15,6 +15,7 @@
       <div class="row">
         <div class="col-lg-12">
           <button id="logoutButton" class="btn btn-danger btn-lg">Logout</button>
+          <a href="/admin" id="adminLink" class="btn btn-primary btn-lg" style="display: none;">Admin</a>
         </div>
       </div>
       <div id="qr-specific-content"></div>
@@ -69,6 +70,9 @@
           }
         }).then(function(data) {
           currentUserEmail = data.email;
+          if (data.is_admin) {
+            document.getElementById("adminLink").style.display = "inline-block";
+          }
         });
       }
 

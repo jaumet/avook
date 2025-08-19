@@ -1,0 +1,61 @@
+---
+layout: default
+---
+<section>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12 text-center">
+        <h2>Batch Management</h2>
+        <hr class="star-primary">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-12">
+        <h3>Existing Batches</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title ID</th>
+              <th>Quantity</th>
+              <th>Printed On</th>
+            </tr>
+          </thead>
+          <tbody id="batches-table-body">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    var token = localStorage.getItem("token");
+    if (!token) {
+      window.location.href = "/login.html";
+    }
+
+    fetch("http://localhost:8000/api/v1/admin/batches", {
+      headers: { "Authorization": "Bearer " + token }
+    }).then(function(response) {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error("Failed to fetch batches.");
+      }
+    }).then(function(batches) {
+      var tableBody = document.getElementById("batches-table-body");
+      batches.forEach(function(batch) {
+        var row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${batch.id}</td>
+          <td>${batch.title_id}</td>
+          <td>${batch.qty}</td>
+          <td>${batch.printed_on || ''}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+    });
+  });
+</script>

@@ -154,6 +154,23 @@ def read_batches(db: Session = Depends(get_session)):
     batches = db.exec(select(Batch)).all()
     return batches
 
+@router.put("/users/{user_id}/make-admin", response_model=User)
+def make_admin(user_id: UUID, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.is_admin = True
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+@router.get("/users", response_model=list[User])
+def read_users(db: Session = Depends(get_session)):
+    users = db.exec(select(User)).all()
+    return users
+
 @router.get("/titles/{title_id}/cards/export.csv")
 def export_cards_csv(title_id: int, batch: int = None, db: Session = Depends(get_session)):
     query = select(Card).where(Card.title_id == title_id)

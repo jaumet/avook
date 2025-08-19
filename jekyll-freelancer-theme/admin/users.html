@@ -1,0 +1,96 @@
+---
+layout: default
+---
+<section>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12 text-center">
+        <h2>User Management</h2>
+        <hr class="star-primary">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-12">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Email</th>
+              <th>Name</th>
+              <th>Location</th>
+              <th>Admin</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="users-table-body">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    var token = localStorage.getItem("token");
+    if (!token) {
+      window.location.href = "/login.html";
+    }
+
+    function makeAdmin(userId) {
+      fetch("http://localhost:8000/api/v1/admin/users/" + userId + "/make-admin", {
+        method: "PUT",
+        headers: { "Authorization": "Bearer " + token }
+      }).then(function(response) {
+        if (response.ok) {
+          location.reload();
+        } else {
+          alert("Failed to make user admin.");
+        }
+      });
+    }
+
+    fetch("http://localhost:8000/api/v1/admin/users", {
+      headers: { "Authorization": "Bearer " + token }
+    }).then(function(response) {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error("Failed to fetch users.");
+      }
+    }).then(function(users) {
+      var tableBody = document.getElementById("users-table-body");
+      users.forEach(function(user) {
+        var row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${user.id}</td>
+          <td>${user.email}</td>
+          <td>${user.name || ''}</td>
+          <td>${user.location || ''}</td>
+          <td>${user.is_admin}</td>
+          <td>
+            ${!user.is_admin ? `<button class="btn btn-primary btn-sm" onclick="makeAdmin('${user.id}')">Make Admin</button>` : ''}
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }).catch(function(error) {
+      console.error(error);
+      alert(error.message);
+    });
+  });
+
+  function makeAdmin(userId) {
+    var token = localStorage.getItem("token");
+    fetch("http://localhost:8000/api/v1/admin/users/" + userId + "/make-admin", {
+      method: "PUT",
+      headers: { "Authorization": "Bearer " + token }
+    }).then(function(response) {
+      if (response.ok) {
+        location.reload();
+      } else {
+        alert("Failed to make user admin.");
+      }
+    });
+  }
+</script>
