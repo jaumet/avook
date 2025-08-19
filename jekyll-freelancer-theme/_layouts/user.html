@@ -119,8 +119,8 @@
         var errorMessage = "{{ site.data[page.lang].errors.GENERIC_ERROR }}";
         if (error.message) {
             var errorKey = error.message.toUpperCase().replace(/ /g, '_');
-            var translatedError = "{{ site.data[page.lang].errors | jsonify }}";
-            var errors = JSON.parse(translatedError.replace(/'/g, '"'));
+            var translatedError = '{{ site.data[page.lang].errors | jsonify }}';
+            var errors = JSON.parse(translatedError);
             if (errors[errorKey]) {
                 errorMessage = errors[errorKey];
             }
