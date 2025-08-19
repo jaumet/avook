@@ -1,0 +1,127 @@
+---
+layout: default
+---
+<section>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12 text-center">
+        <h2>Title Management</h2>
+        <hr class="star-primary">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2">
+        <h3>Create New Title</h3>
+        <form id="createTitleForm">
+          <div class="form-group">
+            <label>Title</label>
+            <input type="text" class="form-control" id="title" required>
+          </div>
+          <div class="form-group">
+            <label>Author</label>
+            <input type="text" class="form-control" id="author" required>
+          </div>
+          <div class="form-group">
+            <label>Language</label>
+            <input type="text" class="form-control" id="language" required>
+          </div>
+          <div class="form-group">
+            <label>Duration (seconds)</label>
+            <input type="number" class="form-control" id="duration_sec" required>
+          </div>
+          <div class="form-group">
+            <label>Retail Price</label>
+            <input type="number" class="form-control" id="price_retail" required>
+          </div>
+          <div class="form-group">
+            <label>Currency</label>
+            <input type="text" class="form-control" id="currency" required>
+          </div>
+          <div class="form-group">
+            <label>ABS Share Code</label>
+            <input type="text" class="form-control" id="abs_share_code">
+          </div>
+          <button type="submit" class="btn btn-primary">Create Title</button>
+        </form>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-12">
+        <h3>Existing Titles</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Author</th>
+              <th>Language</th>
+              <th>Active</th>
+            </tr>
+          </thead>
+          <tbody id="titles-table-body">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    var token = localStorage.getItem("token");
+    if (!token) {
+      window.location.href = "/login.html";
+    }
+
+    fetch("http://localhost:8000/api/v1/admin/titles", {
+      headers: { "Authorization": "Bearer " + token }
+    }).then(function(response) {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error("Failed to fetch titles.");
+      }
+    }).then(function(titles) {
+      var tableBody = document.getElementById("titles-table-body");
+      titles.forEach(function(title) {
+        var row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${title.id}</td>
+          <td>${title.title}</td>
+          <td>${title.author}</td>
+          <td>${title.language}</td>
+          <td>${title.active}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+    });
+
+    document.getElementById("createTitleForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+      var titleData = {
+        title: document.getElementById("title").value,
+        author: document.getElementById("author").value,
+        language: document.getElementById("language").value,
+        duration_sec: parseInt(document.getElementById("duration_sec").value),
+        price_retail: parseFloat(document.getElementById("price_retail").value),
+        currency: document.getElementById("currency").value,
+        abs_share_code: document.getElementById("abs_share_code").value,
+      };
+
+      fetch("http://localhost:8000/api/v1/admin/titles", {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + token,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(titleData)
+      }).then(function(response) {
+        if (response.ok) {
+          location.reload();
+        } else {
+          alert("Failed to create title.");
+        }
+      });
+    });
+  });
+</script>

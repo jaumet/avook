@@ -1,0 +1,96 @@
+---
+layout: default
+---
+<section>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12 text-center">
+        <h2>Card Management</h2>
+        <hr class="star-primary">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2">
+        <h3>Create Card Batch</h3>
+        <form id="createCardBatchForm">
+          <div class="form-group">
+            <label>Title ID</label>
+            <input type="number" class="form-control" id="title_id" required>
+          </div>
+          <div class="form-group">
+            <label>Quantity</label>
+            <input type="number" class="form-control" id="qty" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Create Batch</button>
+        </form>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-12">
+        <h3>Existing Cards</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>QR</th>
+              <th>Title ID</th>
+              <th>User State</th>
+              <th>Retail State</th>
+            </tr>
+          </thead>
+          <tbody id="cards-table-body">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    var token = localStorage.getItem("token");
+    if (!token) {
+      window.location.href = "/login.html";
+    }
+
+    fetch("http://localhost:8000/api/v1/admin/cards", {
+      headers: { "Authorization": "Bearer " + token }
+    }).then(function(response) {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error("Failed to fetch cards.");
+      }
+    }).then(function(cards) {
+      var tableBody = document.getElementById("cards-table-body");
+      cards.forEach(function(card) {
+        var row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${card.qr}</td>
+          <td>${card.title_id}</td>
+          <td>${card.user_state}</td>
+          <td>${card.retail_state}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+    });
+
+    document.getElementById("createCardBatchForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+      var titleId = document.getElementById("title_id").value;
+      var qty = document.getElementById("qty").value;
+
+      fetch("http://localhost:8000/api/v1/admin/titles/" + titleId + "/cards/batch?qty=" + qty, {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + token,
+        }
+      }).then(function(response) {
+        if (response.ok) {
+          location.reload();
+        } else {
+          alert("Failed to create card batch.");
+        }
+      });
+    });
+  });
+</script>
