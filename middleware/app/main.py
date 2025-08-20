@@ -15,7 +15,10 @@ app = FastAPI(title="Audiovook Middleware",
               version="0.1.0",
               lifespan=lifespan)
 
-origins = ["*"]
+origins = [
+    "http://localhost",
+    "http://localhost:4000",
+]
 
 app.add_middleware(
     CORSMiddleware,

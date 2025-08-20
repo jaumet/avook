@@ -334,3 +334,14 @@ def save_progress(
 
 
 __all__ = ["router"]
+
+import yaml
+
+@router.get("/translations/{lang}")
+def get_translations(lang: str):
+    try:
+        with open(f"../jekyll-freelancer-theme/_data/{lang}.yml", "r") as f:
+            translations = yaml.safe_load(f)
+            return translations.get("errors", {})
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Translations not found")

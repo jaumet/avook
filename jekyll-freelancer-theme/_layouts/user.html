@@ -116,15 +116,25 @@
       }
 
       function handleApiError(error) {
-        var errorMessage = "{{ site.data[page.lang].errors.GENERIC_ERROR }}";
-        if (error.message) {
-            var errorKey = error.message.toUpperCase().replace(/ /g, '_');
-            var translatedError = {{ site.data[page.lang].errors | json }};
-            if (translatedError[errorKey]) {
-                errorMessage = translatedError[errorKey];
+        var lang = window.location.pathname.split('/')[1] || 'ca';
+        fetch("http://localhost:8000/api/v1/translations/" + lang)
+          .then(function(response) {
+            if (response.ok) return response.json();
+            throw new Error("Failed to fetch translations.");
+          })
+          .then(function(translations) {
+            var errorMessage = translations.GENERIC_ERROR;
+            if (error.message) {
+                var errorKey = error.message.toUpperCase().replace(/ /g, '_');
+                if (translations[errorKey]) {
+                    errorMessage = translations[errorKey];
+                }
             }
-        }
-        alert(errorMessage);
+            alert(errorMessage);
+          })
+          .catch(function() {
+            alert("An error has occurred. Please try again.");
+          });
       }
 
       function claimBook(qr) {
