@@ -54,11 +54,14 @@
       event.preventDefault();
       var email = document.getElementById("email").value;
       var password = document.getElementById("password").value;
-      var data = new FormData();
+      var data = new URLSearchParams();
       data.append("username", email);
       data.append("password", password);
       fetch("http://localhost:8000/api/v1/login", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
         body: data
       }).then(function(response) {
         if (response.ok) {
