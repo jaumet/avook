@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from app.models import Title, User, Card, Store, Batch
 from app.db import get_session
 from app.auth import get_current_admin_user
-from uuid import uuid4
+from uuid import uuid4, UUID
 from fastapi.responses import StreamingResponse
 import io
 import csv
