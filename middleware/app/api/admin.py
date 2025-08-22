@@ -159,7 +159,7 @@ def read_users(db: Session = Depends(get_session), admin: User = Depends(get_cur
     return users
 
 @router.put("/users/{user_id}/make-admin", response_model=User)
-def make_admin(user_id: UUID, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def make_admin(user_id, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
