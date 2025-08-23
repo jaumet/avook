@@ -10,7 +10,27 @@ payload still explains the reason and starting position.
 
 from pydantic import BaseModel
 from typing import Optional
+from uuid import UUID
 
+
+class UserBase(BaseModel):
+    email: str
+    name: str
+    location: str
+
+class UserCreate(UserBase):
+    password: str
+
+class User(UserBase):
+    id: UUID
+    is_admin: bool
+
+    class Config:
+        orm_mode = True
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 
 class PlayAuthResponse(BaseModel):
     """Response for the play‑auth endpoint.

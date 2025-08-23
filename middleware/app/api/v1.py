@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from app.models import ListeningProgress, Claim, PlaySession, User, Card
 from app.auth import create_access_token, get_current_user, verify_password, get_password_hash
 from app.db import get_session, get_user_by_email, hash_password
-from app.schemas import PlayAuthResponse  # ⬅️ assegura’t que aquest import funcioni
+from app.schemas import PlayAuthResponse, UserCreate, User as UserSchema, Token
 
 
 router = APIRouter()
@@ -59,7 +59,7 @@ def _generate_signed_url(qr: str, user_id: str) -> str:
 def ping():
     return {"pong": True}
 
-@router.post("/login")
+@router.post("/login", response_model=Token)
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_session),
@@ -71,17 +71,23 @@ def login(
     token = create_access_token({"sub": str(user.id)})
     return {"access_token": token, "token_type": "bearer"}
 
-@router.post("/register")
-def register(email: str = Body(...), password: str = Body(...), name: str = Body(...), location: str = Body(...), db: Session = Depends(get_session)):
-    existing = db.exec(select(User).where(User.email == email)).first()
+@router.post("/register", response_model=UserSchema)
+def register(user: UserCreate, db: Session = Depends(get_session)):
+    existing = db.exec(select(User).where(User.email == user.email)).first()
     if existing:
         raise HTTPException(status_code=400, detail="Ja existeix un usuari amb aquest correu")
 
-    user = User(id=uuid4(), email=email, password_hash=hash_password(password), name=name, location=location)
-    db.add(user)
+    user_db = User(
+        id=uuid4(),
+        email=user.email,
+        password_hash=hash_password(user.password),
+        name=user.name,
+        location=user.location
+    )
+    db.add(user_db)
     db.commit()
-    db.refresh(user)
-    return {"id": user.id, "email": user.email, "name": user.name, "location": user.location}
+    db.refresh(user_db)
+    return user_db
 
 @router.get("/users/me")
 def read_users_me(current_user: User = Depends(get_current_user)):
