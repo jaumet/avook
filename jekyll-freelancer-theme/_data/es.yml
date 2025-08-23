@@ -44,6 +44,8 @@ register:
   submit_button: "Registrarse"
   success_message: "¡Te has registrado correctamente!"
   login_button: "Ir a Iniciar Sesión"
+  already_logged_in: "Ya has iniciado sesión. Para registrar un nuevo usuario, primero debes cerrar la sesión."
+  logout_button: "Cerrar Sesión"
 user:
   title: "Área de Usuario"
   owned_books: "Libros Propios"

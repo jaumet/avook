@@ -44,6 +44,8 @@ register:
   submit_button: "Register"
   success_message: "You have registered successfully!"
   login_button: "Go to Login"
+  already_logged_in: "You are already logged in. To register a new user, you must log out first."
+  logout_button: "Logout"
 user:
   title: "User Area"
   owned_books: "Owned Books"

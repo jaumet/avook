@@ -44,6 +44,8 @@ register:
   submit_button: "Registrar-se"
   success_message: "T'has registrat correctament!"
   login_button: "Anar a Iniciar Sessió"
+  already_logged_in: "Ja has iniciat sessió. Per registrar un nou usuari, primer has de tancar la sessió."
+  logout_button: "Tancar Sessió"
 user:
   title: "Àrea d'Usuari"
   owned_books: "Llibres Propis"

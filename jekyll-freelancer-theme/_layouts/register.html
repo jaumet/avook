@@ -82,6 +82,10 @@
               <a href="/{{ page.lang }}/login.html" class="btn btn-primary btn-lg">{{ site.data[page.lang].register.login_button }}</a>
             </div>
           </div>
+          <div id="alreadyLoggedIn" class="alert alert-warning" style="display: none;">
+            <p>{{ site.data[page.lang].register.already_logged_in }}</p>
+            <button id="logoutButton" class="btn btn-danger">{{ site.data[page.lang].register.logout_button }}</button>
+          </div>
         </div>
       </div>
     </div>
@@ -90,36 +94,51 @@
   {% include modals.html %}
   {% include js.html %}
   <script>
-    document.getElementById("registerForm").addEventListener("submit", function(event) {
-      event.preventDefault();
-      var name = document.getElementById("name").value;
-      var email = document.getElementById("email").value;
-      var password = document.getElementById("password").value;
-      var location = document.getElementById("location").value;
-      fetch("http://localhost:8000/api/v1/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          name: name,
-          email: email,
-          password: password,
-          location: location
-        })
-      }).then(function(response) {
-        if (response.ok) {
-          return response.json();
-        } else {
-          throw new Error("Registration failed.");
-        }
-      }).then(function(data) {
+    document.addEventListener("DOMContentLoaded", function() {
+      var token = localStorage.getItem("token");
+      var lang = window.location.pathname.split('/')[1];
+
+      if (token) {
         document.getElementById("registerForm").style.display = "none";
-        document.getElementById("successOverlay").style.display = "flex";
-      }).catch(function(error) {
-        console.error(error);
-        var success = document.getElementById("success");
-        success.innerHTML = "<div class='alert alert-danger'>Registration failed. Please try again.</div>";
+        document.getElementById("alreadyLoggedIn").style.display = "block";
+      }
+
+      document.getElementById("logoutButton").addEventListener("click", function() {
+        localStorage.removeItem("token");
+        window.location.href = "/" + lang + "/login.html";
+      });
+
+      document.getElementById("registerForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+        var name = document.getElementById("name").value;
+        var email = document.getElementById("email").value;
+        var password = document.getElementById("password").value;
+        var location = document.getElementById("location").value;
+        fetch("http://localhost:8000/api/v1/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            name: name,
+            email: email,
+            password: password,
+            location: location
+          })
+        }).then(function(response) {
+          if (response.ok) {
+            return response.json();
+          } else {
+            throw new Error("Registration failed.");
+          }
+        }).then(function(data) {
+          document.getElementById("registerForm").style.display = "none";
+          document.getElementById("successOverlay").style.display = "flex";
+        }).catch(function(error) {
+          console.error(error);
+          var success = document.getElementById("success");
+          success.innerHTML = "<div class='alert alert-danger'>Registration failed. Please try again.</div>";
+        });
       });
     });
   </script>
