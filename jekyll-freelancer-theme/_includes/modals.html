@@ -18,7 +18,7 @@
           <div class="modal-body">
             <h2 class="darkblue">{{ post.title }}</h2>
             <hr class="star-primary">
-            <img src="img/how-it-works/{{ post.img }}" class="img-responsive img-centered" alt="{{ post.alt }}">
+            <img src="{{ site.baseurl }}/img/how-it-works/{{ post.img }}" class="img-responsive img-centered" alt="{{ post.alt }}">
             {% if post.description %}
             <p class="darkblue">{{ post.description }}</p>
             {% endif %}
