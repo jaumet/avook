@@ -65,3 +65,23 @@ user:
   profile_name_label: "Nom:"
   profile_email_label: "Correu Electrònic:"
   profile_location_label: "Ubicació:"
+
+admin:
+  nav_link: "Admin"
+  title: "Àrea d'administració"
+  welcome: "Benvingut a l'àrea d'administració."
+  users_link: "Gestió d'usuaris"
+  titles_link: "Gestió de títols"
+  cards_link: "Gestió de targetes"
+  stores_link: "Gestió de botigues"
+  batches_link: "Gestió de lots"
+
+setup:
+  title: "Crear el primer superusuari"
+  description: "Com que és la primera vegada que s'executa l'aplicació, cal crear un superusuari per poder administrar el sistema."
+  name_label: "Nom"
+  email_label: "Correu electrònic"
+  password_label: "Contrasenya"
+  submit_button: "Crear superusuari"
+  success_message: "Superusuari creat correctament! Redirigint a l'inici de sessió..."
+  error_message_default: "No s'ha pogut crear el superusuari."

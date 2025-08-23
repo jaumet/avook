@@ -65,3 +65,23 @@ user:
   profile_name_label: "Nombre:"
   profile_email_label: "Correo Electrónico:"
   profile_location_label: "Ubicación:"
+
+admin:
+  nav_link: "Admin"
+  title: "Área de administración"
+  welcome: "Bienvenido al área de administración."
+  users_link: "Gestión de usuarios"
+  titles_link: "Gestión de títulos"
+  cards_link: "Gestión de tarjetas"
+  stores_link: "Gestión de tiendas"
+  batches_link: "Gestión de lotes"
+
+setup:
+  title: "Crear primer superusuario"
+  description: "Como es la primera vez que se ejecuta la aplicación, se debe crear un superusuario para administrar el sistema."
+  name_label: "Nombre"
+  email_label: "Correo electrónico"
+  password_label: "Contraseña"
+  submit_button: "Crear superusuario"
+  success_message: "¡Superusuario creado correctamente! Redirigiendo al inicio de sesión..."
+  error_message_default: "No se pudo crear el superusuario."
