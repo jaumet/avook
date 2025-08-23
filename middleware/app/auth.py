@@ -11,12 +11,10 @@ from sqlmodel import Session
 import os
 
 
-SECRET_KEY = os.getenv("SECRET_KEY")
-#SECRET_KEY = "canvia-aquesta-clau-per-una-segura"
+SECRET_KEY = "canvia-aquesta-clau"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-#oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/login")
 
 
@@ -24,7 +22,7 @@ def create_access_token(data: dict):
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({
-        "sub": str(data["sub"]),  # <- això és l’UUID com a string
+        "sub": str(data["sub"]),
         "exp": expire
     })
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
@@ -32,22 +30,25 @@ def create_access_token(data: dict):
 
 from uuid import UUID
 
-# app/auth.py
-
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_session)) -> User:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        user_id_str: str = payload.get("sub")
+        if user_id_str is None:
+            raise credentials_exception
+        user_id = UUID(user_id_str)
+    except (JWTError, ValueError):
+        raise credentials_exception
 
-    user = db.get(User, user_id)  # ← Retorna l'objecte complet
+    user = db.get(User, user_id)
     if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    return user  # 👈 NO return user.id!
+        raise credentials_exception
+    return user
 
 
 
