@@ -71,4 +71,38 @@
   <!-- Localització (codi de la llengua, per exemple, català) -->
   <meta property="og:locale" content="ca_ES" />
 
+  <script>
+    // Global setup script
+    (function() {
+        // 1. First-run setup check
+        if (window.location.pathname.indexOf('setup/create-superuser') === -1) {
+            fetch('http://localhost:8000/api/v1/admin/setup-status')
+                .then(function(res) { if (res.ok) return res.json(); })
+                .then(function(data) {
+                    if (data && data.superuser_exists === false) {
+                        window.location.href = '/setup/create-superuser.html';
+                    }
+                })
+                .catch(function(err) { console.error("Setup check failed", err); });
+        }
+
+        // 2. Admin nav link visibility
+        var token = localStorage.getItem('token');
+        if (token) {
+            fetch('http://localhost:8000/api/v1/admin/users/ping', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            })
+            .then(function(res) {
+                if (res.ok) {
+                    // We need to wait for the DOM to be ready to find the link
+                    document.addEventListener('DOMContentLoaded', function() {
+                        var adminLink = document.getElementById('admin-nav-link');
+                        if (adminLink) adminLink.style.display = 'block';
+                    });
+                }
+            })
+            .catch(function(err) { console.error("Admin check failed", err); });
+        }
+    })();
+  </script>
 </head>
