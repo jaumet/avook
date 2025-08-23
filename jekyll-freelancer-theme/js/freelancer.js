@@ -8,7 +8,7 @@
 $(function() {
     // Initial setup check
     if (window.location.pathname.indexOf('setup/create-superuser') === -1) {
-        fetch('/api/v1/admin/setup-status')
+        fetch('http://localhost:8000/api/v1/admin/setup-status')
             .then(function(response) {
                 if (response.ok) {
                     return response.json();
@@ -41,7 +41,7 @@ $(function() {
     // Admin link visibility check
     var token = localStorage.getItem('token');
     if (token) {
-        fetch('/api/v1/admin/users/ping', {
+        fetch('http://localhost:8000/api/v1/admin/users/ping', {
             headers: {
                 'Authorization': 'Bearer ' + token
             }

@@ -22,7 +22,7 @@
         return;
       }
 
-      fetch('/api/v1/admin/users/ping', {
+      fetch('http://localhost:8000/api/v1/admin/users/ping', {
         headers: {
           'Authorization': 'Bearer ' + token
         }
