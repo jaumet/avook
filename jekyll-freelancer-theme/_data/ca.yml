@@ -62,3 +62,6 @@ user:
   password_mismatch: "Les contrasenyes no coincideixen."
   profile_updated: "Perfil actualitzat correctament."
   update_failed: "No s'ha pogut actualitzar el perfil."
+  profile_name_label: "Nom:"
+  profile_email_label: "Correu Electrònic:"
+  profile_location_label: "Ubicació:"
