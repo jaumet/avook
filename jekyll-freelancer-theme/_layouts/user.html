@@ -16,8 +16,43 @@
         <div class="col-lg-12">
           <button id="logoutButton" class="btn btn-danger btn-lg">Logout</button>
           <a href="/admin" id="adminLink" class="btn btn-primary btn-lg" style="display: none;">Admin</a>
+          <button id="editProfileButton" class="btn btn-info btn-lg">{{ site.data[page.lang].user.edit_profile_button }}</button>
         </div>
       </div>
+
+      <div id="editProfileFormContainer" class="row" style="display: none; margin-top: 20px;">
+        <div class="col-lg-8 col-lg-offset-2">
+          <h3>{{ site.data[page.lang].user.edit_profile_title }}</h3>
+          <form id="editProfileForm">
+            <div class="form-group">
+              <label for="name">{{ site.data[page.lang].user.name_label }}</label>
+              <input type="text" class="form-control" id="name" placeholder="{{ site.data[page.lang].user.name_label }}">
+            </div>
+            <div class="form-group">
+              <label for="location">{{ site.data[page.lang].user.location_label }}</label>
+              <input type="text" class="form-control" id="location" placeholder="{{ site.data[page.lang].user.location_label }}">
+            </div>
+            <button type="submit" class="btn btn-success">{{ site.data[page.lang].user.save_changes_button }}</button>
+          </form>
+
+          <hr>
+
+          <h3>{{ site.data[page.lang].user.change_password_title }}</h3>
+          <form id="changePasswordForm">
+            <div class="form-group">
+              <label for="new_password">{{ site.data[page.lang].user.new_password_label }}</label>
+              <input type="password" class="form-control" id="new_password" placeholder="{{ site.data[page.lang].user.new_password_label }}">
+            </div>
+            <div class="form-group">
+              <label for="password_confirm">{{ site.data[page.lang].user.confirm_password_label }}</label>
+              <input type="password" class="form-control" id="password_confirm" placeholder="{{ site.data[page.lang].user.confirm_password_label }}">
+            </div>
+            <button type="submit" class="btn btn-success">{{ site.data[page.lang].user.save_changes_button }}</button>
+          </form>
+          <div id="edit-success"></div>
+        </div>
+      </div>
+
       <div id="qr-specific-content"></div>
       <div class="row">
         <div class="col-lg-12">
@@ -70,11 +105,75 @@
           }
         }).then(function(data) {
           currentUserEmail = data.email;
+          document.getElementById("name").value = data.name;
+          document.getElementById("location").value = data.location;
           if (data.is_admin) {
             document.getElementById("adminLink").style.display = "inline-block";
           }
         });
       }
+
+      document.getElementById("editProfileButton").addEventListener("click", function() {
+        var formContainer = document.getElementById("editProfileFormContainer");
+        formContainer.style.display = formContainer.style.display === "none" ? "block" : "none";
+      });
+
+      document.getElementById("editProfileForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+        var name = document.getElementById("name").value;
+        var location = document.getElementById("location").value;
+
+        fetch("http://localhost:8000/api/v1/users/me", {
+          method: "PUT",
+          headers: {
+            "Authorization": "Bearer " + token,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ name: name, location: location })
+        }).then(function(response) {
+          if (response.ok) {
+            return response.json();
+          } else {
+            throw new Error("{{ site.data[page.lang].user.update_failed }}");
+          }
+        }).then(function(data) {
+          document.getElementById("edit-success").innerHTML = "<div class='alert alert-success'>{{ site.data[page.lang].user.profile_updated }}</div>";
+        }).catch(function(error) {
+          document.getElementById("edit-success").innerHTML = "<div class='alert alert-danger'>" + error.message + "</div>";
+        });
+      });
+
+      document.getElementById("changePasswordForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+        var new_password = document.getElementById("new_password").value;
+        var password_confirm = document.getElementById("password_confirm").value;
+
+        if (new_password !== password_confirm) {
+          document.getElementById("edit-success").innerHTML = "<div class='alert alert-danger'>{{ site.data[page.lang].user.password_mismatch }}</div>";
+          return;
+        }
+
+        fetch("http://localhost:8000/api/v1/users/me", {
+          method: "PUT",
+          headers: {
+            "Authorization": "Bearer " + token,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ password: new_password, password_confirm: password_confirm })
+        }).then(function(response) {
+          if (response.ok) {
+            return response.json();
+          } else {
+            throw new Error("{{ site.data[page.lang].user.update_failed }}");
+          }
+        }).then(function(data) {
+          document.getElementById("edit-success").innerHTML = "<div class='alert alert-success'>{{ site.data[page.lang].user.profile_updated }}</div>";
+          document.getElementById("new_password").value = "";
+          document.getElementById("password_confirm").value = "";
+        }).catch(function(error) {
+          document.getElementById("edit-success").innerHTML = "<div class='alert alert-danger'>" + error.message + "</div>";
+        });
+      });
 
       function renderBook(qr, statusData) {
         var li = document.createElement("li");
