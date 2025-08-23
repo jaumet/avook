@@ -1,9 +1,41 @@
-version: "3.9"
+name: dev-local-working
 
 services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: avook
+      POSTGRES_USER: avook
+      POSTGRES_PASSWORD: avookpass
+    volumes:
+      - avook_pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U avook -d avook"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  middleware:
+    build: ./middleware
+    working_dir: /app
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/app
+    volumes:
+      - ./middleware:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
   jekyll:
     image: jekyll/jekyll:4.2.2
-    command: jekyll serve --livereload --watch --drafts
+    command: jekyll serve --livereload --watch --drafts --host 0.0.0.0
     ports:
       - "4000:4000"
     volumes:
@@ -11,6 +43,7 @@ services:
 
   audiobookshelf:
     image: ghcr.io/advplyr/audiobookshelf:latest
+    restart: unless-stopped
     ports:
       - "13378:80"
     volumes:
@@ -18,29 +51,7 @@ services:
       - ./audiobookshelf/config:/config
       - ./audiobookshelf/metadata:/metadata
 
-  db:
-    image: postgres:16
-    restart: unless-stopped
-    environment:
-      - POSTGRES_USER=avook
-      - POSTGRES_PASSWORD=avookpass
-      - POSTGRES_DB=avook
-    volumes:
-      - dbdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-
-  middleware:
-    build: ./middleware
-    env_file:
-      - .env
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./middleware:/code    # mounting
-    environment:
-      - PYTHONPATH=/code  # app + tests per hot‑reload i pytest
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-
 volumes:
-  dbdata:
+  avook_pgdata:
+    external: true
+    name: avook_pgdata
