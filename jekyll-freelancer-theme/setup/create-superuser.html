@@ -55,7 +55,7 @@ document.getElementById("createSuperuserForm").addEventListener("submit", functi
     location: "Unknown" // Default location
   };
 
-  fetch("/api/v1/admin/create-first-superuser", {
+  fetch("http://localhost:8000/api/v1/admin/create-first-superuser", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
