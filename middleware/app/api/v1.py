@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from app.models import ListeningProgress, Claim, PlaySession, User, Card
 from app.auth import create_access_token, get_current_user, verify_password, get_password_hash
 from app.db import get_session, get_user_by_email, hash_password
-from app.schemas import PlayAuthResponse, UserCreate, User as UserSchema, Token
+from app.schemas import PlayAuthResponse, UserCreate, User as UserSchema, Token, UserUpdate
 
 
 router = APIRouter()
@@ -89,8 +89,30 @@ def register(user: UserCreate, db: Session = Depends(get_session)):
     db.refresh(user_db)
     return user_db
 
-@router.get("/users/me")
+@router.get("/users/me", response_model=UserSchema)
 def read_users_me(current_user: User = Depends(get_current_user)):
+    return current_user
+
+@router.put("/users/me", response_model=UserSchema)
+def update_user_me(
+    user_update: UserUpdate,
+    db: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    if user_update.password:
+        if user_update.password != user_update.password_confirm:
+            raise HTTPException(status_code=400, detail="Les contrasenyes no coincideixen")
+        current_user.password_hash = hash_password(user_update.password)
+
+    if user_update.name:
+        current_user.name = user_update.name
+
+    if user_update.location:
+        current_user.location = user_update.location
+
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
     return current_user
 
 @router.post("/claim/{qr}")

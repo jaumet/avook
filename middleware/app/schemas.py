@@ -28,6 +28,12 @@ class User(UserBase):
     class Config:
         from_attributes = True
 
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    location: Optional[str] = None
+    password: Optional[str] = None
+    password_confirm: Optional[str] = None
+
 class Token(BaseModel):
     access_token: str
     token_type: str
