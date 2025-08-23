@@ -1,0 +1,18 @@
+Opció 1: Fer un tag (ideal per marcar versions estables)
+
+Un tag serveix per congelar un estat concret del codi, com si fos una “foto” del repositori.
+
+git add .
+git commit -m "Finalitzar versió 1.0"
+git tag -a v1.0 -m "Versió estable 1.0"
+git push origin main
+git push origin v1.0
+
+    Això et deixa guardada la versió v1.0 per sempre.
+
+    Després pots seguir desenvolupant sobre main o una altra branca.
+
+    Per recuperar-la més tard:
+
+git checkout v1.0
+
