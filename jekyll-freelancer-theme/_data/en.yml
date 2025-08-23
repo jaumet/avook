@@ -65,3 +65,23 @@ user:
   profile_name_label: "Name:"
   profile_email_label: "Email:"
   profile_location_label: "Location:"
+
+admin:
+  nav_link: "Admin"
+  title: "Admin Area"
+  welcome: "Welcome to the admin area."
+  users_link: "User Management"
+  titles_link: "Title Management"
+  cards_link: "Card Management"
+  stores_link: "Store Management"
+  batches_link: "Batch Management"
+
+setup:
+  title: "Create First Superuser"
+  description: "As this is the first time running the application, a superuser must be created to manage the system."
+  name_label: "Name"
+  email_label: "Email"
+  password_label: "Password"
+  submit_button: "Create Superuser"
+  success_message: "Superuser created successfully! Redirecting to login..."
+  error_message_default: "Failed to create superuser."

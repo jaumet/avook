@@ -1,0 +1,87 @@
+---
+layout: page
+lang: ca
+---
+<div class="row">
+  <div class="col-lg-12 text-center">
+    <h2>{{ site.data[page.lang].setup.title }}</h2>
+    <hr class="star-primary">
+    <p>{{ site.data[page.lang].setup.description }}</p>
+  </div>
+</div>
+<div class="row">
+  <div class="col-lg-8 col-lg-offset-2">
+    <form name="createSuperuserForm" id="createSuperuserForm" novalidate>
+      <div class="row control-group">
+        <div class="form-group col-xs-12 floating-label-form-group controls">
+          <label>{{ site.data[page.lang].setup.name_label }}</label>
+          <input type="text" class="form-control" placeholder="{{ site.data[page.lang].setup.name_label }}" id="name" required>
+        </div>
+      </div>
+      <div class="row control-group">
+        <div class="form-group col-xs-12 floating-label-form-group controls">
+          <label>{{ site.data[page.lang].setup.email_label }}</label>
+          <input type="email" class="form-control" placeholder="{{ site.data[page.lang].setup.email_label }}" id="email" required>
+        </div>
+      </div>
+      <div class="row control-group">
+        <div class="form-group col-xs-12 floating-label-form-group controls">
+          <label>{{ site.data[page.lang].setup.password_label }}</label>
+          <input type="password" class="form-control" placeholder="{{ site.data[page.lang].setup.password_label }}" id="password" required>
+        </div>
+      </div>
+      <br>
+      <div id="success"></div>
+      <div class="row">
+        <div class="form-group col-xs-12">
+          <button type="submit" class="btn btn-success btn-lg">{{ site.data[page.lang].setup.submit_button }}</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.getElementById("createSuperuserForm").addEventListener("submit", function(event) {
+  event.preventDefault();
+  var name = document.getElementById("name").value;
+  var email = document.getElementById("email").value;
+  var password = document.getElementById("password").value;
+
+  var data = {
+    name: name,
+    email: email,
+    password: password,
+    location: "Unknown" // Default location
+  };
+
+  fetch("/api/v1/admin/create-first-superuser", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(data)
+  }).then(function(response) {
+    if (response.ok) {
+      return response.json();
+    } else {
+      return response.json().then(function(errorData) {
+        var defaultError = '{{ site.data[page.lang].setup.error_message_default }}';
+        throw new Error(errorData.detail || defaultError);
+      });
+    }
+  }).then(function(data) {
+    var success = document.getElementById("success");
+    var successMessage = '{{ site.data[page.lang].setup.success_message }}';
+    success.innerHTML = "<div class='alert alert-success'>" + successMessage + "</div>";
+    setTimeout(function() {
+      var lang = '{{ page.lang | default: "ca" }}';
+      window.location.href = "/" + lang + "/login.html";
+    }, 2000);
+  }).catch(function(error) {
+    console.error(error);
+    var success = document.getElementById("success");
+    success.innerHTML = "<div class='alert alert-danger'>" + error.message + "</div>";
+  });
+});
+</script>
