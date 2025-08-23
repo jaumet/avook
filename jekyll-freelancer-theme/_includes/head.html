@@ -27,7 +27,7 @@
   document.addEventListener("DOMContentLoaded", function () {
     // Check if a language preference is already set in the URL
     let currentPath = window.location.pathname;
-    let languageSet = currentPath.startsWith("/ca") || currentPath.startsWith("/es") || currentPath.startsWith("/en");
+    let languageSet = currentPath.startsWith("/ca") || currentPath.startsWith("/es") || currentPath.startsWith("/en") || currentPath.startsWith("/setup");
 
     if (!languageSet) {
       // Detect browser language
