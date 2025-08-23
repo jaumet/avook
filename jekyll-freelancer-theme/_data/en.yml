@@ -62,3 +62,6 @@ user:
   password_mismatch: "Passwords do not match."
   profile_updated: "Profile updated successfully."
   update_failed: "Failed to update profile."
+  profile_name_label: "Name:"
+  profile_email_label: "Email:"
+  profile_location_label: "Location:"

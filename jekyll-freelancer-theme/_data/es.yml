@@ -62,3 +62,6 @@ user:
   password_mismatch: "Las contraseñas no coinciden."
   profile_updated: "Perfil actualizado correctamente."
   update_failed: "No se pudo actualizar el perfil."
+  profile_name_label: "Nombre:"
+  profile_email_label: "Correo Electrónico:"
+  profile_location_label: "Ubicación:"
