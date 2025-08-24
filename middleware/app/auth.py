@@ -10,10 +10,12 @@ from app.models import User
 from sqlmodel import Session
 import os
 
-
-SECRET_KEY = os.getenv("SECRET_KEY", "canvia-aquesta-clau")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
+
+def get_secret_key() -> str:
+    """Gets the secret key from environment variables with a fallback."""
+    return os.getenv("SECRET_KEY", "canvia-aquesta-clau")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/login")
 
@@ -25,7 +27,7 @@ def create_access_token(data: dict):
         "sub": str(data["sub"]),
         "exp": expire
     })
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(to_encode, get_secret_key(), algorithm=ALGORITHM)
 
 
 from uuid import UUID
@@ -37,7 +39,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, get_secret_key(), algorithms=[ALGORITHM])
         user_id_str: str = payload.get("sub")
         if user_id_str is None:
             raise credentials_exception
