@@ -1,35 +1,35 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from app.models import Title, User, Card, Store, Batch
-from app.schemas import UserCreate
 from app.db import get_session
-from app.auth import get_current_admin_user
+from app.auth import get_current_config_superuser
 from uuid import uuid4, UUID
 from fastapi.responses import StreamingResponse
 import io
 import csv
 
 router = APIRouter(
-    tags=["Admin"]
+    tags=["Admin"],
+    dependencies=[Depends(get_current_config_superuser)]
 )
 
 @router.get("/")
-def admin_root(admin: User = Depends(get_current_admin_user)):
+def admin_root():
     return {"status": "Admin section"}
 
 @router.get("/ping")
-def admin_ping(admin: User = Depends(get_current_admin_user)):
+def admin_ping():
     return {"ok": True}
 
 @router.post("/titles", response_model=Title)
-def create_title(title: Title, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def create_title(title: Title, db: Session = Depends(get_session)):
     db.add(title)
     db.commit()
     db.refresh(title)
     return title
 
 @router.get("/titles", response_model=list[Title])
-def read_titles(search: str = "", active: bool = True, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def read_titles(search: str = "", active: bool = True, db: Session = Depends(get_session)):
     query = select(Title).where(Title.active == active)
     if search:
         query = query.where(Title.title.contains(search))
@@ -37,14 +37,14 @@ def read_titles(search: str = "", active: bool = True, db: Session = Depends(get
     return titles
 
 @router.get("/titles/{title_id}", response_model=Title)
-def read_title(title_id: int, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def read_title(title_id: int, db: Session = Depends(get_session)):
     title = db.get(Title, title_id)
     if not title:
         raise HTTPException(status_code=404, detail="Title not found")
     return title
 
 @router.put("/titles/{title_id}", response_model=Title)
-def update_title(title_id: int, title: Title, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def update_title(title_id: int, title: Title, db: Session = Depends(get_session)):
     db_title = db.get(Title, title_id)
     if not db_title:
         raise HTTPException(status_code=404, detail="Title not found")
@@ -57,7 +57,7 @@ def update_title(title_id: int, title: Title, db: Session = Depends(get_session)
     return db_title
 
 @router.post("/titles/{title_id}/cards/batch", response_model=list[Card])
-def create_cards_batch(title_id: int, qty: int, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def create_cards_batch(title_id: int, qty: int, db: Session = Depends(get_session)):
     title = db.get(Title, title_id)
     if not title:
         raise HTTPException(status_code=404, detail="Title not found")
@@ -75,7 +75,7 @@ def create_cards_batch(title_id: int, qty: int, db: Session = Depends(get_sessio
     return cards
 
 @router.get("/cards", response_model=list[Card])
-def read_cards(title: int = None, store: int = None, user_state: int = None, retail_state: str = None, q: str = None, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def read_cards(title: int = None, store: int = None, user_state: int = None, retail_state: str = None, q: str = None, db: Session = Depends(get_session)):
     query = select(Card)
     if title:
         query = query.where(Card.title_id == title)
@@ -92,7 +92,7 @@ def read_cards(title: int = None, store: int = None, user_state: int = None, ret
     return cards
 
 @router.put("/cards/{qr}", response_model=Card)
-def update_card(qr: str, card: Card, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def update_card(qr: str, card: Card, db: Session = Depends(get_session)):
     db_card = db.get(Card, qr)
     if not db_card:
         raise HTTPException(status_code=404, detail="Card not found")
@@ -107,26 +107,26 @@ def update_card(qr: str, card: Card, db: Session = Depends(get_session), admin: 
     return db_card
 
 @router.post("/stores", response_model=Store)
-def create_store(store: Store, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def create_store(store: Store, db: Session = Depends(get_session)):
     db.add(store)
     db.commit()
     db.refresh(store)
     return store
 
 @router.get("/stores", response_model=list[Store])
-def read_stores(db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def read_stores(db: Session = Depends(get_session)):
     stores = db.exec(select(Store)).all()
     return stores
 
 @router.get("/stores/{store_id}", response_model=Store)
-def read_store(store_id: int, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def read_store(store_id: int, db: Session = Depends(get_session)):
     store = db.get(Store, store_id)
     if not store:
         raise HTTPException(status_code=404, detail="Store not found")
     return store
 
 @router.put("/stores/{store_id}", response_model=Store)
-def update_store(store_id: int, store: Store, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def update_store(store_id: int, store: Store, db: Session = Depends(get_session)):
     db_store = db.get(Store, store_id)
     if not db_store:
         raise HTTPException(status_code=404, detail="Store not found")
@@ -141,7 +141,7 @@ def update_store(store_id: int, store: Store, db: Session = Depends(get_session)
     return db_store
 
 @router.delete("/stores/{store_id}")
-def delete_store(store_id: int, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def delete_store(store_id: int, db: Session = Depends(get_session)):
     store = db.get(Store, store_id)
     if not store:
         raise HTTPException(status_code=404, detail="Store not found")
@@ -150,17 +150,17 @@ def delete_store(store_id: int, db: Session = Depends(get_session), admin: User 
     return {"ok": True}
 
 @router.get("/batches", response_model=list[Batch])
-def read_batches(db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def read_batches(db: Session = Depends(get_session)):
     batches = db.exec(select(Batch)).all()
     return batches
 
 @router.get("/users", response_model=list[User])
-def read_users(db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def read_users(db: Session = Depends(get_session)):
     users = db.exec(select(User)).all()
     return users
 
 @router.put("/users/{user_id}/make-admin", response_model=User)
-def make_admin(user_id, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def make_admin(user_id, db: Session = Depends(get_session)):
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -172,7 +172,7 @@ def make_admin(user_id, db: Session = Depends(get_session), admin: User = Depend
     return user
 
 @router.get("/titles/{title_id}/cards/export.csv")
-def export_cards_csv(title_id: int, batch: int = None, db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
+def export_cards_csv(title_id: int, batch: int = None, db: Session = Depends(get_session)):
     query = select(Card).where(Card.title_id == title_id)
     if batch:
         query = query.where(Card.batch_id == batch)

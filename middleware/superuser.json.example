@@ -1,0 +1,4 @@
+{
+  "email": "your_superuser_email@example.com",
+  "password_hash": "a_secure_bcrypt_hash_will_go_here"
+}
