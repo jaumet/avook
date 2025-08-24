@@ -69,3 +69,18 @@ def get_current_admin_user(current_user: User = Depends(get_current_user)):
     if not current_user.is_admin:
         raise HTTPException(status_code=403, detail="The user doesn't have enough privileges")
     return current_user
+
+def get_current_config_superuser(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate superuser credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, get_secret_key(), algorithms=[ALGORITHM])
+        scope = payload.get("scope")
+        if scope != "superuser":
+            raise credentials_exception
+    except (JWTError, ValueError):
+        raise credentials_exception
+    return payload

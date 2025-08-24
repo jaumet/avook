@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+{% include head.html %}
+<body id="page-top" class="index">
+  {% include nav.html %}
+  <section>
+    <div class="container">
+      {{ content }}
+    </div>
+  </section>
+  {% include footer.html %}
+  {% include modals.html %}
+  {% include js.html %}
+  <script>
+    (function() {
+      var token = localStorage.getItem('su_token');
+      var loginUrl = '/_su/su.html';
+
+      if (!token) {
+        window.location.href = loginUrl;
+        return;
+      }
+
+      fetch('http://localhost:8000/api/v1/su/ping', {
+        headers: {
+          'Authorization': 'Bearer ' + token
+        }
+      })
+      .then(function(response) {
+        if (!response.ok) {
+          // Any error (401, 403, 500) means no access
+          localStorage.removeItem('su_token'); // Clean up invalid token
+          window.location.href = loginUrl;
+        }
+        // If response is ok, do nothing and let the page render.
+      })
+      .catch(function(error) {
+        console.error('Network error while verifying superuser session:', error);
+        window.location.href = loginUrl;
+      });
+    })();
+  </script>
+</body>
+</html>

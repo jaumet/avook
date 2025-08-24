@@ -48,7 +48,28 @@
       window.location.replace(langRedirect);
     }
   });
-</script>
+  </script>
+
+  <script>
+    // Superuser Admin link visibility
+    (function() {
+        var su_token = localStorage.getItem('su_token');
+        if (su_token) {
+            fetch('http://localhost:8000/api/v1/su/ping', {
+                headers: { 'Authorization': 'Bearer ' + su_token }
+            })
+            .then(function(res) {
+                if (res.ok) {
+                    document.addEventListener('DOMContentLoaded', function() {
+                        var adminLink = document.getElementById('admin-nav-link');
+                        if (adminLink) adminLink.style.display = 'block';
+                    });
+                }
+            })
+            .catch(function(err) { console.error("Superuser ping failed", err); });
+        }
+    })();
+  </script>
 
   <!-- Títol de la pàgina -->
   <meta property="og:title" content="{{ site.og[current_lang].title }}" />
