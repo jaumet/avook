@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from app.models import Title, User, Card, Store, Batch
 from app.schemas import UserCreate
 from app.db import get_session
-from app.auth import get_current_admin_user, get_current_superuser
+from app.auth import get_current_admin_user
 from uuid import uuid4, UUID
 from fastapi.responses import StreamingResponse
 import io
@@ -154,40 +154,8 @@ def read_batches(db: Session = Depends(get_session), admin: User = Depends(get_c
     batches = db.exec(select(Batch)).all()
     return batches
 
-@router.get("/setup-status")
-def setup_status(db: Session = Depends(get_session)):
-    superuser_exists = db.exec(select(User).where(User.is_superuser == True)).first() is not None
-    return {"superuser_exists": superuser_exists}
-
-@router.post("/create-first-superuser", response_model=User)
-def create_first_superuser(user: UserCreate, db: Session = Depends(get_session)):
-    superuser_exists = db.exec(select(User).where(User.is_superuser == True)).first() is not None
-    if superuser_exists:
-        raise HTTPException(status_code=400, detail="A superuser already exists.")
-
-    existing_user = db.exec(select(User).where(User.email == user.email)).first()
-    if existing_user:
-        raise HTTPException(status_code=400, detail="User with this email already exists.")
-
-    from app.auth import get_password_hash
-    user_db = User(
-        email=user.email,
-        password_hash=get_password_hash(user.password),
-        name=user.name,
-        is_superuser=True,
-        is_admin=True, # Superusers should also be admins
-    )
-    db.add(user_db)
-    db.commit()
-    db.refresh(user_db)
-    return user_db
-
-@router.get("/users/ping")
-def ping_superuser(current_user: User = Depends(get_current_superuser)):
-    return {"status": "ok", "message": "Welcome superuser!"}
-
 @router.get("/users", response_model=list[User])
-def read_users(db: Session = Depends(get_session), admin: User = Depends(get_current_superuser)):
+def read_users(db: Session = Depends(get_session), admin: User = Depends(get_current_admin_user)):
     users = db.exec(select(User)).all()
     return users
 

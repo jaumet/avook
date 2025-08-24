@@ -8,4 +8,3 @@ class User(SQLModel, table=True):
     name: str | None = Field(default=None)
     location: str | None = Field(default=None)
     is_admin: bool = Field(default=False)
-    is_superuser: bool = Field(default=False)
