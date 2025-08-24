@@ -31,6 +31,7 @@ def create_access_token(data: dict):
 from uuid import UUID
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_session)) -> User:
+    print(f"DEBUG: Received token: {token}")
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -38,6 +39,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        print(f"DEBUG: Decoded payload: {payload}")
         user_id_str: str = payload.get("sub")
         if user_id_str is None:
             raise credentials_exception
