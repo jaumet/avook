@@ -14,7 +14,7 @@
   <script>
     (function() {
       var token = localStorage.getItem('su_token');
-      var loginUrl = '/_su/su.html';
+      var loginUrl = '/su/su.html';
 
       if (!token) {
         window.location.href = loginUrl;
@@ -28,11 +28,9 @@
       })
       .then(function(response) {
         if (!response.ok) {
-          // Any error (401, 403, 500) means no access
-          localStorage.removeItem('su_token'); // Clean up invalid token
+          localStorage.removeItem('su_token');
           window.location.href = loginUrl;
         }
-        // If response is ok, do nothing and let the page render.
       })
       .catch(function(error) {
         console.error('Network error while verifying superuser session:', error);

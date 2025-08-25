@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Superuser Login</title>
+    <link rel="stylesheet" href="{{ site.baseurl }}/style.css">
+</head>
+<body>
+    <section>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <h2>Superuser Login</h2>
+                    <hr class="star-primary">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2">
+                    <form id="suLoginForm">
+                        <div class="row control-group">
+                            <div class="form-group col-xs-12 floating-label-form-group controls">
+                                <label>Email</label>
+                                <input type="email" class="form-control" placeholder="Email" id="email" required>
+                            </div>
+                        </div>
+                        <div class="row control-group">
+                            <div class="form-group col-xs-12 floating-label-form-group controls">
+                                <label>Password</label>
+                                <input type="password" class="form-control" placeholder="Password" id="password" required>
+                            </div>
+                        </div>
+                        <br>
+                        <div id="success"></div>
+                        <div class="row">
+                            <div class="form-group col-xs-12">
+                                <button type="submit" class="btn btn-success btn-lg">Login</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        document.getElementById("suLoginForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            var email = document.getElementById("email").value;
+            var password = document.getElementById("password").value;
+            var data = new URLSearchParams();
+            data.append("username", email);
+            data.append("password", password);
+
+            fetch("http://localhost:8000/api/v1/su/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: data
+            }).then(function(response) {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error("Superuser login failed.");
+                }
+            }).then(function(data) {
+                // Store the superuser token separately
+                localStorage.setItem("su_token", data.access_token);
+                window.location.href = "/admin/";
+            }).catch(function(error) {
+                console.error(error);
+                var success = document.getElementById("success");
+                success.innerHTML = "<div class='alert alert-danger'>Login failed. Please check your credentials.</div>";
+            });
+        });
+    </script>
+</body>
+</html>
