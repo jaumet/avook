@@ -12,9 +12,9 @@
   <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ site.baseurl }}/feed.xml">
 
     <!-- Define the favicon -->
-  <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
+  <link rel="icon" type="image/x-icon" href="{{ site.baseurl }}/img/favicon.ico">
   <!-- Optionally, include the shortcut icon for older browsers -->
-  <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon">
+  <link rel="shortcut icon" href="{{ site.baseurl }}/img/favicon.ico" type="image/x-icon">
 
   <!-- ✅ Corrected CSS Paths -->
   <link rel="stylesheet" href="{{ site.baseurl }}/style.css">
@@ -23,6 +23,7 @@
   <!-- ✅ Corrected Fonts -->
   <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
   <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" type="text/css">
+
   <script>
   document.addEventListener("DOMContentLoaded", function () {
     // Check if a language preference is already set in the URL
@@ -51,22 +52,44 @@
   </script>
 
   <script>
-    // Superuser Admin link visibility
+    // Consolidated Superuser Authentication Script
     (function() {
         var su_token = localStorage.getItem('su_token');
+        var isAdminPage = window.location.pathname.startsWith('/admin');
+        var loginUrl = '/su/su.html';
+
         if (su_token) {
             fetch('http://localhost:8000/api/v1/su/ping', {
                 headers: { 'Authorization': 'Bearer ' + su_token }
             })
             .then(function(res) {
                 if (res.ok) {
+                    // Token is valid, show admin link
                     document.addEventListener('DOMContentLoaded', function() {
                         var adminLink = document.getElementById('admin-nav-link');
                         if (adminLink) adminLink.style.display = 'block';
                     });
+                } else {
+                    // Token is invalid, remove it
+                    localStorage.removeItem('su_token');
+                    // If we are on an admin page, redirect to login
+                    if (isAdminPage) {
+                        window.location.href = loginUrl;
+                    }
                 }
             })
-            .catch(function(err) { console.error("Superuser ping failed", err); });
+            .catch(function(err) {
+                console.error("Superuser ping failed:", err);
+                // If ping fails due to network error and we are on an admin page, redirect
+                if (isAdminPage) {
+                    window.location.href = loginUrl;
+                }
+            });
+        } else {
+            // No token exists. If we are trying to access an admin page, redirect.
+            if (isAdminPage) {
+                window.location.href = loginUrl;
+            }
         }
     })();
   </script>
@@ -92,24 +115,4 @@
   <!-- Localització (codi de la llengua, per exemple, català) -->
   <meta property="og:locale" content="ca_ES" />
 
-  <script>
-    // Superuser Admin link visibility
-    (function() {
-        var su_token = localStorage.getItem('su_token');
-        if (su_token) {
-            fetch('http://localhost:8000/api/v1/su/ping', {
-                headers: { 'Authorization': 'Bearer ' + su_token }
-            })
-            .then(function(res) {
-                if (res.ok) {
-                    document.addEventListener('DOMContentLoaded', function() {
-                        var adminLink = document.getElementById('admin-nav-link');
-                        if (adminLink) adminLink.style.display = 'block';
-                    });
-                }
-            })
-            .catch(function(err) { console.error("Superuser ping failed", err); });
-        }
-    })();
-  </script>
 </head>
