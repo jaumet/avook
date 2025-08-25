@@ -75,6 +75,15 @@ admin:
   cards_link: "Card Management"
   stores_link: "Store Management"
   batches_link: "Batch Management"
+  users_title: "User Management"
+  col_email: "Email"
+  col_is_admin: "Is Admin"
+  col_is_superuser: "Is Superuser"
+  col_actions: "Actions"
+  loading_users: "Loading users..."
+  no_users_found: "No users found."
+  edit_button: "Edit"
+  delete_button: "Delete"
 
 setup:
   title: "Create First Superuser"

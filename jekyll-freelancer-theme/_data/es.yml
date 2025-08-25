@@ -75,6 +75,15 @@ admin:
   cards_link: "Gestión de tarjetas"
   stores_link: "Gestión de tiendas"
   batches_link: "Gestión de lotes"
+  users_title: "Gestión de usuarios"
+  col_email: "Correo electrónico"
+  col_is_admin: "Es Admin"
+  col_is_superuser: "Es Superusuario"
+  col_actions: "Acciones"
+  loading_users: "Cargando usuarios..."
+  no_users_found: "No se encontraron usuarios."
+  edit_button: "Editar"
+  delete_button: "Eliminar"
 
 setup:
   title: "Crear primer superusuario"
