@@ -156,7 +156,9 @@ def read_batches(db: Session = Depends(get_session)):
 
 @router.get("/users", response_model=list[User])
 def read_users(db: Session = Depends(get_session)):
+    print("DEBUG: Entering read_users endpoint")
     users = db.exec(select(User)).all()
+    print("DEBUG: Exiting read_users endpoint")
     return users
 
 @router.put("/users/{user_id}/make-admin", response_model=User)
