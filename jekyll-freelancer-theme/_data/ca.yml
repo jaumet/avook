@@ -75,6 +75,15 @@ admin:
   cards_link: "Gestió de targetes"
   stores_link: "Gestió de botigues"
   batches_link: "Gestió de lots"
+  users_title: "Gestió d'usuaris"
+  col_email: "Correu electrònic"
+  col_is_admin: "És Admin"
+  col_is_superuser: "És Superusuari"
+  col_actions: "Accions"
+  loading_users: "Carregant usuaris..."
+  no_users_found: "No s'han trobat usuaris."
+  edit_button: "Edita"
+  delete_button: "Suprimeix"
 
 setup:
   title: "Crear el primer superusuari"
