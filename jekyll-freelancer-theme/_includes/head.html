@@ -52,11 +52,11 @@
   </script>
 
   <script>
-    // Consolidated Superuser Authentication Script
+    // Consolidated Superuser & Page Protection Script
     (function() {
         var su_token = localStorage.getItem('su_token');
         var isAdminPage = window.location.pathname.startsWith('/admin');
-        var loginUrl = '/su/su.html';
+        var loginUrl = '{{ site.baseurl }}/su/su.html';
 
         if (su_token) {
             fetch('http://localhost:8000/api/v1/su/ping', {
@@ -64,15 +64,33 @@
             })
             .then(function(res) {
                 if (res.ok) {
-                    // Token is valid, show admin link
+                    // Superuser is logged in and token is valid.
                     document.addEventListener('DOMContentLoaded', function() {
+                        // Show admin-related links
                         var adminLink = document.getElementById('admin-nav-link');
                         if (adminLink) adminLink.style.display = 'block';
+
+                        var suLogoutLink = document.getElementById('su-logout-link');
+                        if (suLogoutLink) {
+                            suLogoutLink.style.display = 'block';
+                            suLogoutLink.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                localStorage.removeItem('su_token');
+                                window.location.href = '{{ site.baseurl }}/';
+                            });
+                        }
+
+                        // Hide regular user links
+                        var loginLink = document.getElementById('login-link');
+                        if (loginLink) loginLink.style.display = 'none';
+                        var registerLink = document.getElementById('register-link');
+                        if (registerLink) registerLink.style.display = 'none';
+                        var userLink = document.getElementById('user-link');
+                        if (userLink) userLink.style.display = 'none';
                     });
                 } else {
                     // Token is invalid, remove it
                     localStorage.removeItem('su_token');
-                    // If we are on an admin page, redirect to login
                     if (isAdminPage) {
                         window.location.href = loginUrl;
                     }
@@ -80,13 +98,12 @@
             })
             .catch(function(err) {
                 console.error("Superuser ping failed:", err);
-                // If ping fails due to network error and we are on an admin page, redirect
                 if (isAdminPage) {
                     window.location.href = loginUrl;
                 }
             });
         } else {
-            // No token exists. If we are trying to access an admin page, redirect.
+            // No superuser token exists.
             if (isAdminPage) {
                 window.location.href = loginUrl;
             }
