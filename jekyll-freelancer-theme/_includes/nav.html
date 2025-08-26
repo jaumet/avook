@@ -24,10 +24,11 @@
         <li><a href="/{{ current_lang }}/#portfolio">{{ site.nav[current_lang].how }}</a></li>
         <li><a href="/{{ current_lang }}/#about">{{ site.nav[current_lang].about }}</a></li>
         <li><a href="/{{ current_lang }}/#contact">{{ site.nav[current_lang].contact }}</a></li>
-        <li><a href="/{{ current_lang }}/login.html">{{ site.nav[current_lang].login }}</a></li>
-        <li><a href="/{{ current_lang }}/register.html">{{ site.nav[current_lang].register }}</a></li>
-        <li><a href="/{{ current_lang }}/user.html">{{ site.nav[current_lang].user }}</a></li>
+        <li id="login-link"><a href="/{{ current_lang }}/login.html">{{ site.nav[current_lang].login }}</a></li>
+        <li id="register-link"><a href="/{{ current_lang }}/register.html">{{ site.nav[current_lang].register }}</a></li>
+        <li id="user-link"><a href="/{{ current_lang }}/user.html">{{ site.nav[current_lang].user }}</a></li>
         <li id="admin-nav-link" style="display: none;"><a href="/admin/">{{ site.data[page.lang].admin.nav_link }}</a></li>
+        <li id="su-logout-link" style="display: none;"><a href="#">Superuser Logout</a></li>
 
         <!-- Language Links (Tiny Size) -->
         <li class="lang-option {% if current_lang == 'ca' %}active{% endif %}">
