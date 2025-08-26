@@ -34,6 +34,12 @@ class UserUpdate(BaseModel):
     password: Optional[str] = None
     password_confirm: Optional[str] = None
 
+class UserUpdateAdmin(BaseModel):
+    email: Optional[str] = None
+    name: Optional[str] = None
+    location: Optional[str] = None
+    is_admin: Optional[bool] = None
+
 class Token(BaseModel):
     access_token: str
     token_type: str
