@@ -49,21 +49,22 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     })
     .then(function(users) {
-        var noUsersText = '{{ site.data[page.lang].admin.no_users_found }}';
+        var noUsersText = {{ site.data[page.lang].admin.no_users_found | jsonify }};
         if (users.length === 0) {
             tableBody.innerHTML = `<tr><td colspan="4">${noUsersText}</td></tr>`;
             return;
         }
 
         tableBody.innerHTML = '';
-        var editText = '{{ site.data[page.lang].admin.edit_button }}';
-        var deleteText = '{{ site.data[page.lang].admin.delete_button }}';
+        var editText = {{ site.data[page.lang].admin.edit_button | jsonify }};
+        var deleteText = {{ site.data[page.lang].admin.delete_button | jsonify }};
+        var siteEmail = {{ site.email | jsonify }};
 
         users.forEach(function(user) {
             var row = document.createElement('tr');
             // The backend User model doesn't have is_superuser, so we'll fake it for now.
             // This will be properly addressed when we build the edit/create logic.
-            var isSuperuser = user.email === '{{ site.email }}'; // Placeholder logic
+            var isSuperuser = user.email === siteEmail; // Placeholder logic
             row.innerHTML = `
                 <td>${user.email}</td>
                 <td>${user.is_admin}</td>
