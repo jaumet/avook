@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 <td>${user.is_admin}</td>
                 <td>${isSuperuser}</td>
                 <td>
-                    <button class="btn btn-sm btn-primary">${editText}</button>
+                    <a href="users/edit.html?id=${user.id}" class="btn btn-sm btn-primary">${editText}</a>
                     <button class="btn btn-sm btn-danger">${deleteText}</button>
                 </td>
             `;

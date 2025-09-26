@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from app.models import Title, User, Card, Store, Batch
+from app.schemas import UserCreate, UserUpdateAdmin
 from app.db import get_session
 from app.auth import get_current_config_superuser
 from uuid import uuid4, UUID
@@ -156,10 +157,30 @@ def read_batches(db: Session = Depends(get_session)):
 
 @router.get("/users", response_model=list[User])
 def read_users(db: Session = Depends(get_session)):
-    print("DEBUG: Entering read_users endpoint")
     users = db.exec(select(User)).all()
-    print("DEBUG: Exiting read_users endpoint")
     return users
+
+@router.get("/users/{user_id}", response_model=User)
+def read_user(user_id: UUID, db: Session = Depends(get_session)):
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+@router.put("/users/{user_id}", response_model=User)
+def update_user(user_id: UUID, user_update: UserUpdateAdmin, db: Session = Depends(get_session)):
+    db_user = db.get(User, user_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    update_data = user_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_user, key, value)
+
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
 
 @router.put("/users/{user_id}/make-admin", response_model=User)
 def make_admin(user_id, db: Session = Depends(get_session)):
