@@ -1,0 +1,5 @@
+# Fitxers temporals Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
