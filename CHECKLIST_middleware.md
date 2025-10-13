@@ -18,8 +18,8 @@
 - [x] Taula `listening_progress`
 - [x] Endpoint `/abook/:qr/lend` amb validació completa
 - [x] Endpoint `/abook/:qr/stop-lend`
-- [ ] Control exclusiu d’un dispositiu per llibre
-- [ ] Expiració automàtica de préstec
+- [x] Control exclusiu d’un dispositiu per llibre
+- [x] Expiració automàtica de préstec
 
 ## 🎧 Fase 3 — Integració amb reproductor i experiència d’usuari
 - [x] Endpoint `/abook/:qr/play-auth` (esborrany funcional)

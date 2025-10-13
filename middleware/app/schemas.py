@@ -60,3 +60,5 @@ class PlayAuthResponse(BaseModel):
     reason: str
     start_position: float
     signed_url: Optional[str] = None
+    redirect_url: Optional[str] = None
+    expires_in: Optional[int] = None
