@@ -29,9 +29,9 @@
 - [x] Missatges d’estat personalitzats (“És teu / prestat / no disponible”)
 
 ## 🚀 Fase 4 — Escalabilitat, tests i redundància
-- [ ] Implementar cache (Redis)
-- [ ] Còpies de seguretat automàtiques
-- [ ] Tests unitari i integració
+- [x] Implementar cache (Redis)
+- [x] Còpies de seguretat automàtiques
+- [x] Tests unitari i integració
 - [ ] Monitoratge i logs centralitzats
 - [ ] Internacionalització (CA/ES/EN)
 

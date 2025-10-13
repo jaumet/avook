@@ -15,6 +15,8 @@ from urllib.parse import urljoin
 
 import httpx
 
+from app.cache import get_cache
+
 __all__ = [
     "AudiobookshelfClient",
     "AudiobookshelfError",
@@ -62,6 +64,8 @@ class AudiobookshelfClient:
     base_url: str = field(default_factory=_resolve_base_url)
     api_token: Optional[str] = os.getenv("ABS_API_TOKEN")
     timeout: float = float(os.getenv("ABS_HTTP_TIMEOUT", "5.0"))
+    cache_namespace: str = os.getenv("ABS_CACHE_NAMESPACE", "abs:share")
+    cache_ttl: int = int(os.getenv("ABS_CACHE_TTL", "600"))
 
     def _headers(self) -> Dict[str, str]:
         headers = {"Accept": "application/json"}
@@ -92,6 +96,13 @@ class AudiobookshelfClient:
         if not share_code:
             raise AudiobookshelfError("Missing Audiobookshelf share code")
 
+        cache = get_cache()
+        cache_key = f"{self.cache_namespace}:{share_code}"
+        if cache:
+            cached = cache.get_json(cache_key)
+            if cached:
+                return cached
+
         response = self._request(f"api/shares/{share_code}")
         if response.status_code == 404:
             raise AudiobookshelfNotFound(f"Share {share_code!r} was not found")
@@ -109,6 +120,8 @@ class AudiobookshelfClient:
         for key in ("streamUrl", "shareUrl", "webUrl", "coverUrl"):
             if key in data:
                 data[key] = self._absolute(data[key])
+        if cache:
+            cache.set_json(cache_key, data, ttl=self.cache_ttl)
         return data
 
     def health(self) -> Dict[str, Any]:
