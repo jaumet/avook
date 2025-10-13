@@ -8,6 +8,7 @@ Audiobookshelf server.  When a caller is not authorised to play a book the
 payload still explains the reason and starting position.
 """
 
+from datetime import date, datetime
 from pydantic import BaseModel
 from typing import Optional
 from uuid import UUID
@@ -27,6 +28,28 @@ class User(UserBase):
 
     class Config:
         from_attributes = True
+
+
+class DashboardTotals(BaseModel):
+    users: int
+    titles: int
+    cards: int
+    claimed_cards: int
+    active_loans: int
+
+
+class DashboardDailyStat(BaseModel):
+    date: date
+    count: int
+
+
+class AdminDashboard(BaseModel):
+    generated_at: datetime
+    totals: DashboardTotals
+    activations_last_30_days: int
+    loans_last_30_days: int
+    activations_trend: list[DashboardDailyStat]
+    loans_trend: list[DashboardDailyStat]
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None
@@ -54,9 +77,24 @@ class PlayAuthResponse(BaseModel):
             playback should begin.
         signed_url: a signed Audiobookshelf playback URL, only included
             when ``can_play`` is ``True``.
+        abs_stream_url: absolute Audiobookshelf stream URL returned by the
+            upstream service once validated.
     """
 
     can_play: bool
     reason: str
     start_position: float
     signed_url: Optional[str] = None
+    redirect_url: Optional[str] = None
+    expires_in: Optional[int] = None
+    abs_stream_url: Optional[str] = None
+
+
+class ProxyValidationResponse(BaseModel):
+    ok: bool
+    qr: str
+    user_id: UUID
+    device_id: str
+    abs_share_code: Optional[str] = None
+    stream_url: Optional[str] = None
+    expires_at: int
