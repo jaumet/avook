@@ -2,15 +2,21 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.db import init_db
+from app.db import init_db, engine
 from app.api.v1 import router as v1_router
 from app.api.admin import router as admin_router
 from app.api.su import router as su_router
+from app.backup import get_backup_scheduler
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()          # s’executa al startup
-    yield              # aquí vindria el shutdown, si cal
+    scheduler = get_backup_scheduler(engine)
+    await scheduler.start()
+    try:
+        yield          # aquí vindria el shutdown, si cal
+    finally:
+        await scheduler.stop()
 
 app = FastAPI(title="Audiovook Middleware",
               version="0.1.0",

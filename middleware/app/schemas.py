@@ -54,9 +54,24 @@ class PlayAuthResponse(BaseModel):
             playback should begin.
         signed_url: a signed Audiobookshelf playback URL, only included
             when ``can_play`` is ``True``.
+        abs_stream_url: absolute Audiobookshelf stream URL returned by the
+            upstream service once validated.
     """
 
     can_play: bool
     reason: str
     start_position: float
     signed_url: Optional[str] = None
+    redirect_url: Optional[str] = None
+    expires_in: Optional[int] = None
+    abs_stream_url: Optional[str] = None
+
+
+class ProxyValidationResponse(BaseModel):
+    ok: bool
+    qr: str
+    user_id: UUID
+    device_id: str
+    abs_share_code: Optional[str] = None
+    stream_url: Optional[str] = None
+    expires_at: int
