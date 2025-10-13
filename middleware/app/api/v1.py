@@ -3,12 +3,25 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session, select, delete
 from datetime import datetime, timedelta, timezone
 import hmac, hashlib, base64, os
-from uuid import uuid4
+from uuid import uuid4, UUID
 from pydantic import BaseModel
 from app.models import ListeningProgress, PlaySession, User, Card, Title
 from app.auth import create_access_token, get_current_user, verify_password, get_password_hash
 from app.db import get_session, get_user_by_email, hash_password
-from app.schemas import PlayAuthResponse, UserCreate, User as UserSchema, Token, UserUpdate
+from app.schemas import (
+    PlayAuthResponse,
+    ProxyValidationResponse,
+    UserCreate,
+    User as UserSchema,
+    Token,
+    UserUpdate,
+)
+from app.audiobookshelf import (
+    AudiobookshelfClient,
+    AudiobookshelfError,
+    AudiobookshelfNotFound,
+    AudiobookshelfUnavailable,
+)
 
 
 router = APIRouter()
@@ -18,42 +31,56 @@ TTL_HOURS = int(os.getenv("URL_TTL_HOURS", 4))
 SECRET_KEY = os.getenv("SECRET_KEY", "change-me")
 
 
-def _generate_signed_url(qr: str, user_id: str) -> str:
+def _get_abs_client() -> AudiobookshelfClient:
+    """Dependency factory returning the Audiobookshelf client."""
+
+    return AudiobookshelfClient()
+
+
+def _compute_signature(qr: str, user_id: str, device_id: str, expiry_ts: int) -> str:
+    """Return the HMAC signature used to protect playback URLs."""
+
+    message = f"{qr}:{user_id}:{device_id}:{expiry_ts}".encode()
+    secret = SECRET_KEY.encode()
+    digest = hmac.new(secret, message, hashlib.sha256).digest()
+    return base64.urlsafe_b64encode(digest).decode().rstrip("=")
+
+
+def _normalise_host(host: str) -> str:
+    if host.startswith("http://") or host.startswith("https://"):
+        return host
+    return f"http://{host}"
+
+
+def _generate_signed_url(qr: str, user_id: str, device_id: str, expiry_ts: int) -> str:
     """Generate a signed playback URL for Audiobookshelf.
 
-    The signature is an HMAC‐SHA256 digest over the QR code, the user id and
-    an expiry timestamp.  The resulting digest is base64url encoded without
-    padding.  The URL includes the QR, the user id (``uid``) and the expiry
-    (``exp``) as query parameters along with the signature.
+    The signature is an HMAC‐SHA256 digest over the QR code, the user id,
+    the device identifier and an expiry timestamp.  The resulting digest is
+    base64url encoded without padding.  The URL includes the QR, the user id
+    (``uid``), the device id (``did``) and the expiry (``exp``) as query
+    parameters along with the signature.
 
     Args:
         qr: the QR identifier for the book being requested.
         user_id: the UUID of the authenticated user as a string.
+        device_id: identifier of the playback device requesting access.
+        expiry_ts: UTC timestamp (seconds) when the token should expire.
 
     Returns:
         A fully qualified URL pointing at the Audiobookshelf host with
         signed query parameters.
     """
-    # Compute an expiry timestamp TTL_HOURS into the future.  We use UTC to
-    # avoid timezone issues.  Cast to int to avoid floating point in the URL.
-    expiry_dt = datetime.utcnow() + timedelta(hours=TTL_HOURS)
-    expiry_ts = int(expiry_dt.timestamp())
-
     # Construct the message to sign.  Including the QR and user id binds the
     # signature to both the resource and the requester.
-    message = f"{qr}:{user_id}:{expiry_ts}".encode()
-    secret = SECRET_KEY.encode()
-
-    # Create the HMAC digest and encode using URL‑safe base64 (no padding).
-    digest = hmac.new(secret, message, hashlib.sha256).digest()
-    signature = base64.urlsafe_b64encode(digest).decode().rstrip("=")
+    signature = _compute_signature(qr, user_id, device_id, expiry_ts)
 
     # Build the URL.  We default to HTTP if no scheme is present.  A real
     # deployment should use HTTPS.
-    host = ABS_HOST
-    if not host.startswith("http://") and not host.startswith("https://"):
-        host = f"http://{host}"
-    return f"{host}/stream/{qr}?uid={user_id}&exp={expiry_ts}&sig={signature}"
+    host = _normalise_host(ABS_HOST)
+    return (
+        f"{host}/stream/{qr}?uid={user_id}&did={device_id}&exp={expiry_ts}&sig={signature}"
+    )
 
 @router.get("/ping")
 def ping():
@@ -210,7 +237,8 @@ def get_play_auth(
     qr: str,
     device_id: str = Query(..., min_length=1),
     db: Session = Depends(get_session),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    abs_client: AudiobookshelfClient = Depends(_get_abs_client)
 ) -> PlayAuthResponse:
     card = db.get(Card, qr)
     if not card:
@@ -247,11 +275,22 @@ def get_play_auth(
     ).first()
     start_position = progress.position if progress else 0.0
 
-    signed_url = _generate_signed_url(qr, str(user.id))
-
-    # Create a new play session
     session_ttl = timedelta(hours=TTL_HOURS)
     expiry = now_utc + session_ttl
+    expiry_ts = int(expiry.timestamp())
+
+    try:
+        share_info = abs_client.ensure_share_available(title.abs_share_code or "")
+    except AudiobookshelfNotFound as exc:
+        raise HTTPException(status_code=502, detail="ABS_SHARE_NOT_FOUND") from exc
+    except AudiobookshelfUnavailable as exc:
+        raise HTTPException(status_code=502, detail="ABS_UNAVAILABLE") from exc
+    except AudiobookshelfError as exc:
+        raise HTTPException(status_code=502, detail="ABS_CONFIGURATION_ERROR") from exc
+
+    signed_url = _generate_signed_url(qr, str(user.id), device_id, expiry_ts)
+
+    # Create a new play session
     if active_session:
         active_session.device_id = device_id
         active_session.issued_at = now_utc
@@ -267,13 +306,24 @@ def get_play_auth(
         db.add(new_session)
     db.commit()
 
+    fallback_redirect = _normalise_host(ABS_HOST)
+    if title.abs_share_code:
+        fallback_redirect = f"{fallback_redirect}/#/book/{title.abs_share_code}"
+
+    redirect_url = (
+        share_info.get("webUrl")
+        or share_info.get("shareUrl")
+        or fallback_redirect
+    )
+
     return PlayAuthResponse(
         can_play=True,
         reason="owner" if user.id == card.owner_user_id else "borrower",
         start_position=start_position,
         signed_url=signed_url,
-        redirect_url=f"https://{ABS_HOST}/#/book/{title.abs_share_code}?pt={signed_url.split('sig=')[1]}",
+        redirect_url=redirect_url,
         expires_in=int(session_ttl.total_seconds()),
+        abs_stream_url=share_info.get("streamUrl"),
     )
 
 
@@ -282,7 +332,8 @@ def get_play_auth_alias(
     qr: str,
     device_id: str = Query(..., min_length=1),
     db: Session = Depends(get_session),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    abs_client: AudiobookshelfClient = Depends(_get_abs_client),
 ) -> PlayAuthResponse:
     """Alias for backwards compatibility.
 
@@ -290,7 +341,75 @@ def get_play_auth_alias(
     `/play-auth/{qr}`.  Some existing clients use the shorter path so we
     expose both.
     """
-    return get_play_auth(qr=qr, device_id=device_id, db=db, user=user)
+    return get_play_auth(qr=qr, device_id=device_id, db=db, user=user, abs_client=abs_client)
+
+
+@router.get("/proxy/validate", response_model=ProxyValidationResponse)
+def validate_proxy_request(
+    qr: str,
+    uid: UUID = Query(..., alias="uid"),
+    exp: int = Query(..., alias="exp"),
+    sig: str = Query(..., alias="sig", min_length=1),
+    device_id: str = Query(..., alias="did", min_length=1),
+    db: Session = Depends(get_session),
+    abs_client: AudiobookshelfClient = Depends(_get_abs_client),
+) -> ProxyValidationResponse:
+    """Validate signed playback requests coming from the NGINX proxy."""
+
+    now = datetime.now(timezone.utc)
+    expiry_dt = datetime.fromtimestamp(exp, tz=timezone.utc)
+    if expiry_dt <= now:
+        raise HTTPException(status_code=403, detail="TOKEN_EXPIRED")
+
+    expected_sig = _compute_signature(qr, str(uid), device_id, exp)
+    if not hmac.compare_digest(expected_sig, sig):
+        raise HTTPException(status_code=403, detail="INVALID_SIGNATURE")
+
+    card = db.get(Card, qr)
+    if not card:
+        raise HTTPException(status_code=404, detail="QR_NOT_FOUND")
+
+    allowed_users = {user_id for user_id in (card.owner_user_id, card.borrower_user_id) if user_id}
+    if uid not in allowed_users:
+        raise HTTPException(status_code=403, detail="USER_NOT_AUTHORISED")
+
+    session = (
+        db.exec(
+            select(PlaySession)
+            .where(PlaySession.qr == qr, PlaySession.expires_at > now)
+            .order_by(PlaySession.expires_at.desc())
+        ).first()
+    )
+    if not session:
+        raise HTTPException(status_code=403, detail="SESSION_NOT_FOUND")
+    if session.device_id != device_id:
+        raise HTTPException(status_code=409, detail="DEVICE_MISMATCH")
+
+    if int(session.expires_at.timestamp()) != exp:
+        raise HTTPException(status_code=409, detail="EXPIRY_MISMATCH")
+
+    title = db.get(Title, card.title_id)
+    if not title:
+        raise HTTPException(status_code=404, detail="TITLE_NOT_FOUND")
+
+    try:
+        share_info = abs_client.ensure_share_available(title.abs_share_code or "")
+    except AudiobookshelfNotFound as exc:
+        raise HTTPException(status_code=502, detail="ABS_SHARE_NOT_FOUND") from exc
+    except AudiobookshelfUnavailable as exc:
+        raise HTTPException(status_code=502, detail="ABS_UNAVAILABLE") from exc
+    except AudiobookshelfError as exc:
+        raise HTTPException(status_code=502, detail="ABS_CONFIGURATION_ERROR") from exc
+
+    return ProxyValidationResponse(
+        ok=True,
+        qr=qr,
+        user_id=uid,
+        device_id=device_id,
+        abs_share_code=title.abs_share_code,
+        stream_url=share_info.get("streamUrl"),
+        expires_at=exp,
+    )
 
 @router.post("/abook/{qr}/stop-lend")
 def stop_lend(

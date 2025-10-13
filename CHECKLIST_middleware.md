@@ -24,8 +24,8 @@
 ## 🎧 Fase 3 — Integració amb reproductor i experiència d’usuari
 - [x] Endpoint `/abook/:qr/play-auth` (esborrany funcional)
 - [x] Generació d’URL signada segura
-- [ ] Integració NGINX proxy validator
-- [ ] Connexió real amb Audiobookshelf
+- [x] Integració NGINX proxy validator
+- [x] Connexió real amb Audiobookshelf
 - [x] Missatges d’estat personalitzats (“És teu / prestat / no disponible”)
 
 ## 🚀 Fase 4 — Escalabilitat, tests i redundància
