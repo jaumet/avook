@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Body, Query
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlmodel import Session, select
+from sqlmodel import Session, select, delete
 from datetime import datetime, timedelta, timezone
 import hmac, hashlib, base64, os
 from uuid import uuid4
 from pydantic import BaseModel
-from app.models import ListeningProgress, Claim, PlaySession, User, Card
+from app.models import ListeningProgress, PlaySession, User, Card, Title
 from app.auth import create_access_token, get_current_user, verify_password, get_password_hash
 from app.db import get_session, get_user_by_email, hash_password
 from app.schemas import PlayAuthResponse, UserCreate, User as UserSchema, Token, UserUpdate
@@ -115,6 +115,45 @@ def update_user_me(
     db.refresh(current_user)
     return current_user
 
+def _get_lend_ttl() -> timedelta:
+    """Return the configured lending TTL as a ``timedelta``.
+
+    The value can be overridden at runtime through the ``LEND_TTL_HOURS``
+    environment variable which makes testing easier without requiring the
+    application to be reloaded.
+    """
+
+    hours = int(os.getenv("LEND_TTL_HOURS", 24 * 14))
+    return timedelta(hours=hours)
+
+
+def _enforce_lend_expiry(card: Card, db: Session) -> None:
+    """Automatically expire loans whose TTL has elapsed.
+
+    When a card has been lent for longer than the configured TTL the loan is
+    cleared so the owner regains control.  Any lingering playback sessions for
+    the QR are also removed to guarantee that a new device can start playback
+    immediately after the expiry is detected.
+    """
+
+    if card.user_state != 2 or not card.lent_at:
+        return
+
+    now_utc = datetime.now(timezone.utc)
+    lend_ttl = _get_lend_ttl()
+    if card.lent_at + lend_ttl > now_utc:
+        return
+
+    card.borrower_user_id = None
+    card.lent_at = None
+    card.user_state = 1
+    card.updated_at = datetime.utcnow()
+    db.add(card)
+    db.exec(delete(PlaySession).where(PlaySession.qr == card.qr))
+    db.commit()
+    db.refresh(card)
+
+
 @router.post("/claim/{qr}")
 def claim_qr(
     qr: str,
@@ -147,6 +186,7 @@ def lend_book(
     card = db.get(Card, qr)
     if not card:
         raise HTTPException(status_code=404, detail="QR_NOT_FOUND")
+    _enforce_lend_expiry(card, db)
     if card.owner_user_id != user.id:
         raise HTTPException(status_code=403, detail="NOT_OWNER")
     if card.user_state != 1:
@@ -168,6 +208,7 @@ def lend_book(
 @router.get("/abook/{qr}/play-auth", response_model=PlayAuthResponse)
 def get_play_auth(
     qr: str,
+    device_id: str = Query(..., min_length=1),
     db: Session = Depends(get_session),
     user: User = Depends(get_current_user)
 ) -> PlayAuthResponse:
@@ -175,13 +216,25 @@ def get_play_auth(
     if not card:
         raise HTTPException(status_code=404, detail="QR_NOT_FOUND")
 
+    _enforce_lend_expiry(card, db)
+
     can_play = user.id == card.owner_user_id or user.id == card.borrower_user_id
     if not can_play:
         raise HTTPException(status_code=403, detail="NOT_ALLOWED_TO_PLAY")
 
     # Check for active play sessions
-    active_session = db.exec(select(PlaySession).where(PlaySession.qr == qr, PlaySession.expires_at > datetime.now(timezone.utc))).first()
-    if active_session and active_session.device_id != str(user.id): # simple check, can be improved
+    now_utc = datetime.now(timezone.utc)
+    db.exec(delete(PlaySession).where(PlaySession.expires_at <= now_utc))
+    db.commit()
+
+    active_session = (
+        db.exec(
+            select(PlaySession)
+            .where(PlaySession.qr == qr, PlaySession.expires_at > now_utc)
+            .order_by(PlaySession.expires_at.desc())
+        ).first()
+    )
+    if active_session and active_session.device_id != device_id:
         raise HTTPException(status_code=409, detail="ACTIVE_SESSION_EXISTS")
 
     title = db.get(Title, card.title_id)
@@ -198,13 +251,20 @@ def get_play_auth(
 
     # Create a new play session
     session_ttl = timedelta(hours=TTL_HOURS)
-    new_session = PlaySession(
-        qr=qr,
-        device_id=str(user.id),
-        issued_at=datetime.now(timezone.utc),
-        expires_at=datetime.now(timezone.utc) + session_ttl,
-    )
-    db.add(new_session)
+    expiry = now_utc + session_ttl
+    if active_session:
+        active_session.device_id = device_id
+        active_session.issued_at = now_utc
+        active_session.expires_at = expiry
+        db.add(active_session)
+    else:
+        new_session = PlaySession(
+            qr=qr,
+            device_id=device_id,
+            issued_at=now_utc,
+            expires_at=expiry,
+        )
+        db.add(new_session)
     db.commit()
 
     return PlayAuthResponse(
@@ -220,6 +280,7 @@ def get_play_auth(
 @router.get("/play-auth/{qr}", response_model=PlayAuthResponse)
 def get_play_auth_alias(
     qr: str,
+    device_id: str = Query(..., min_length=1),
     db: Session = Depends(get_session),
     user: User = Depends(get_current_user)
 ) -> PlayAuthResponse:
@@ -229,7 +290,7 @@ def get_play_auth_alias(
     `/play-auth/{qr}`.  Some existing clients use the shorter path so we
     expose both.
     """
-    return get_play_auth(qr=qr, db=db, user=user)
+    return get_play_auth(qr=qr, device_id=device_id, db=db, user=user)
 
 @router.post("/abook/{qr}/stop-lend")
 def stop_lend(
@@ -240,6 +301,7 @@ def stop_lend(
     card = db.get(Card, qr)
     if not card:
         raise HTTPException(status_code=404, detail="QR_NOT_FOUND")
+    _enforce_lend_expiry(card, db)
     if card.owner_user_id != user.id:
         raise HTTPException(status_code=403, detail="NOT_OWNER")
     if card.user_state != 2:
@@ -251,6 +313,8 @@ def stop_lend(
     db.add(card)
     db.commit()
     db.refresh(card)
+    db.exec(delete(PlaySession).where(PlaySession.qr == card.qr))
+    db.commit()
     return {"message": "Lend stopped", "qr": card.qr, "status": card.user_state}
 
 def get_status_label(status: int, lent_at: datetime | None = None) -> str:
@@ -284,6 +348,8 @@ def abook_status(
     card = db.get(Card, qr)
     if not card:
         raise HTTPException(status_code=404, detail="QR_NOT_FOUND")
+
+    _enforce_lend_expiry(card, db)
 
     owner = db.get(User, card.owner_user_id) if card.owner_user_id else None
     borrower = db.get(User, card.borrower_user_id) if card.borrower_user_id else None
