@@ -16,17 +16,17 @@
 - [x] Control d’estats `status 0→1`
 - [x] Associació `owner_id`
 - [x] Taula `listening_progress`
-- [ ] Endpoint `/abook/:qr/lend` amb validació completa
-- [ ] Endpoint `/abook/:qr/stop-lend`
+- [x] Endpoint `/abook/:qr/lend` amb validació completa
+- [x] Endpoint `/abook/:qr/stop-lend`
 - [ ] Control exclusiu d’un dispositiu per llibre
 - [ ] Expiració automàtica de préstec
 
 ## 🎧 Fase 3 — Integració amb reproductor i experiència d’usuari
 - [x] Endpoint `/abook/:qr/play-auth` (esborrany funcional)
-- [ ] Generació d’URL signada segura
+- [x] Generació d’URL signada segura
 - [ ] Integració NGINX proxy validator
 - [ ] Connexió real amb Audiobookshelf
-- [ ] Missatges d’estat personalitzats (“És teu / prestat / no disponible”)
+- [x] Missatges d’estat personalitzats (“És teu / prestat / no disponible”)
 
 ## 🚀 Fase 4 — Escalabilitat, tests i redundància
 - [ ] Implementar cache (Redis)
@@ -47,5 +47,5 @@
 - [x] Docker Compose amb serveis `backend`, `db`
 - [ ] Afegir servei `nginx` de validació
 - [ ] Revisar compatibilitat amb PWA/app mòbil
-- [ ] Afegir fitxer `LICENSE` i metadades GPL3
+- [x] Afegir fitxer `LICENSE` i metadades GPL3
 - [ ] Actualitzar documentació `/docs` i `README.md`
