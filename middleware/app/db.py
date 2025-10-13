@@ -9,7 +9,15 @@ from app.models import User, Title, Card, Store, Batch, Claim, PlaySession, List
 # 🔧 Load .env i crea engine SQLModel
 load_dotenv("/code/.env")
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@db:5432/postgres")
-engine = create_engine(DATABASE_URL, echo=True)
+
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(
+        DATABASE_URL,
+        echo=True,
+        connect_args={"check_same_thread": False},
+    )
+else:
+    engine = create_engine(DATABASE_URL, echo=True)
 
 # 🔄 Inici BD
 def init_db():

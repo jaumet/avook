@@ -29,6 +29,13 @@ errors:
   CARD_NOT_FOUND: "Card not found."
   FORBIDDEN: "You don't have permission to perform this action."
   INVALID_STATE_TRANSITION: "Invalid state transition."
+statuses:
+  "0": "Unclaimed"
+  "1": "Claimed"
+  "2": "On loan"
+  "3": "Active loan"
+  "4": "Loan disabled"
+  unknown: "Unknown"
 register:
   title: "Register"
   name_label: "Name"
