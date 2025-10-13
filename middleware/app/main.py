@@ -7,6 +7,10 @@ from app.api.v1 import router as v1_router
 from app.api.admin import router as admin_router
 from app.api.su import router as su_router
 from app.backup import get_backup_scheduler
+from app.monitoring import configure_logging, RequestMonitoringMiddleware
+
+
+configure_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -35,6 +39,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(RequestMonitoringMiddleware)
 
 app.include_router(v1_router, prefix="/api/v1")
 app.include_router(admin_router, prefix="/api/v1/admin")

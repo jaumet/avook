@@ -32,8 +32,8 @@
 - [x] Implementar cache (Redis)
 - [x] Còpies de seguretat automàtiques
 - [x] Tests unitari i integració
-- [ ] Monitoratge i logs centralitzats
-- [ ] Internacionalització (CA/ES/EN)
+- [x] Monitoratge i logs centralitzats
+- [x] Internacionalització (CA/ES/EN)
 
 ## 🏢 Fase 5 — Extensió i personalització per editorials
 - [ ] Panell d’administració bàsic

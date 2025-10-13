@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Body, Query
+from fastapi import APIRouter, Depends, HTTPException, Body, Query, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session, select, delete
 from datetime import datetime, timedelta, timezone
@@ -22,7 +22,7 @@ from app.audiobookshelf import (
     AudiobookshelfNotFound,
     AudiobookshelfUnavailable,
 )
-
+from app.i18n import get_catalog, resolve_language, translate_status
 
 router = APIRouter()
 
@@ -436,31 +436,25 @@ def stop_lend(
     db.commit()
     return {"message": "Lend stopped", "qr": card.qr, "status": card.user_state}
 
-def get_status_label(status: int, lent_at: datetime | None = None) -> str:
-    """Return a human‑readable label for a claim status.
+def get_status_label(
+    status: int,
+    lent_at: datetime | None = None,  # maintained for backwards compatibility
+    language: str | None = None,
+) -> str:
+    """Return the translated label for a claim status.
 
-    The logic avoids embedding a dynamically computed duration in the label,
-    since tests expect the plain text "En préstec" when a book is lent out.
-    Additional statuses (3 and 4) are included for future extensions.
+    ``lent_at`` is accepted for legacy callers but the translation itself is
+    delegated to :mod:`app.i18n` so the wording stays consistent across the
+    middleware and the front-end.
     """
-    match status:
-        case 0:
-            return "No reclamat"
-        case 1:
-            return "Reclamat"
-        case 2:
-            # Always return a simple label; durations can be computed separately.
-            return "En préstec"
-        case 3:
-            return "Préstec actiu"
-        case 4:
-            return "Préstec desactivat"
-        case _:
-            return "Desconegut"
+
+    return translate_status(status, language)
 
 @router.get("/abook/{qr}/status")
 def abook_status(
     qr: str,
+    request: Request,
+    lang: str | None = Query(None, description="Language override (ca, es, en)"),
     db: Session = Depends(get_session),
     user: User = Depends(get_current_user),
 ):
@@ -469,6 +463,8 @@ def abook_status(
         raise HTTPException(status_code=404, detail="QR_NOT_FOUND")
 
     _enforce_lend_expiry(card, db)
+
+    language = resolve_language(lang, request.headers.get("Accept-Language"))
 
     owner = db.get(User, card.owner_user_id) if card.owner_user_id else None
     borrower = db.get(User, card.borrower_user_id) if card.borrower_user_id else None
@@ -487,7 +483,7 @@ def abook_status(
     return {
         "qr": card.qr,
         "status": card.user_state,
-        "status_label": get_status_label(card.user_state),
+        "status_label": get_status_label(card.user_state, language=language),
         "owner_email": owner.email if owner else None,
         "borrower_email": borrower.email if borrower else None,
         "claimed_at": card.claimed_at,
@@ -497,6 +493,7 @@ def abook_status(
         "can_stop_lend": can_stop_lend,
         "can_play": can_play,
         "start_position": start_position,
+        "language": language,
     }
 
 class ProgressData(BaseModel):
@@ -548,13 +545,31 @@ def save_progress(
 
 __all__ = ["router"]
 
-import yaml
 
 @router.get("/translations/{lang}")
-def get_translations(lang: str):
-    try:
-        with open(f"../jekyll-freelancer-theme/_data/{lang}.yml", "r") as f:
-            translations = yaml.safe_load(f)
-            return translations.get("errors", {})
-    except FileNotFoundError:
+def get_translations(
+    lang: str,
+    namespace: str = Query(
+        "errors",
+        description="Translation namespace (errors, statuses, all)",
+    ),
+):
+    catalog = get_catalog()
+    language = catalog.normalise(lang)
+    if namespace == "all":
+        payload = {
+            "language": language,
+            "errors": catalog.section(language, "errors"),
+            "statuses": catalog.section(language, "statuses"),
+        }
+        if not payload["errors"] and not payload["statuses"]:
+            raise HTTPException(status_code=404, detail="Translations not found")
+        return payload
+
+    if namespace not in {"errors", "statuses"}:
+        raise HTTPException(status_code=400, detail="Unsupported namespace")
+
+    section = catalog.section(language, namespace)
+    if not section:
         raise HTTPException(status_code=404, detail="Translations not found")
+    return section

@@ -29,6 +29,13 @@ errors:
   CARD_NOT_FOUND: "Targeta no trobada."
   FORBIDDEN: "No tens permís per fer aquesta acció."
   INVALID_STATE_TRANSITION: "Transició d'estat no vàlida."
+statuses:
+  "0": "No reclamat"
+  "1": "Reclamat"
+  "2": "En préstec"
+  "3": "Préstec actiu"
+  "4": "Préstec desactivat"
+  unknown: "Desconegut"
 register:
   title: "Registrar-se"
   name_label: "Nom"
