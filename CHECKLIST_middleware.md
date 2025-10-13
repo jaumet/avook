@@ -36,8 +36,8 @@
 - [x] Internacionalització (CA/ES/EN)
 
 ## 🏢 Fase 5 — Extensió i personalització per editorials
-- [ ] Panell d’administració bàsic
-- [ ] Estadístiques de préstec i activacions
+- [x] Panell d’administració bàsic
+- [x] Estadístiques de préstec i activacions
 - [ ] Codis promocionals / premsa
 - [ ] QR personalitzats amb tracking
 

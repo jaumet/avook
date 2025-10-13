@@ -8,6 +8,7 @@ Audiobookshelf server.  When a caller is not authorised to play a book the
 payload still explains the reason and starting position.
 """
 
+from datetime import date, datetime
 from pydantic import BaseModel
 from typing import Optional
 from uuid import UUID
@@ -27,6 +28,28 @@ class User(UserBase):
 
     class Config:
         from_attributes = True
+
+
+class DashboardTotals(BaseModel):
+    users: int
+    titles: int
+    cards: int
+    claimed_cards: int
+    active_loans: int
+
+
+class DashboardDailyStat(BaseModel):
+    date: date
+    count: int
+
+
+class AdminDashboard(BaseModel):
+    generated_at: datetime
+    totals: DashboardTotals
+    activations_last_30_days: int
+    loans_last_30_days: int
+    activations_trend: list[DashboardDailyStat]
+    loans_trend: list[DashboardDailyStat]
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None

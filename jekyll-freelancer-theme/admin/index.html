@@ -1,20 +1,209 @@
 ---
 layout: admin
+lang: ca
 ---
 <div class="row">
   <div class="col-lg-12 text-center">
-    <h2>Admin Dashboard</h2>
+    <h2>{{ site.data[page.lang].admin.dashboard_title }}</h2>
+    <p class="lead">{{ site.data[page.lang].admin.dashboard_intro }}</p>
     <hr class="star-primary">
   </div>
 </div>
+
 <div class="row">
   <div class="col-lg-12">
-    <ul>
-      <li><a href="/admin/users.html">User Management</a></li>
-      <li><a href="/admin/titles.html">Title Management</a></li>
-      <li><a href="/admin/cards.html">Card Management</a></li>
-      <li><a href="/admin/stores.html">Store Management</a></li>
-      <li><a href="/admin/batches.html">Batch Management</a></li>
-    </ul>
+    <div id="dashboard-error" class="alert alert-warning" style="display: none;"></div>
   </div>
 </div>
+
+<div id="dashboard-content" style="display: none;">
+  <div class="row metrics-row">
+    <div class="col-sm-6 col-lg-3">
+      <div class="metric-card">
+        <div class="metric-label">{{ site.data[page.lang].admin.stat_total_users }}</div>
+        <div class="metric-value" id="stat-total-users">0</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="metric-card">
+        <div class="metric-label">{{ site.data[page.lang].admin.stat_total_titles }}</div>
+        <div class="metric-value" id="stat-total-titles">0</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="metric-card">
+        <div class="metric-label">{{ site.data[page.lang].admin.stat_total_cards }}</div>
+        <div class="metric-value" id="stat-total-cards">0</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="metric-card">
+        <div class="metric-label">{{ site.data[page.lang].admin.stat_claimed_cards }}</div>
+        <div class="metric-value" id="stat-claimed-cards">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row metrics-row">
+    <div class="col-sm-6 col-lg-4">
+      <div class="metric-card highlight">
+        <div class="metric-label">{{ site.data[page.lang].admin.stat_active_loans }}</div>
+        <div class="metric-value" id="stat-active-loans">0</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+      <div class="metric-card">
+        <div class="metric-label">{{ site.data[page.lang].admin.stat_activations_30d }}</div>
+        <div class="metric-value" id="stat-activations-window">0</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+      <div class="metric-card">
+        <div class="metric-label">{{ site.data[page.lang].admin.stat_loans_30d }}</div>
+        <div class="metric-value" id="stat-loans-window">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row trends-row">
+    <div class="col-lg-6">
+      <h3>{{ site.data[page.lang].admin.trend_activations }}</h3>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>{{ site.data[page.lang].admin.trend_date }}</th>
+            <th>{{ site.data[page.lang].admin.trend_count }}</th>
+          </tr>
+        </thead>
+        <tbody id="activations-trend-body">
+          <tr><td colspan="2">{{ site.data[page.lang].admin.trend_empty }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="col-lg-6">
+      <h3>{{ site.data[page.lang].admin.trend_loans }}</h3>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>{{ site.data[page.lang].admin.trend_date }}</th>
+            <th>{{ site.data[page.lang].admin.trend_count }}</th>
+          </tr>
+        </thead>
+        <tbody id="loans-trend-body">
+          <tr><td colspan="2">{{ site.data[page.lang].admin.trend_empty }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-12 text-right">
+      <small>{{ site.data[page.lang].admin.last_updated }} <span id="dashboard-updated">—</span></small>
+    </div>
+  </div>
+</div>
+
+<style>
+  .metrics-row {
+    margin-bottom: 30px;
+  }
+  .metric-card {
+    background: #f8f9fb;
+    border-radius: 8px;
+    padding: 18px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+  }
+  .metric-card.highlight {
+    background: #fff3cd;
+  }
+  .metric-label {
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    color: #666;
+  }
+  .metric-value {
+    font-size: 32px;
+    font-weight: 700;
+    margin-top: 10px;
+    color: #1d3b53;
+  }
+  .trends-row h3 {
+    margin-top: 0;
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    var token = localStorage.getItem("su_token");
+    var content = document.getElementById("dashboard-content");
+    var errorBox = document.getElementById("dashboard-error");
+
+    if (!token) {
+      errorBox.textContent = {{ site.data[page.lang].admin.not_authorized | jsonify }};
+      errorBox.style.display = "block";
+      return;
+    }
+
+    fetch("http://localhost:8000/api/v1/admin/dashboard", {
+      headers: { "Authorization": "Bearer " + token }
+    })
+      .then(function(response) {
+        if (!response.ok) {
+          throw new Error("HTTP " + response.status);
+        }
+        return response.json();
+      })
+      .then(function(payload) {
+        document.getElementById("stat-total-users").textContent = payload.totals.users;
+        document.getElementById("stat-total-titles").textContent = payload.totals.titles;
+        document.getElementById("stat-total-cards").textContent = payload.totals.cards;
+        document.getElementById("stat-claimed-cards").textContent = payload.totals.claimed_cards;
+        document.getElementById("stat-active-loans").textContent = payload.totals.active_loans;
+        document.getElementById("stat-activations-window").textContent = payload.activations_last_30_days;
+        document.getElementById("stat-loans-window").textContent = payload.loans_last_30_days;
+
+        var activationsBody = document.getElementById("activations-trend-body");
+        var loansBody = document.getElementById("loans-trend-body");
+        var emptyText = {{ site.data[page.lang].admin.trend_empty | jsonify }};
+
+        function populateRows(target, series) {
+          target.innerHTML = "";
+          if (!series || series.length === 0) {
+            target.innerHTML = '<tr><td colspan="2">' + emptyText + '</td></tr>';
+            return;
+          }
+          var hasData = false;
+          series.forEach(function(point) {
+            if (point.count > 0) {
+              hasData = true;
+            }
+            var row = document.createElement("tr");
+            row.innerHTML = "<td>" + point.date + "</td><td>" + point.count + "</td>";
+            target.appendChild(row);
+          });
+          if (!hasData) {
+            target.innerHTML = '<tr><td colspan="2">' + emptyText + '</td></tr>';
+          }
+        }
+
+        populateRows(activationsBody, payload.activations_trend);
+        populateRows(loansBody, payload.loans_trend);
+
+        try {
+          var updated = new Date(payload.generated_at).toLocaleString();
+          document.getElementById("dashboard-updated").textContent = updated;
+        } catch (e) {
+          document.getElementById("dashboard-updated").textContent = payload.generated_at;
+        }
+
+        content.style.display = "block";
+      })
+      .catch(function(error) {
+        errorBox.textContent = {{ site.data[page.lang].admin.load_error | jsonify }} + " (" + error.message + ")";
+        errorBox.style.display = "block";
+      });
+  });
+</script>

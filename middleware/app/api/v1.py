@@ -24,6 +24,7 @@ from app.audiobookshelf import (
 )
 from app.i18n import get_catalog, resolve_language, translate_status
 
+
 router = APIRouter()
 
 ABS_HOST = os.getenv("ABS_HOST", "localhost:13378")

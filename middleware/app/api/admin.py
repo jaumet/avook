@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from app.models import Title, User, Card, Store, Batch
-from app.schemas import UserCreate, UserUpdateAdmin
+from app.schemas import AdminDashboard, UserCreate, UserUpdateAdmin
 from app.db import get_session
 from app.auth import get_current_config_superuser
+from app.analytics import build_admin_dashboard
 from uuid import uuid4, UUID
 from fastapi.responses import StreamingResponse
 import io
@@ -21,6 +22,13 @@ def admin_root():
 @router.get("/ping")
 def admin_ping():
     return {"ok": True}
+
+
+@router.get("/dashboard", response_model=AdminDashboard)
+def get_dashboard(db: Session = Depends(get_session)):
+    """Return aggregated metrics for the administration panel."""
+
+    return build_admin_dashboard(db)
 
 @router.post("/titles", response_model=Title)
 def create_title(title: Title, db: Session = Depends(get_session)):
