@@ -1,5 +1,7 @@
 # app/main.py
 from contextlib import asynccontextmanager
+from os import getenv
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.db import init_db, engine
@@ -26,15 +28,23 @@ app = FastAPI(title="Audiovook Middleware",
               version="0.1.0",
               lifespan=lifespan)
 
-origins = [
+default_origins = {
     "http://localhost",
+    "http://localhost:3000",
     "http://localhost:4000",
+    "http://localhost:5173",
+    "http://127.0.0.1:3000",
     "http://127.0.0.1:4000",
-]
+    "http://127.0.0.1:5173",
+}
+
+extra_origins = getenv("CORS_ALLOW_ORIGINS")
+if extra_origins:
+    default_origins.update({origin.strip() for origin in extra_origins.split(",") if origin.strip()})
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=sorted(default_origins),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

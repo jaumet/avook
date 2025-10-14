@@ -45,7 +45,7 @@
 
 ## 🧩 Altres tasques generals
 - [x] Docker Compose amb serveis `backend`, `db`
-- [ ] Afegir servei `nginx` de validació
-- [ ] Revisar compatibilitat amb PWA/app mòbil
+- [x] Afegir servei `nginx` de validació
+- [x] Revisar compatibilitat amb PWA/app mòbil
 - [x] Afegir fitxer `LICENSE` i metadades GPL3
-- [ ] Actualitzar documentació `/docs` i `README.md`
+- [x] Actualitzar documentació `/docs` i `README.md`
