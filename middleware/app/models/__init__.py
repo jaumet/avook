@@ -6,6 +6,8 @@ from .title import Title
 from .card import Card
 from .store import Store
 from .batch import Batch
+from .promo_code import PromoCode, PromoRedemption
+from .custom_qr import CustomQr, QrScanEvent
 
 __all__ = [
     "User",
@@ -16,4 +18,8 @@ __all__ = [
     "Card",
     "Store",
     "Batch",
+    "PromoCode",
+    "PromoRedemption",
+    "CustomQr",
+    "QrScanEvent",
 ]

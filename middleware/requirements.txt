@@ -12,3 +12,5 @@ python-multipart
 pytz
 pandas
 ace_tools
+redis
+fakeredis
