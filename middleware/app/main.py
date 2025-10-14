@@ -4,7 +4,6 @@ from os import getenv
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
 from app.db import init_db, engine
 from app.api.v1 import router as v1_router
 from app.api.admin import router as admin_router
