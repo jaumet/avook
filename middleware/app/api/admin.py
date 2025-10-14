@@ -1,9 +1,36 @@
+from urllib.parse import urlparse, unquote
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
-from app.models import Title, User, Card, Store, Batch
-from app.schemas import UserCreate, UserUpdateAdmin
+
+from app.models import (
+    Title,
+    User,
+    Card,
+    Store,
+    Batch,
+    PromoCode,
+    PromoRedemption,
+    CustomQr,
+    QrScanEvent,
+)
+from app.schemas import (
+    AdminDashboard,
+    TitleRead,
+    UserCreate,
+    UserUpdateAdmin,
+    PromoCodeCreate,
+    PromoCodeRead,
+    PromoCodeDetail,
+    PromoRedemptionRead,
+    CustomQrCreate,
+    CustomQrRead,
+    CustomQrDetail,
+    QrScanEventRead,
+)
 from app.db import get_session
 from app.auth import get_current_config_superuser
+from app.analytics import build_admin_dashboard
 from uuid import uuid4, UUID
 from fastapi.responses import StreamingResponse
 import io
@@ -22,6 +49,13 @@ def admin_root():
 def admin_ping():
     return {"ok": True}
 
+
+@router.get("/dashboard", response_model=AdminDashboard)
+def get_dashboard(db: Session = Depends(get_session)):
+    """Return aggregated metrics for the administration panel."""
+
+    return build_admin_dashboard(db)
+
 @router.post("/titles", response_model=Title)
 def create_title(title: Title, db: Session = Depends(get_session)):
     db.add(title)
@@ -29,13 +63,51 @@ def create_title(title: Title, db: Session = Depends(get_session)):
     db.refresh(title)
     return title
 
-@router.get("/titles", response_model=list[Title])
-def read_titles(search: str = "", active: bool = True, db: Session = Depends(get_session)):
-    query = select(Title).where(Title.active == active)
+@router.get("/titles", response_model=list[TitleRead])
+def read_titles(
+    search: str = "",
+    active: bool = True,
+    db: Session = Depends(get_session),
+) -> list[TitleRead]:
+    query = select(Title)
+    if active is not None:
+        query = query.where(Title.active == active)
     if search:
         query = query.where(Title.title.contains(search))
-    titles = db.exec(query).all()
-    return titles
+    titles = db.exec(query.order_by(Title.title.asc())).all()
+    return [TitleRead.model_validate(row, from_attributes=True) for row in titles]
+
+
+def _normalise_share_code(value: str) -> str:
+    raw = unquote(value or "").strip()
+    if not raw:
+        return ""
+
+    parsed = urlparse(raw)
+    if parsed.scheme and parsed.netloc:
+        candidate = parsed.path
+    else:
+        candidate = raw
+
+    candidate = candidate.split("?")[0].split("#")[0].rstrip("/")
+    if "/" in candidate:
+        candidate = candidate.rsplit("/", 1)[-1]
+    return candidate.strip()
+
+
+@router.get("/titles/by-share/{share_code:path}", response_model=TitleRead)
+def read_title_by_share(
+    share_code: str, db: Session = Depends(get_session)
+) -> TitleRead:
+    normalised = _normalise_share_code(share_code)
+    if not normalised:
+        raise HTTPException(status_code=400, detail="INVALID_SHARE_CODE")
+
+    title = db.exec(select(Title).where(Title.abs_share_code == normalised)).first()
+    if not title:
+        raise HTTPException(status_code=404, detail="TITLE_NOT_FOUND_FOR_SHARE")
+
+    return TitleRead.model_validate(title, from_attributes=True)
 
 @router.get("/titles/{title_id}", response_model=Title)
 def read_title(title_id: int, db: Session = Depends(get_session)):
@@ -149,6 +221,144 @@ def delete_store(store_id: int, db: Session = Depends(get_session)):
     db.delete(store)
     db.commit()
     return {"ok": True}
+
+
+def _normalise_code(value: str) -> str:
+    return value.strip().upper()
+
+
+@router.post("/promo-codes", response_model=PromoCodeRead)
+def create_promo_code(
+    payload: PromoCodeCreate, db: Session = Depends(get_session)
+) -> PromoCodeRead:
+    code = _normalise_code(payload.code)
+    if db.get(PromoCode, code):
+        raise HTTPException(status_code=400, detail="PROMO_CODE_EXISTS")
+
+    promo = PromoCode(
+        code=code,
+        title_id=payload.title_id,
+        label=payload.label,
+        kind=payload.kind,
+        campaign=payload.campaign,
+        notes=payload.notes,
+        max_uses=payload.max_uses,
+        expires_at=payload.expires_at,
+    )
+    db.add(promo)
+    db.commit()
+    db.refresh(promo)
+    remaining = (
+        max(promo.max_uses - promo.usage_count, 0)
+        if promo.max_uses is not None
+        else None
+    )
+    promo_read = PromoCodeRead.model_validate(promo, from_attributes=True)
+    promo_read.remaining_uses = remaining
+    return promo_read
+
+
+@router.get("/promo-codes", response_model=list[PromoCodeRead])
+def list_promo_codes(db: Session = Depends(get_session)) -> list[PromoCodeRead]:
+    promos = (
+        db.exec(select(PromoCode).order_by(PromoCode.created_at.desc())).all()
+    )
+    results: list[PromoCodeRead] = []
+    for promo in promos:
+        remaining = (
+            max(promo.max_uses - promo.usage_count, 0)
+            if promo.max_uses is not None
+            else None
+        )
+        promo_read = PromoCodeRead.model_validate(promo, from_attributes=True)
+        promo_read.remaining_uses = remaining
+        results.append(promo_read)
+    return results
+
+
+@router.get("/promo-codes/{code}", response_model=PromoCodeDetail)
+def get_promo_code(code: str, db: Session = Depends(get_session)) -> PromoCodeDetail:
+    promo = db.get(PromoCode, _normalise_code(code))
+    if not promo:
+        raise HTTPException(status_code=404, detail="PROMO_CODE_NOT_FOUND")
+
+    redemptions = (
+        db.exec(
+            select(PromoRedemption)
+            .where(PromoRedemption.promo_code_code == promo.code)
+            .order_by(PromoRedemption.redeemed_at.desc())
+        ).all()
+    )
+    remaining = (
+        max(promo.max_uses - promo.usage_count, 0)
+        if promo.max_uses is not None
+        else None
+    )
+    promo_read = PromoCodeRead.model_validate(promo, from_attributes=True)
+    promo_read.remaining_uses = remaining
+    redemption_reads = [
+        PromoRedemptionRead.model_validate(r, from_attributes=True)
+        for r in redemptions
+    ]
+    return PromoCodeDetail(
+        **promo_read.model_dump(),
+        redemptions=redemption_reads,
+    )
+
+
+@router.post("/qr/custom", response_model=CustomQrRead)
+def create_custom_qr(
+    payload: CustomQrCreate, db: Session = Depends(get_session)
+) -> CustomQrRead:
+    slug = payload.slug.strip().lower()
+    if db.get(CustomQr, slug):
+        raise HTTPException(status_code=400, detail="CUSTOM_QR_EXISTS")
+
+    record = CustomQr(
+        slug=slug,
+        target_url=payload.target_url,
+        title_id=payload.title_id,
+        label=payload.label,
+        campaign=payload.campaign,
+        notes=payload.notes,
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return CustomQrRead.model_validate(record, from_attributes=True)
+
+
+@router.get("/qr/custom", response_model=list[CustomQrRead])
+def list_custom_qr(db: Session = Depends(get_session)) -> list[CustomQrRead]:
+    records = (
+        db.exec(select(CustomQr).order_by(CustomQr.created_at.desc())).all()
+    )
+    return [CustomQrRead.model_validate(row, from_attributes=True) for row in records]
+
+
+@router.get("/qr/custom/{slug}", response_model=CustomQrDetail)
+def get_custom_qr(slug: str, db: Session = Depends(get_session)) -> CustomQrDetail:
+    record = db.get(CustomQr, slug.strip().lower())
+    if not record:
+        raise HTTPException(status_code=404, detail="CUSTOM_QR_NOT_FOUND")
+
+    events = (
+        db.exec(
+            select(QrScanEvent)
+            .where(QrScanEvent.slug == record.slug)
+            .order_by(QrScanEvent.scanned_at.desc())
+            .limit(100)
+        ).all()
+    )
+    base = CustomQrRead.model_validate(record, from_attributes=True)
+    event_reads = [
+        QrScanEventRead.model_validate(event, from_attributes=True)
+        for event in events
+    ]
+    return CustomQrDetail(
+        **base.model_dump(),
+        events=event_reads,
+    )
 
 @router.get("/batches", response_model=list[Batch])
 def read_batches(db: Session = Depends(get_session)):
