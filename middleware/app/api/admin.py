@@ -1,7 +1,30 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
-from app.models import Title, User, Card, Store, Batch
-from app.schemas import AdminDashboard, UserCreate, UserUpdateAdmin
+
+from app.models import (
+    Title,
+    User,
+    Card,
+    Store,
+    Batch,
+    PromoCode,
+    PromoRedemption,
+    CustomQr,
+    QrScanEvent,
+)
+from app.schemas import (
+    AdminDashboard,
+    UserCreate,
+    UserUpdateAdmin,
+    PromoCodeCreate,
+    PromoCodeRead,
+    PromoCodeDetail,
+    PromoRedemptionRead,
+    CustomQrCreate,
+    CustomQrRead,
+    CustomQrDetail,
+    QrScanEventRead,
+)
 from app.db import get_session
 from app.auth import get_current_config_superuser
 from app.analytics import build_admin_dashboard
@@ -157,6 +180,144 @@ def delete_store(store_id: int, db: Session = Depends(get_session)):
     db.delete(store)
     db.commit()
     return {"ok": True}
+
+
+def _normalise_code(value: str) -> str:
+    return value.strip().upper()
+
+
+@router.post("/promo-codes", response_model=PromoCodeRead)
+def create_promo_code(
+    payload: PromoCodeCreate, db: Session = Depends(get_session)
+) -> PromoCodeRead:
+    code = _normalise_code(payload.code)
+    if db.get(PromoCode, code):
+        raise HTTPException(status_code=400, detail="PROMO_CODE_EXISTS")
+
+    promo = PromoCode(
+        code=code,
+        title_id=payload.title_id,
+        label=payload.label,
+        kind=payload.kind,
+        campaign=payload.campaign,
+        notes=payload.notes,
+        max_uses=payload.max_uses,
+        expires_at=payload.expires_at,
+    )
+    db.add(promo)
+    db.commit()
+    db.refresh(promo)
+    remaining = (
+        max(promo.max_uses - promo.usage_count, 0)
+        if promo.max_uses is not None
+        else None
+    )
+    promo_read = PromoCodeRead.model_validate(promo, from_attributes=True)
+    promo_read.remaining_uses = remaining
+    return promo_read
+
+
+@router.get("/promo-codes", response_model=list[PromoCodeRead])
+def list_promo_codes(db: Session = Depends(get_session)) -> list[PromoCodeRead]:
+    promos = (
+        db.exec(select(PromoCode).order_by(PromoCode.created_at.desc())).all()
+    )
+    results: list[PromoCodeRead] = []
+    for promo in promos:
+        remaining = (
+            max(promo.max_uses - promo.usage_count, 0)
+            if promo.max_uses is not None
+            else None
+        )
+        promo_read = PromoCodeRead.model_validate(promo, from_attributes=True)
+        promo_read.remaining_uses = remaining
+        results.append(promo_read)
+    return results
+
+
+@router.get("/promo-codes/{code}", response_model=PromoCodeDetail)
+def get_promo_code(code: str, db: Session = Depends(get_session)) -> PromoCodeDetail:
+    promo = db.get(PromoCode, _normalise_code(code))
+    if not promo:
+        raise HTTPException(status_code=404, detail="PROMO_CODE_NOT_FOUND")
+
+    redemptions = (
+        db.exec(
+            select(PromoRedemption)
+            .where(PromoRedemption.promo_code_code == promo.code)
+            .order_by(PromoRedemption.redeemed_at.desc())
+        ).all()
+    )
+    remaining = (
+        max(promo.max_uses - promo.usage_count, 0)
+        if promo.max_uses is not None
+        else None
+    )
+    promo_read = PromoCodeRead.model_validate(promo, from_attributes=True)
+    promo_read.remaining_uses = remaining
+    redemption_reads = [
+        PromoRedemptionRead.model_validate(r, from_attributes=True)
+        for r in redemptions
+    ]
+    return PromoCodeDetail(
+        **promo_read.model_dump(),
+        redemptions=redemption_reads,
+    )
+
+
+@router.post("/qr/custom", response_model=CustomQrRead)
+def create_custom_qr(
+    payload: CustomQrCreate, db: Session = Depends(get_session)
+) -> CustomQrRead:
+    slug = payload.slug.strip().lower()
+    if db.get(CustomQr, slug):
+        raise HTTPException(status_code=400, detail="CUSTOM_QR_EXISTS")
+
+    record = CustomQr(
+        slug=slug,
+        target_url=payload.target_url,
+        title_id=payload.title_id,
+        label=payload.label,
+        campaign=payload.campaign,
+        notes=payload.notes,
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return CustomQrRead.model_validate(record, from_attributes=True)
+
+
+@router.get("/qr/custom", response_model=list[CustomQrRead])
+def list_custom_qr(db: Session = Depends(get_session)) -> list[CustomQrRead]:
+    records = (
+        db.exec(select(CustomQr).order_by(CustomQr.created_at.desc())).all()
+    )
+    return [CustomQrRead.model_validate(row, from_attributes=True) for row in records]
+
+
+@router.get("/qr/custom/{slug}", response_model=CustomQrDetail)
+def get_custom_qr(slug: str, db: Session = Depends(get_session)) -> CustomQrDetail:
+    record = db.get(CustomQr, slug.strip().lower())
+    if not record:
+        raise HTTPException(status_code=404, detail="CUSTOM_QR_NOT_FOUND")
+
+    events = (
+        db.exec(
+            select(QrScanEvent)
+            .where(QrScanEvent.slug == record.slug)
+            .order_by(QrScanEvent.scanned_at.desc())
+            .limit(100)
+        ).all()
+    )
+    base = CustomQrRead.model_validate(record, from_attributes=True)
+    event_reads = [
+        QrScanEventRead.model_validate(event, from_attributes=True)
+        for event in events
+    ]
+    return CustomQrDetail(
+        **base.model_dump(),
+        events=event_reads,
+    )
 
 @router.get("/batches", response_model=list[Batch])
 def read_batches(db: Session = Depends(get_session)):

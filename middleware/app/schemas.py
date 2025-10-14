@@ -98,3 +98,101 @@ class ProxyValidationResponse(BaseModel):
     abs_share_code: Optional[str] = None
     stream_url: Optional[str] = None
     expires_at: int
+
+
+class PromoCodeBase(BaseModel):
+    code: str
+    title_id: int
+    label: str
+    kind: str = "promo"
+    campaign: Optional[str] = None
+    notes: Optional[str] = None
+    max_uses: Optional[int] = None
+    expires_at: Optional[datetime] = None
+
+
+class PromoCodeCreate(PromoCodeBase):
+    pass
+
+
+class PromoCodeRead(PromoCodeBase):
+    usage_count: int
+    created_at: datetime
+    updated_at: datetime
+    remaining_uses: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+
+class PromoRedemptionRead(BaseModel):
+    qr: str
+    user_id: UUID
+    redeemed_at: datetime
+    device_id: Optional[str] = None
+    source: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class PromoCodeDetail(PromoCodeRead):
+    redemptions: list[PromoRedemptionRead]
+
+
+class PromoRedeemRequest(BaseModel):
+    code: str
+    device_id: Optional[str] = None
+    source: Optional[str] = None
+
+
+class PromoRedeemResponse(BaseModel):
+    qr: str
+    title_id: int
+    redeemed_at: datetime
+    remaining_uses: Optional[int] = None
+    message: str
+
+
+class CustomQrBase(BaseModel):
+    slug: str
+    target_url: str
+    title_id: Optional[int] = None
+    label: Optional[str] = None
+    campaign: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class CustomQrCreate(CustomQrBase):
+    pass
+
+
+class CustomQrRead(CustomQrBase):
+    scan_count: int
+    last_scanned_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class QrScanEventRead(BaseModel):
+    scanned_at: datetime
+    source: Optional[str] = None
+    user_agent: Optional[str] = None
+    ip: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class CustomQrDetail(CustomQrRead):
+    events: list[QrScanEventRead]
+
+
+class QrVisitResponse(BaseModel):
+    slug: str
+    target_url: str
+    scan_count: int
+    campaign: Optional[str] = None

@@ -4,8 +4,19 @@ from sqlmodel import Session, select, delete
 from datetime import datetime, timedelta, timezone
 import hmac, hashlib, base64, os
 from uuid import uuid4, UUID
+from typing import Optional
 from pydantic import BaseModel
-from app.models import ListeningProgress, PlaySession, User, Card, Title
+from app.models import (
+    ListeningProgress,
+    PlaySession,
+    User,
+    Card,
+    Title,
+    PromoCode,
+    PromoRedemption,
+    CustomQr,
+    QrScanEvent,
+)
 from app.auth import create_access_token, get_current_user, verify_password, get_password_hash
 from app.db import get_session, get_user_by_email, hash_password
 from app.schemas import (
@@ -15,6 +26,9 @@ from app.schemas import (
     User as UserSchema,
     Token,
     UserUpdate,
+    PromoRedeemRequest,
+    PromoRedeemResponse,
+    QrVisitResponse,
 )
 from app.audiobookshelf import (
     AudiobookshelfClient,
@@ -82,6 +96,10 @@ def _generate_signed_url(qr: str, user_id: str, device_id: str, expiry_ts: int) 
     return (
         f"{host}/stream/{qr}?uid={user_id}&did={device_id}&exp={expiry_ts}&sig={signature}"
     )
+
+
+def _normalise_code(value: str) -> str:
+    return value.strip().upper()
 
 @router.get("/ping")
 def ping():
@@ -180,6 +198,12 @@ def _enforce_lend_expiry(card: Card, db: Session) -> None:
     db.exec(delete(PlaySession).where(PlaySession.qr == card.qr))
     db.commit()
     db.refresh(card)
+
+
+def _compute_remaining_uses(promo: PromoCode) -> Optional[int]:
+    if promo.max_uses is None:
+        return None
+    return max(promo.max_uses - promo.usage_count, 0)
 
 
 @router.post("/claim/{qr}")
@@ -496,6 +520,109 @@ def abook_status(
         "start_position": start_position,
         "language": language,
     }
+
+
+
+@router.post("/promo/redeem", response_model=PromoRedeemResponse)
+def redeem_promo_code(
+    payload: PromoRedeemRequest,
+    db: Session = Depends(get_session),
+    user: User = Depends(get_current_user),
+) -> PromoRedeemResponse:
+    promo = db.get(PromoCode, _normalise_code(payload.code))
+    if not promo:
+        raise HTTPException(status_code=404, detail="PROMO_CODE_NOT_FOUND")
+
+    now = datetime.now(timezone.utc)
+    if promo.expires_at:
+        expires_at = promo.expires_at
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        if expires_at < now:
+            raise HTTPException(status_code=410, detail="PROMO_CODE_EXPIRED")
+
+    remaining = _compute_remaining_uses(promo)
+    if remaining is not None and remaining <= 0:
+        raise HTTPException(status_code=409, detail="PROMO_CODE_DEPLETED")
+
+    qr_value = ""
+    for _ in range(5):
+        candidate = f"PROMO-{promo.code}-{uuid4().hex[:8]}".upper()
+        if not db.get(Card, candidate):
+            qr_value = candidate
+            break
+    if not qr_value:
+        raise HTTPException(status_code=500, detail="QR_GENERATION_FAILED")
+
+    card = Card(
+        qr=qr_value,
+        title_id=promo.title_id,
+        owner_user_id=user.id,
+        user_state=1,
+        claimed_at=now,
+        promo_code=promo.code,
+        campaign=promo.campaign,
+        retail_state="promo",
+    )
+    db.add(card)
+
+    promo.usage_count += 1
+    promo.updated_at = datetime.now(timezone.utc)
+
+    redemption = PromoRedemption(
+        promo_code_code=promo.code,
+        qr=card.qr,
+        user_id=user.id,
+        device_id=payload.device_id,
+        source=payload.source,
+    )
+    db.add(redemption)
+    db.commit()
+    db.refresh(card)
+    db.refresh(promo)
+    db.refresh(redemption)
+
+    return PromoRedeemResponse(
+        qr=card.qr,
+        title_id=card.title_id,
+        redeemed_at=redemption.redeemed_at,
+        remaining_uses=_compute_remaining_uses(promo),
+        message="PROMO_REDEEMED",
+    )
+
+
+@router.get("/qr/custom/{slug}", response_model=QrVisitResponse)
+def visit_custom_qr(
+    slug: str,
+    request: Request,
+    source: str | None = Query(None),
+    db: Session = Depends(get_session),
+) -> QrVisitResponse:
+    record = db.get(CustomQr, slug.strip().lower())
+    if not record:
+        raise HTTPException(status_code=404, detail="CUSTOM_QR_NOT_FOUND")
+
+    now = datetime.now(timezone.utc)
+    event = QrScanEvent(
+        slug=record.slug,
+        source=source,
+        user_agent=request.headers.get("User-Agent"),
+        ip=request.client.host if request.client else None,
+    )
+    record.scan_count += 1
+    record.last_scanned_at = now
+    record.updated_at = now
+    db.add(event)
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+
+    return QrVisitResponse(
+        slug=record.slug,
+        target_url=record.target_url,
+        scan_count=record.scan_count,
+        campaign=record.campaign,
+    )
 
 class ProgressData(BaseModel):
     position: float

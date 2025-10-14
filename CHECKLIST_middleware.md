@@ -38,8 +38,8 @@
 ## 🏢 Fase 5 — Extensió i personalització per editorials
 - [x] Panell d’administració bàsic
 - [x] Estadístiques de préstec i activacions
-- [ ] Codis promocionals / premsa
-- [ ] QR personalitzats amb tracking
+- [x] Codis promocionals / premsa
+- [x] QR personalitzats amb tracking
 
 ---
 
