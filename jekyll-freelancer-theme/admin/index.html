@@ -105,27 +105,33 @@ lang: ca
         <div class="form-group">
           <label for="promo-code">{{ site.data[page.lang].admin.promo_form_code }}</label>
           <input type="text" id="promo-code" class="form-control" required>
+          <small class="form-text text-muted">{{ site.data[page.lang].admin.promo_form_code_help }}</small>
         </div>
         <div class="form-group">
           <label for="promo-title-id">{{ site.data[page.lang].admin.promo_form_title_id }}</label>
           <input type="number" id="promo-title-id" class="form-control" min="1" required>
+          <small class="form-text text-muted">{{ site.data[page.lang].admin.promo_form_title_id_help }}</small>
         </div>
         <div class="form-group">
           <label for="promo-label">{{ site.data[page.lang].admin.promo_form_label }}</label>
           <input type="text" id="promo-label" class="form-control" required>
+          <small class="form-text text-muted">{{ site.data[page.lang].admin.promo_form_label_help }}</small>
         </div>
         <div class="form-group">
           <label for="promo-campaign">{{ site.data[page.lang].admin.promo_form_campaign }}</label>
           <input type="text" id="promo-campaign" class="form-control">
+          <small class="form-text text-muted">{{ site.data[page.lang].admin.promo_form_campaign_help }}</small>
         </div>
         <div class="form-row">
           <div class="form-group col-sm-6">
             <label for="promo-max-uses">{{ site.data[page.lang].admin.promo_form_max_uses }}</label>
             <input type="number" id="promo-max-uses" class="form-control" min="1">
+            <small class="form-text text-muted">{{ site.data[page.lang].admin.promo_form_max_uses_help }}</small>
           </div>
           <div class="form-group col-sm-6">
             <label for="promo-expires">{{ site.data[page.lang].admin.promo_form_expires_at }}</label>
             <input type="text" id="promo-expires" class="form-control" placeholder="2025-12-31T23:59:59Z">
+            <small class="form-text text-muted">{{ site.data[page.lang].admin.promo_form_expires_at_help }}</small>
           </div>
         </div>
         <button type="submit" class="btn btn-primary">{{ site.data[page.lang].admin.promo_form_submit }}</button>
