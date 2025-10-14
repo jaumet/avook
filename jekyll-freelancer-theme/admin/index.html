@@ -109,8 +109,15 @@ lang: ca
         </div>
         <div class="form-group">
           <label for="promo-title-id">{{ site.data[page.lang].admin.promo_form_title_id }}</label>
-          <input type="number" id="promo-title-id" class="form-control" min="1" required>
+          <input type="text" id="promo-title-id" class="form-control" inputmode="numeric" list="promo-title-options" placeholder="{{ site.data[page.lang].admin.promo_form_title_id_placeholder }}" required>
+          <datalist id="promo-title-options"></datalist>
           <small class="form-text text-muted">{{ site.data[page.lang].admin.promo_form_title_id_help }}</small>
+          <small id="promo-title-preview" class="form-text text-muted">{{ site.data[page.lang].admin.promo_form_title_preview_missing }}</small>
+        </div>
+        <div class="form-group">
+          <label for="promo-share">{{ site.data[page.lang].admin.promo_form_share }}</label>
+          <input type="text" id="promo-share" class="form-control" placeholder="https://…/share/XXXXXX">
+          <small id="promo-share-hint" class="form-text text-muted">{{ site.data[page.lang].admin.promo_form_share_help }}</small>
         </div>
         <div class="form-group">
           <label for="promo-label">{{ site.data[page.lang].admin.promo_form_label }}</label>
@@ -281,13 +288,86 @@ lang: ca
     var qrTableBody = document.getElementById("qr-table-body");
     var promoFeedback = document.getElementById("promo-feedback");
     var qrFeedback = document.getElementById("qr-feedback");
+    var titleOptions = document.getElementById("promo-title-options");
+    var titlePreview = document.getElementById("promo-title-preview");
+    var shareInput = document.getElementById("promo-share");
+    var shareHint = document.getElementById("promo-share-hint");
     var promoEmptyText = {{ site.data[page.lang].admin.promo_empty_state | jsonify }};
     var qrEmptyText = {{ site.data[page.lang].admin.qr_empty_state | jsonify }};
     var promoSuccessText = {{ site.data[page.lang].admin.promo_create_success | jsonify }};
     var qrSuccessText = {{ site.data[page.lang].admin.qr_create_success | jsonify }};
+    var networkErrorText = {{ site.data[page.lang].admin.api_network_error | jsonify }};
+    var titlePreviewPrefix = {{ site.data[page.lang].admin.promo_form_title_preview_prefix | jsonify }};
+    var titlePreviewMissing = {{ site.data[page.lang].admin.promo_form_title_preview_missing | jsonify }};
+    var titleListLoading = {{ site.data[page.lang].admin.promo_form_title_list_loading | jsonify }};
+    var titleListError = {{ site.data[page.lang].admin.promo_form_title_list_error | jsonify }};
+    var shareHelpText = {{ site.data[page.lang].admin.promo_form_share_help | jsonify }};
+    var shareFoundPrefix = {{ site.data[page.lang].admin.promo_form_share_found_prefix | jsonify }};
+    var shareNotFound = {{ site.data[page.lang].admin.promo_form_share_not_found | jsonify }};
+    var shareInvalid = {{ site.data[page.lang].admin.promo_form_share_invalid | jsonify }};
+    var titleIdInvalid = {{ site.data[page.lang].admin.promo_form_title_id_invalid | jsonify }};
+
+    var apiBase = window.AVOOK_ADMIN_API_BASE;
+    if (!apiBase && document.body && document.body.dataset && document.body.dataset.apiBase) {
+      apiBase = document.body.dataset.apiBase;
+    }
+    if (!apiBase) {
+      var host = window.location.hostname || "localhost";
+      var protocol = window.location.protocol || "http:";
+      if (host === "localhost" || host === "127.0.0.1") {
+        apiBase = protocol + "//" + host + ":8000";
+      } else {
+        apiBase = protocol + "//" + host;
+      }
+    }
+    var storedBase = localStorage.getItem("admin_api_base");
+    if (storedBase) {
+      apiBase = storedBase;
+    }
+
+    var cachedTitles = [];
+
+    function setShareHint(message, state) {
+      if (!shareHint) { return; }
+      var baseClass = "form-text ";
+      if (state === "success") {
+        baseClass += "text-success";
+      } else if (state === "error") {
+        baseClass += "text-danger";
+      } else {
+        baseClass += "text-muted";
+      }
+      shareHint.className = baseClass;
+      shareHint.textContent = message;
+    }
+
+    function setTitlePreview(text, hasValue) {
+      if (!titlePreview) { return; }
+      titlePreview.textContent = hasValue ? titlePreviewPrefix + " " + text : titlePreviewMissing;
+      titlePreview.className = hasValue ? "form-text text-success" : "form-text text-muted";
+    }
+
+    if (titlePreview) {
+      setTitlePreview("", false);
+    }
+    if (shareHint) {
+      setShareHint(shareHelpText, "default");
+    }
+
+    function resolveTitleLabel(record) {
+      var bits = [record.title];
+      if (record.author) { bits.push(record.author); }
+      var summary = bits.join(" · ");
+      if (record.abs_share_code) {
+        summary += " (#" + record.abs_share_code + ")";
+      }
+      return summary;
+    }
 
     function requestJson(url, options) {
-      return fetch(url, options).then(function(response) {
+      return fetch(url, options || {}).catch(function() {
+        throw new Error(networkErrorText);
+      }).then(function(response) {
         if (!response.ok) {
           return response.json().catch(function() { return {}; }).then(function(data) {
             var detail = data.detail || response.statusText || ("HTTP " + response.status);
@@ -354,7 +434,7 @@ lang: ca
     }
 
     function loadPromoCodes(tokenValue) {
-      requestJson("http://localhost:8000/api/v1/admin/promo-codes", {
+      requestJson(apiBase + "/api/v1/admin/promo-codes", {
         headers: { "Authorization": "Bearer " + tokenValue }
       }).then(function(items) {
         renderPromoTable(items);
@@ -364,7 +444,7 @@ lang: ca
     }
 
     function loadCustomQrs(tokenValue) {
-      requestJson("http://localhost:8000/api/v1/admin/qr/custom", {
+      requestJson(apiBase + "/api/v1/admin/qr/custom", {
         headers: { "Authorization": "Bearer " + tokenValue }
       }).then(function(items) {
         renderQrTable(items);
@@ -373,10 +453,130 @@ lang: ca
       });
     }
 
+    function populateTitleOptions(items) {
+      if (!titleOptions) { return; }
+      titleOptions.innerHTML = "";
+      cachedTitles = items || [];
+      cachedTitles.forEach(function(record) {
+        var option = document.createElement("option");
+        option.value = String(record.id);
+        option.textContent = resolveTitleLabel(record);
+        titleOptions.appendChild(option);
+      });
+    }
+
+    function loadTitles(tokenValue) {
+      if (!titleOptions) { return; }
+      titleOptions.innerHTML = "";
+      if (shareHint) {
+        setShareHint(titleListLoading, "default");
+      }
+      requestJson(apiBase + "/api/v1/admin/titles", {
+        headers: { "Authorization": "Bearer " + tokenValue }
+      }).then(function(items) {
+        populateTitleOptions(items);
+        if (shareHint) {
+          setShareHint(shareHelpText, "default");
+        }
+      }).catch(function(error) {
+        if (shareHint) {
+          setShareHint(titleListError + " (" + error.message + ")", "error");
+        }
+      });
+    }
+
+    function findTitleById(id) {
+      if (!id) { return null; }
+      for (var i = 0; i < cachedTitles.length; i += 1) {
+        if (Number(cachedTitles[i].id) === Number(id)) {
+          return cachedTitles[i];
+        }
+      }
+      return null;
+    }
+
+    function handleTitleInputChange() {
+      if (!titlePreview) { return; }
+      var raw = document.getElementById("promo-title-id").value.trim();
+      var parsed = parseInt(raw, 10);
+      if (!raw || isNaN(parsed)) {
+        setTitlePreview("", false);
+        return;
+      }
+      var match = findTitleById(parsed);
+      if (match) {
+        setTitlePreview(resolveTitleLabel(match) + " (#" + match.id + ")", true);
+      } else {
+        setTitlePreview("ID " + parsed, true);
+      }
+    }
+
+    function extractShareCode(raw) {
+      if (!raw) { return ""; }
+      var trimmed = raw.trim();
+      if (!trimmed) { return ""; }
+      try {
+        var url = new URL(trimmed);
+        trimmed = url.pathname;
+      } catch (_) {
+        // continue with raw value
+      }
+      trimmed = trimmed.split("?")[0].split("#")[0].replace(/\/$/, "");
+      if (trimmed.indexOf("/") !== -1) {
+        trimmed = trimmed.substring(trimmed.lastIndexOf("/") + 1);
+      }
+      return trimmed.trim();
+    }
+
+    function handleShareLookup(tokenValue) {
+      if (!shareInput) { return; }
+      var code = extractShareCode(shareInput.value);
+      if (!code) {
+        setShareHint(shareInvalid, "error");
+        return;
+      }
+      setShareHint(titleListLoading, "default");
+      requestJson(apiBase + "/api/v1/admin/titles/by-share/" + encodeURIComponent(code), {
+        headers: { "Authorization": "Bearer " + tokenValue }
+      }).then(function(record) {
+        document.getElementById("promo-title-id").value = record.id;
+        handleTitleInputChange();
+        setShareHint(shareFoundPrefix + " " + resolveTitleLabel(record) + " (#" + record.id + ")", "success");
+      }).catch(function(error) {
+        setShareHint(shareNotFound + " (" + error.message + ")", "error");
+      });
+    }
+
     if (!token) {
       errorBox.textContent = {{ site.data[page.lang].admin.not_authorized | jsonify }};
       errorBox.style.display = "block";
       return;
+    }
+
+    if (titleOptions && token) {
+      loadTitles(token);
+    }
+
+    var titleIdInput = document.getElementById("promo-title-id");
+    if (titleIdInput) {
+      titleIdInput.addEventListener("change", handleTitleInputChange);
+      titleIdInput.addEventListener("keyup", handleTitleInputChange);
+    }
+
+    if (shareInput) {
+      shareInput.addEventListener("change", function() { handleShareLookup(token); });
+      shareInput.addEventListener("input", function() {
+        if (!shareInput.value.trim()) {
+          setShareHint(shareHelpText, "default");
+        }
+      });
+      shareInput.addEventListener("keyup", function(event) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          handleShareLookup(token);
+        }
+      });
+      shareInput.addEventListener("blur", function() { if (shareInput.value.trim()) { handleShareLookup(token); } });
     }
 
     if (promoForm) {
@@ -388,6 +588,10 @@ lang: ca
           title_id: parseInt(document.getElementById("promo-title-id").value, 10),
           label: document.getElementById("promo-label").value.trim()
         };
+        if (!payload.title_id || isNaN(payload.title_id)) {
+          showFeedback(promoFeedback, titleIdInvalid, "danger");
+          return;
+        }
         var campaignValue = document.getElementById("promo-campaign").value.trim();
         if (campaignValue) { payload.campaign = campaignValue; }
         var maxUsesValue = document.getElementById("promo-max-uses").value.trim();
@@ -395,7 +599,7 @@ lang: ca
         var expiresValue = document.getElementById("promo-expires").value.trim();
         if (expiresValue) { payload.expires_at = expiresValue; }
 
-        requestJson("http://localhost:8000/api/v1/admin/promo-codes", {
+        requestJson(apiBase + "/api/v1/admin/promo-codes", {
           method: "POST",
           headers: {
             "Authorization": "Bearer " + token,
@@ -405,6 +609,10 @@ lang: ca
         }).then(function() {
           showFeedback(promoFeedback, promoSuccessText, "success");
           promoForm.reset();
+          setTitlePreview("", false);
+          if (shareHint) {
+            setShareHint(shareHelpText, "default");
+          }
           loadPromoCodes(token);
         }).catch(function(error) {
           showFeedback(promoFeedback, error.message, "danger");
@@ -427,7 +635,7 @@ lang: ca
         var notesValue = document.getElementById("qr-notes").value.trim();
         if (notesValue) { payload.notes = notesValue; }
 
-        requestJson("http://localhost:8000/api/v1/admin/qr/custom", {
+        requestJson(apiBase + "/api/v1/admin/qr/custom", {
           method: "POST",
           headers: {
             "Authorization": "Bearer " + token,
@@ -444,7 +652,7 @@ lang: ca
       });
     }
 
-    requestJson("http://localhost:8000/api/v1/admin/dashboard", {
+    requestJson(apiBase + "/api/v1/admin/dashboard", {
       headers: { "Authorization": "Bearer " + token }
     }).then(function(payload) {
       document.getElementById("stat-total-users").textContent = payload.totals.users;

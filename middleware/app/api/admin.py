@@ -1,3 +1,5 @@
+from urllib.parse import urlparse, unquote
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 
@@ -14,6 +16,7 @@ from app.models import (
 )
 from app.schemas import (
     AdminDashboard,
+    TitleRead,
     UserCreate,
     UserUpdateAdmin,
     PromoCodeCreate,
@@ -60,13 +63,51 @@ def create_title(title: Title, db: Session = Depends(get_session)):
     db.refresh(title)
     return title
 
-@router.get("/titles", response_model=list[Title])
-def read_titles(search: str = "", active: bool = True, db: Session = Depends(get_session)):
-    query = select(Title).where(Title.active == active)
+@router.get("/titles", response_model=list[TitleRead])
+def read_titles(
+    search: str = "",
+    active: bool = True,
+    db: Session = Depends(get_session),
+) -> list[TitleRead]:
+    query = select(Title)
+    if active is not None:
+        query = query.where(Title.active == active)
     if search:
         query = query.where(Title.title.contains(search))
-    titles = db.exec(query).all()
-    return titles
+    titles = db.exec(query.order_by(Title.title.asc())).all()
+    return [TitleRead.model_validate(row, from_attributes=True) for row in titles]
+
+
+def _normalise_share_code(value: str) -> str:
+    raw = unquote(value or "").strip()
+    if not raw:
+        return ""
+
+    parsed = urlparse(raw)
+    if parsed.scheme and parsed.netloc:
+        candidate = parsed.path
+    else:
+        candidate = raw
+
+    candidate = candidate.split("?")[0].split("#")[0].rstrip("/")
+    if "/" in candidate:
+        candidate = candidate.rsplit("/", 1)[-1]
+    return candidate.strip()
+
+
+@router.get("/titles/by-share/{share_code:path}", response_model=TitleRead)
+def read_title_by_share(
+    share_code: str, db: Session = Depends(get_session)
+) -> TitleRead:
+    normalised = _normalise_share_code(share_code)
+    if not normalised:
+        raise HTTPException(status_code=400, detail="INVALID_SHARE_CODE")
+
+    title = db.exec(select(Title).where(Title.abs_share_code == normalised)).first()
+    if not title:
+        raise HTTPException(status_code=404, detail="TITLE_NOT_FOUND_FOR_SHARE")
+
+    return TitleRead.model_validate(title, from_attributes=True)
 
 @router.get("/titles/{title_id}", response_model=Title)
 def read_title(title_id: int, db: Session = Depends(get_session)):

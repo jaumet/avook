@@ -2,6 +2,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
+from urllib.parse import quote
 from uuid import uuid4
 import sys
 
@@ -56,6 +57,9 @@ client = TestClient(app)
 
 
 def _seed_data():
+    SQLModel.metadata.drop_all(app_db.engine)
+    SQLModel.metadata.create_all(app_db.engine)
+
     now = datetime.now(timezone.utc)
     with Session(app_db.engine) as session:
         title = Title(
@@ -65,10 +69,13 @@ def _seed_data():
             duration_sec=3600,
             price_retail=9.99,
             currency="EUR",
+            abs_share_code="dashboard-share",
         )
         session.add(title)
         session.commit()
         session.refresh(title)
+        title_id = title.id
+        title_share = title.abs_share_code
 
         owner = User(email="owner@example.com", password_hash="hash", name="Owner")
         borrower = User(email="borrower@example.com", password_hash="hash", name="Borrower")
@@ -108,6 +115,8 @@ def _seed_data():
         session.add_all([recent_claim, recent_loan, old_claim, untouched])
         session.commit()
 
+    return SimpleNamespace(id=title_id, abs_share_code=title_share)
+
 
 def test_admin_dashboard_includes_activation_and_loan_metrics():
     _seed_data()
@@ -139,6 +148,41 @@ def test_admin_dashboard_includes_activation_and_loan_metrics():
 
     activation_day = (datetime.now(timezone.utc) - timedelta(days=2)).date().isoformat()
     assert activation_counts[activation_day] >= 1
+
+
+def test_admin_titles_listing_and_share_lookup():
+    title = _seed_data()
+
+    list_response = client.get(
+        "/api/v1/admin/titles",
+        headers={"Authorization": "Bearer test"},
+    )
+    assert list_response.status_code == 200
+    titles = list_response.json()
+    assert any(item["abs_share_code"] == "dashboard-share" for item in titles)
+
+    lookup_response = client.get(
+        f"/api/v1/admin/titles/by-share/{title.abs_share_code}",
+        headers={"Authorization": "Bearer test"},
+    )
+    assert lookup_response.status_code == 200
+    payload = lookup_response.json()
+    assert payload["id"] == title.id
+
+    encoded_url = quote("https://example.test/share/dashboard-share", safe="")
+    url_lookup = client.get(
+        f"/api/v1/admin/titles/by-share/{encoded_url}",
+        headers={"Authorization": "Bearer test"},
+    )
+    assert url_lookup.status_code == 200
+    assert url_lookup.json()["id"] == title.id
+
+    missing = client.get(
+        "/api/v1/admin/titles/by-share/not-a-real-share",
+        headers={"Authorization": "Bearer test"},
+    )
+    assert missing.status_code == 404
+    assert missing.json()["detail"] == "TITLE_NOT_FOUND_FOR_SHARE"
 
 
 def teardown_module(_module):

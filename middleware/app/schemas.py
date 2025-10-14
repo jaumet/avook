@@ -14,6 +14,21 @@ from typing import Optional
 from uuid import UUID
 
 
+class TitleRead(BaseModel):
+    id: int
+    title: str
+    author: str
+    language: str
+    duration_sec: int
+    abs_share_code: Optional[str] = None
+    price_retail: float
+    currency: str
+    active: bool
+
+    class Config:
+        from_attributes = True
+
+
 class UserBase(BaseModel):
     email: str
     name: str
