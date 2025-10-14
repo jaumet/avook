@@ -1,20 +1,492 @@
 ---
 layout: admin
+lang: ca
 ---
 <div class="row">
   <div class="col-lg-12 text-center">
-    <h2>Admin Dashboard</h2>
+    <h2>{{ site.data[page.lang].admin.dashboard_title }}</h2>
+    <p class="lead">{{ site.data[page.lang].admin.dashboard_intro }}</p>
     <hr class="star-primary">
   </div>
 </div>
+
 <div class="row">
   <div class="col-lg-12">
-    <ul>
-      <li><a href="/admin/users.html">User Management</a></li>
-      <li><a href="/admin/titles.html">Title Management</a></li>
-      <li><a href="/admin/cards.html">Card Management</a></li>
-      <li><a href="/admin/stores.html">Store Management</a></li>
-      <li><a href="/admin/batches.html">Batch Management</a></li>
-    </ul>
+    <div id="dashboard-error" class="alert alert-warning" style="display: none;"></div>
   </div>
 </div>
+
+<div id="dashboard-content" style="display: none;">
+  <div class="row metrics-row">
+    <div class="col-sm-6 col-lg-3">
+      <div class="metric-card">
+        <div class="metric-label">{{ site.data[page.lang].admin.stat_total_users }}</div>
+        <div class="metric-value" id="stat-total-users">0</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="metric-card">
+        <div class="metric-label">{{ site.data[page.lang].admin.stat_total_titles }}</div>
+        <div class="metric-value" id="stat-total-titles">0</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="metric-card">
+        <div class="metric-label">{{ site.data[page.lang].admin.stat_total_cards }}</div>
+        <div class="metric-value" id="stat-total-cards">0</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="metric-card">
+        <div class="metric-label">{{ site.data[page.lang].admin.stat_claimed_cards }}</div>
+        <div class="metric-value" id="stat-claimed-cards">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row metrics-row">
+    <div class="col-sm-6 col-lg-4">
+      <div class="metric-card highlight">
+        <div class="metric-label">{{ site.data[page.lang].admin.stat_active_loans }}</div>
+        <div class="metric-value" id="stat-active-loans">0</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+      <div class="metric-card">
+        <div class="metric-label">{{ site.data[page.lang].admin.stat_activations_30d }}</div>
+        <div class="metric-value" id="stat-activations-window">0</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+      <div class="metric-card">
+        <div class="metric-label">{{ site.data[page.lang].admin.stat_loans_30d }}</div>
+        <div class="metric-value" id="stat-loans-window">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row trends-row">
+    <div class="col-lg-6">
+      <h3>{{ site.data[page.lang].admin.trend_activations }}</h3>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>{{ site.data[page.lang].admin.trend_date }}</th>
+            <th>{{ site.data[page.lang].admin.trend_count }}</th>
+          </tr>
+        </thead>
+        <tbody id="activations-trend-body">
+          <tr><td colspan="2">{{ site.data[page.lang].admin.trend_empty }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="col-lg-6">
+      <h3>{{ site.data[page.lang].admin.trend_loans }}</h3>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>{{ site.data[page.lang].admin.trend_date }}</th>
+            <th>{{ site.data[page.lang].admin.trend_count }}</th>
+          </tr>
+        </thead>
+        <tbody id="loans-trend-body">
+          <tr><td colspan="2">{{ site.data[page.lang].admin.trend_empty }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="row promo-qr-row">
+    <div class="col-lg-6">
+      <h3>{{ site.data[page.lang].admin.promo_section_title }}</h3>
+      <p>{{ site.data[page.lang].admin.promo_section_intro }}</p>
+      <div id="promo-feedback" class="alert" style="display:none;"></div>
+      <form id="promo-form" class="admin-form">
+        <div class="form-group">
+          <label for="promo-code">{{ site.data[page.lang].admin.promo_form_code }}</label>
+          <input type="text" id="promo-code" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="promo-title-id">{{ site.data[page.lang].admin.promo_form_title_id }}</label>
+          <input type="number" id="promo-title-id" class="form-control" min="1" required>
+        </div>
+        <div class="form-group">
+          <label for="promo-label">{{ site.data[page.lang].admin.promo_form_label }}</label>
+          <input type="text" id="promo-label" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="promo-campaign">{{ site.data[page.lang].admin.promo_form_campaign }}</label>
+          <input type="text" id="promo-campaign" class="form-control">
+        </div>
+        <div class="form-row">
+          <div class="form-group col-sm-6">
+            <label for="promo-max-uses">{{ site.data[page.lang].admin.promo_form_max_uses }}</label>
+            <input type="number" id="promo-max-uses" class="form-control" min="1">
+          </div>
+          <div class="form-group col-sm-6">
+            <label for="promo-expires">{{ site.data[page.lang].admin.promo_form_expires_at }}</label>
+            <input type="text" id="promo-expires" class="form-control" placeholder="2025-12-31T23:59:59Z">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">{{ site.data[page.lang].admin.promo_form_submit }}</button>
+      </form>
+      <table class="table table-striped table-sm promo-table">
+        <thead>
+          <tr>
+            <th>{{ site.data[page.lang].admin.promo_table_code }}</th>
+            <th>{{ site.data[page.lang].admin.promo_table_label }}</th>
+            <th>{{ site.data[page.lang].admin.promo_table_campaign }}</th>
+            <th>{{ site.data[page.lang].admin.promo_table_usage }}</th>
+            <th>{{ site.data[page.lang].admin.promo_table_expires }}</th>
+          </tr>
+        </thead>
+        <tbody id="promo-table-body">
+          <tr><td colspan="5">{{ site.data[page.lang].admin.promo_empty_state }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="col-lg-6">
+      <h3>{{ site.data[page.lang].admin.qr_section_title }}</h3>
+      <p>{{ site.data[page.lang].admin.qr_section_intro }}</p>
+      <div id="qr-feedback" class="alert" style="display:none;"></div>
+      <form id="qr-form" class="admin-form">
+        <div class="form-group">
+          <label for="qr-slug">{{ site.data[page.lang].admin.qr_form_slug }}</label>
+          <input type="text" id="qr-slug" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="qr-target">{{ site.data[page.lang].admin.qr_form_target_url }}</label>
+          <input type="url" id="qr-target" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="qr-label">{{ site.data[page.lang].admin.qr_form_label }}</label>
+          <input type="text" id="qr-label" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="qr-campaign">{{ site.data[page.lang].admin.qr_form_campaign }}</label>
+          <input type="text" id="qr-campaign" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="qr-notes">{{ site.data[page.lang].admin.qr_form_notes }}</label>
+          <textarea id="qr-notes" class="form-control" rows="2"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">{{ site.data[page.lang].admin.qr_form_submit }}</button>
+      </form>
+      <table class="table table-striped table-sm qr-table">
+        <thead>
+          <tr>
+            <th>{{ site.data[page.lang].admin.qr_table_slug }}</th>
+            <th>{{ site.data[page.lang].admin.qr_table_target }}</th>
+            <th>{{ site.data[page.lang].admin.qr_table_campaign }}</th>
+            <th>{{ site.data[page.lang].admin.qr_table_scans }}</th>
+          </tr>
+        </thead>
+        <tbody id="qr-table-body">
+          <tr><td colspan="4">{{ site.data[page.lang].admin.qr_empty_state }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-12 text-right">
+      <small>{{ site.data[page.lang].admin.last_updated }} <span id="dashboard-updated">—</span></small>
+    </div>
+  </div>
+</div>
+
+<style>
+  .metrics-row {
+    margin-bottom: 30px;
+  }
+  .metric-card {
+    background: #f8f9fb;
+    border-radius: 8px;
+    padding: 18px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+  }
+  .metric-card.highlight {
+    background: #fff3cd;
+  }
+  .metric-label {
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    color: #666;
+  }
+  .metric-value {
+    font-size: 32px;
+    font-weight: 700;
+    margin-top: 10px;
+    color: #1d3b53;
+  }
+  .trends-row h3 {
+    margin-top: 0;
+  }
+  .promo-qr-row {
+    margin-top: 40px;
+  }
+  .admin-form {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #fdfdfd;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+  }
+  .admin-form .form-group {
+    margin-bottom: 12px;
+  }
+  .admin-form .form-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .admin-form .form-row .form-group {
+    flex: 1 1 160px;
+  }
+  .promo-table th,
+  .qr-table th {
+    font-size: 13px;
+    text-transform: uppercase;
+    color: #555;
+  }
+  .alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+  }
+  .alert-danger {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    var token = localStorage.getItem("su_token");
+    var content = document.getElementById("dashboard-content");
+    var errorBox = document.getElementById("dashboard-error");
+    var promoForm = document.getElementById("promo-form");
+    var qrForm = document.getElementById("qr-form");
+    var promoTableBody = document.getElementById("promo-table-body");
+    var qrTableBody = document.getElementById("qr-table-body");
+    var promoFeedback = document.getElementById("promo-feedback");
+    var qrFeedback = document.getElementById("qr-feedback");
+    var promoEmptyText = {{ site.data[page.lang].admin.promo_empty_state | jsonify }};
+    var qrEmptyText = {{ site.data[page.lang].admin.qr_empty_state | jsonify }};
+    var promoSuccessText = {{ site.data[page.lang].admin.promo_create_success | jsonify }};
+    var qrSuccessText = {{ site.data[page.lang].admin.qr_create_success | jsonify }};
+
+    function requestJson(url, options) {
+      return fetch(url, options).then(function(response) {
+        if (!response.ok) {
+          return response.json().catch(function() { return {}; }).then(function(data) {
+            var detail = data.detail || response.statusText || ("HTTP " + response.status);
+            throw new Error(detail);
+          });
+        }
+        return response.json();
+      });
+    }
+
+    function showFeedback(box, message, kind) {
+      if (!box) { return; }
+      box.textContent = message;
+      box.className = "alert alert-" + kind;
+      box.style.display = "block";
+    }
+
+    function clearFeedback(box) {
+      if (!box) { return; }
+      box.style.display = "none";
+      box.textContent = "";
+      box.className = "alert";
+    }
+
+    function renderPromoTable(items) {
+      if (!promoTableBody) { return; }
+      promoTableBody.innerHTML = "";
+      if (!items || items.length === 0) {
+        promoTableBody.innerHTML = '<tr><td colspan="5">' + promoEmptyText + '</td></tr>';
+        return;
+      }
+      items.forEach(function(item) {
+        var usageLabel = item.max_uses ? item.usage_count + " / " + item.max_uses : item.usage_count + " / ∞";
+        var expiresLabel = item.expires_at ? new Date(item.expires_at).toLocaleString() : "—";
+        var row = document.createElement("tr");
+        row.innerHTML =
+          "<td>" + item.code + "</td>" +
+          "<td>" + (item.label || "—") + "</td>" +
+          "<td>" + (item.campaign || "—") + "</td>" +
+          "<td>" + usageLabel + "</td>" +
+          "<td>" + expiresLabel + "</td>";
+        promoTableBody.appendChild(row);
+      });
+    }
+
+    function renderQrTable(items) {
+      if (!qrTableBody) { return; }
+      qrTableBody.innerHTML = "";
+      if (!items || items.length === 0) {
+        qrTableBody.innerHTML = '<tr><td colspan="4">' + qrEmptyText + '</td></tr>';
+        return;
+      }
+      items.forEach(function(item) {
+        var scansLabel = item.scan_count + (item.last_scanned_at ? " (" + new Date(item.last_scanned_at).toLocaleString() + ")" : "");
+        var row = document.createElement("tr");
+        var targetCell = '<a href="' + item.target_url + '" target="_blank" rel="noopener">' + item.target_url + '</a>';
+        row.innerHTML =
+          "<td>" + item.slug + "</td>" +
+          "<td>" + targetCell + "</td>" +
+          "<td>" + (item.campaign || "—") + "</td>" +
+          "<td>" + scansLabel + "</td>";
+        qrTableBody.appendChild(row);
+      });
+    }
+
+    function loadPromoCodes(tokenValue) {
+      requestJson("http://localhost:8000/api/v1/admin/promo-codes", {
+        headers: { "Authorization": "Bearer " + tokenValue }
+      }).then(function(items) {
+        renderPromoTable(items);
+      }).catch(function(error) {
+        showFeedback(promoFeedback, error.message, "danger");
+      });
+    }
+
+    function loadCustomQrs(tokenValue) {
+      requestJson("http://localhost:8000/api/v1/admin/qr/custom", {
+        headers: { "Authorization": "Bearer " + tokenValue }
+      }).then(function(items) {
+        renderQrTable(items);
+      }).catch(function(error) {
+        showFeedback(qrFeedback, error.message, "danger");
+      });
+    }
+
+    if (!token) {
+      errorBox.textContent = {{ site.data[page.lang].admin.not_authorized | jsonify }};
+      errorBox.style.display = "block";
+      return;
+    }
+
+    if (promoForm) {
+      promoForm.addEventListener("submit", function(event) {
+        event.preventDefault();
+        clearFeedback(promoFeedback);
+        var payload = {
+          code: document.getElementById("promo-code").value.trim(),
+          title_id: parseInt(document.getElementById("promo-title-id").value, 10),
+          label: document.getElementById("promo-label").value.trim()
+        };
+        var campaignValue = document.getElementById("promo-campaign").value.trim();
+        if (campaignValue) { payload.campaign = campaignValue; }
+        var maxUsesValue = document.getElementById("promo-max-uses").value.trim();
+        if (maxUsesValue) { payload.max_uses = parseInt(maxUsesValue, 10); }
+        var expiresValue = document.getElementById("promo-expires").value.trim();
+        if (expiresValue) { payload.expires_at = expiresValue; }
+
+        requestJson("http://localhost:8000/api/v1/admin/promo-codes", {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer " + token,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        }).then(function() {
+          showFeedback(promoFeedback, promoSuccessText, "success");
+          promoForm.reset();
+          loadPromoCodes(token);
+        }).catch(function(error) {
+          showFeedback(promoFeedback, error.message, "danger");
+        });
+      });
+    }
+
+    if (qrForm) {
+      qrForm.addEventListener("submit", function(event) {
+        event.preventDefault();
+        clearFeedback(qrFeedback);
+        var payload = {
+          slug: document.getElementById("qr-slug").value.trim(),
+          target_url: document.getElementById("qr-target").value.trim()
+        };
+        var labelValue = document.getElementById("qr-label").value.trim();
+        if (labelValue) { payload.label = labelValue; }
+        var qrCampaignValue = document.getElementById("qr-campaign").value.trim();
+        if (qrCampaignValue) { payload.campaign = qrCampaignValue; }
+        var notesValue = document.getElementById("qr-notes").value.trim();
+        if (notesValue) { payload.notes = notesValue; }
+
+        requestJson("http://localhost:8000/api/v1/admin/qr/custom", {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer " + token,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        }).then(function() {
+          showFeedback(qrFeedback, qrSuccessText, "success");
+          qrForm.reset();
+          loadCustomQrs(token);
+        }).catch(function(error) {
+          showFeedback(qrFeedback, error.message, "danger");
+        });
+      });
+    }
+
+    requestJson("http://localhost:8000/api/v1/admin/dashboard", {
+      headers: { "Authorization": "Bearer " + token }
+    }).then(function(payload) {
+      document.getElementById("stat-total-users").textContent = payload.totals.users;
+      document.getElementById("stat-total-titles").textContent = payload.totals.titles;
+      document.getElementById("stat-total-cards").textContent = payload.totals.cards;
+      document.getElementById("stat-claimed-cards").textContent = payload.totals.claimed_cards;
+      document.getElementById("stat-active-loans").textContent = payload.totals.active_loans;
+      document.getElementById("stat-activations-window").textContent = payload.activations_last_30_days;
+      document.getElementById("stat-loans-window").textContent = payload.loans_last_30_days;
+
+      var activationsBody = document.getElementById("activations-trend-body");
+      var loansBody = document.getElementById("loans-trend-body");
+      var emptyText = {{ site.data[page.lang].admin.trend_empty | jsonify }};
+
+      function populateRows(target, series) {
+        target.innerHTML = "";
+        if (!series || series.length === 0) {
+          target.innerHTML = '<tr><td colspan="2">' + emptyText + '</td></tr>';
+          return;
+        }
+        var hasData = false;
+        series.forEach(function(point) {
+          if (point.count > 0) { hasData = true; }
+          var row = document.createElement("tr");
+          row.innerHTML = "<td>" + point.date + "</td><td>" + point.count + "</td>";
+          target.appendChild(row);
+        });
+        if (!hasData) {
+          target.innerHTML = '<tr><td colspan="2">' + emptyText + '</td></tr>';
+        }
+      }
+
+      populateRows(activationsBody, payload.activations_trend);
+      populateRows(loansBody, payload.loans_trend);
+
+      try {
+        var updated = new Date(payload.generated_at).toLocaleString();
+        document.getElementById("dashboard-updated").textContent = updated;
+      } catch (e) {
+        document.getElementById("dashboard-updated").textContent = payload.generated_at;
+      }
+
+      loadPromoCodes(token);
+      loadCustomQrs(token);
+      content.style.display = "block";
+    }).catch(function(error) {
+      errorBox.textContent = {{ site.data[page.lang].admin.load_error | jsonify }} + " (" + error.message + ")";
+      errorBox.style.display = "block";
+    });
+  });
+</script>
