@@ -45,6 +45,10 @@ Services:
 
 > ℹ️ See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for detailed deployment notes and environment variable guidance.
 
+If your Audiobookshelf server protects the share metadata API, set
+`ABS_USERNAME` and `ABS_PASSWORD` in `.env`. The middleware will log in with
+those credentials and reuse the issued token for admin imports and proxy checks.
+
 ## 🌐 PWA & mobile compatibility
 
 The middleware exposes granular CORS controls to accommodate progressive web apps and native wrappers:

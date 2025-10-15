@@ -68,12 +68,57 @@ class AudiobookshelfClient:
     """Tiny helper around the Audiobookshelf HTTP API."""
 
     base_url: str = field(default_factory=_resolve_base_url)
-    api_token: Optional[str] = os.getenv("ABS_API_TOKEN")
-    timeout: float = float(os.getenv("ABS_HTTP_TIMEOUT", "5.0"))
-    cache_namespace: str = os.getenv("ABS_CACHE_NAMESPACE", "abs:share")
-    cache_ttl: int = int(os.getenv("ABS_CACHE_TTL", "600"))
+    api_token: Optional[str] = field(default=None)
+    username: Optional[str] = field(default=None)
+    password: Optional[str] = field(default=None)
+    timeout: float = field(
+        default_factory=lambda: float(os.getenv("ABS_HTTP_TIMEOUT", "5.0"))
+    )
+    cache_namespace: str = field(
+        default_factory=lambda: os.getenv("ABS_CACHE_NAMESPACE", "abs:share")
+    )
+    cache_ttl: int = field(default_factory=lambda: int(os.getenv("ABS_CACHE_TTL", "600")))
+
+    def __post_init__(self) -> None:
+        if self.api_token is None:
+            self.api_token = os.getenv("ABS_API_TOKEN")
+        if self.username is None:
+            self.username = os.getenv("ABS_USERNAME")
+        if self.password is None:
+            self.password = os.getenv("ABS_PASSWORD")
+
+    def _ensure_token(self) -> None:
+        """Authenticate with Audiobookshelf when credentials are configured."""
+
+        if self.api_token or not (self.username and self.password):
+            return
+
+        login_url = urljoin(f"{self.base_url}/", "api/login")
+        payload = {"username": self.username, "password": self.password}
+        try:
+            response = httpx.post(login_url, json=payload, timeout=self.timeout)
+        except httpx.HTTPError as exc:  # pragma: no cover - network failure
+            raise AudiobookshelfUnavailable("Audiobookshelf login failed") from exc
+
+        if response.status_code >= 400:
+            raise AudiobookshelfUnavailable(
+                f"Audiobookshelf login failed with status {response.status_code}"
+            )
+
+        data: Dict[str, Any]
+        if "application/json" in response.headers.get("content-type", ""):
+            data = response.json()
+        else:
+            data = {}
+
+        token = data.get("token")
+        if not token:
+            raise AudiobookshelfUnavailable("Audiobookshelf login did not return a token")
+
+        self.api_token = token
 
     def _headers(self) -> Dict[str, str]:
+        self._ensure_token()
         headers = {"Accept": "application/json"}
         if self.api_token:
             headers["Authorization"] = f"Bearer {self.api_token}"

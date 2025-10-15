@@ -46,6 +46,11 @@ you run the middleware directly on your machine (without Docker) change
 `ABS_API_BASE_URL` to `http://localhost:13378` so the API can still reach the
 Audiobookshelf process.
 
+If your Audiobookshelf instance requires authentication to access the share
+metadata API, provide the admin credentials via `ABS_USERNAME` and
+`ABS_PASSWORD`. The middleware will log in automatically, cache the issued
+token, and reuse it for subsequent metadata lookups.
+
 ## Customising CORS for clients
 
 Set `CORS_ALLOW_ORIGINS` in the `.env` file to a comma-separated list of origins that should be allowed to call the middleware API (for example, progressive web apps served from HTTPS domains).
