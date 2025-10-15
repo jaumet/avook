@@ -25,6 +25,7 @@ services:
       - .env
     environment:
       - PYTHONPATH=/app
+      - ABS_API_BASE_URL=http://audiobookshelf
     volumes:
       - ./middleware:/app
     ports:

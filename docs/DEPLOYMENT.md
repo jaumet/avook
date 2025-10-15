@@ -39,12 +39,15 @@ Once running:
 
 The middleware now distinguishes between the public Audiobookshelf host that
 clients should open (`ABS_HOST`) and the internal URL the container must call
-(`ABS_API_BASE_URL`). In Docker Compose the default `.env` points the public
-host at `localhost:13378` so browsers can access the UI, while the API base URL
-targets `http://audiobookshelf`, the service name on the Compose network. If
-you run the middleware directly on your machine (without Docker) change
-`ABS_API_BASE_URL` to `http://localhost:13378` so the API can still reach the
-Audiobookshelf process.
+(`ABS_API_BASE_URL`). The sample `.env` only sets `ABS_HOST` to
+`localhost:13378`, which works out of the box when you run the middleware
+directly on your machine. Docker Compose injects
+`ABS_API_BASE_URL=http://audiobookshelf` for the middleware service so the
+container talks to the Audiobookshelf host on the Compose network while still
+serving public links with the localhost address. If you customise the
+environment or run the API outside of Compose, set `ABS_API_BASE_URL` to the
+internal hostname that can reach Audiobookshelf (for example
+`http://localhost:13378`).
 
 If your Audiobookshelf instance requires authentication to access the share
 metadata API, provide the admin credentials via `ABS_USERNAME` and
