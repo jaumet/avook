@@ -35,6 +35,17 @@ Once running:
 - Audiobookshelf UI: http://localhost:13378
 - Jekyll site: http://localhost:4000
 
+## Configuring the Audiobookshelf host
+
+The middleware now distinguishes between the public Audiobookshelf host that
+clients should open (`ABS_HOST`) and the internal URL the container must call
+(`ABS_API_BASE_URL`). In Docker Compose the default `.env` points the public
+host at `localhost:13378` so browsers can access the UI, while the API base URL
+targets `http://audiobookshelf`, the service name on the Compose network. If
+you run the middleware directly on your machine (without Docker) change
+`ABS_API_BASE_URL` to `http://localhost:13378` so the API can still reach the
+Audiobookshelf process.
+
 ## Customising CORS for clients
 
 Set `CORS_ALLOW_ORIGINS` in the `.env` file to a comma-separated list of origins that should be allowed to call the middleware API (for example, progressive web apps served from HTTPS domains).

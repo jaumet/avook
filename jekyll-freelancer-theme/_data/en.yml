@@ -127,7 +127,7 @@ admin:
   promo_form_share_found_prefix: "Linked title:"
   promo_form_share_not_found: "We couldn't find a title with that share code."
   promo_form_share_not_found_abs: "Audiobookshelf doesn't recognise that code. Double-check the share link."
-  promo_form_share_unavailable: "We couldn't reach Audiobookshelf right now."
+  promo_form_share_unavailable: "We couldn't reach Audiobookshelf right now. Make sure `ABS_API_BASE_URL` points at the internal host (e.g. http://audiobookshelf)."
   promo_form_share_invalid: "Enter a share code such as CgyUpslyCx or the full share URL."
   promo_form_share_importing: "Importing the title from Audiobookshelf…"
   promo_form_share_import_success: "Imported title:"

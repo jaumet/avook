@@ -127,7 +127,7 @@ admin:
   promo_form_share_found_prefix: "Títol vinculat:"
   promo_form_share_not_found: "No hem trobat cap títol amb aquest codi de compartició."
   promo_form_share_not_found_abs: "Aquest codi no existeix a Audiobookshelf. Revisa que l'enllaç sigui correcte."
-  promo_form_share_unavailable: "No hem pogut contactar amb Audiobookshelf ara mateix."
+  promo_form_share_unavailable: "No hem pogut contactar amb Audiobookshelf ara mateix. Revisa que `ABS_API_BASE_URL` apunti a l'host intern (p. ex. http://audiobookshelf)."
   promo_form_share_invalid: "Introdueix un codi de compartició com CgyUpslyCx o l'enllaç complet."
   promo_form_share_importing: "Importem el títol des d'Audiobookshelf…"
   promo_form_share_import_success: "Títol importat:"

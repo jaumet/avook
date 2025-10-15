@@ -40,11 +40,17 @@ class AudiobookshelfNotFound(AudiobookshelfError):
 def _resolve_base_url() -> str:
     """Return the configured Audiobookshelf base URL.
 
-    The configuration accepts either a fully qualified ``ABS_BASE_URL`` or a
-    bare ``ABS_HOST`` hostname/host:port pair.  When only the host is
-    provided, HTTP is assumed as the scheme which mirrors the development
-    docker-compose setup.
+    The middleware might run in an environment where the public host that
+    clients use (for example ``localhost:13378``) differs from the internal
+    address the container must call (for example ``audiobookshelf`` on the
+    Docker network).  ``ABS_API_BASE_URL`` allows operators to point the
+    middleware at the internal address without changing the public-facing
+    value used for signed URLs.
     """
+
+    api_base_url = os.getenv("ABS_API_BASE_URL")
+    if api_base_url:
+        return api_base_url.rstrip("/")
 
     base_url = os.getenv("ABS_BASE_URL")
     if base_url:
