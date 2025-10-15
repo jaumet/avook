@@ -92,6 +92,54 @@ def _extract_title_metadata(data: dict) -> dict:
         "cover_url": cover_url,
     }
 
+
+def get_audiobookshelf_client(request: Request) -> AudiobookshelfClient:
+    override = getattr(request.app.state, "abs_client_override", None)
+    if override is not None:
+        return override
+    return AudiobookshelfClient()
+
+
+def _extract_title_metadata(data: dict) -> dict:
+    item = data.get("libraryItem") or {}
+    media = item.get("media") or {}
+    metadata = media.get("metadata") or {}
+
+    title = metadata.get("title") or item.get("title")
+    author = (
+        metadata.get("author")
+        or metadata.get("authorName")
+        or metadata.get("artist")
+        or item.get("author")
+    )
+    language = metadata.get("language") or item.get("language")
+
+    duration_raw = (
+        metadata.get("duration")
+        or media.get("duration")
+        or item.get("duration")
+        or metadata.get("audioDuration")
+    )
+    try:
+        duration = int(float(duration_raw)) if duration_raw is not None else None
+    except (TypeError, ValueError):
+        duration = None
+
+    cover_url = (
+        data.get("coverUrl")
+        or metadata.get("cover")
+        or metadata.get("coverUrl")
+        or media.get("cover")
+    )
+
+    return {
+        "title": title,
+        "author": author,
+        "language": language,
+        "duration_sec": duration,
+        "cover_url": cover_url,
+    }
+
 router = APIRouter(
     tags=["Admin"],
     dependencies=[Depends(get_current_config_superuser)]
