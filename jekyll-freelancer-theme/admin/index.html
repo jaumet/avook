@@ -304,7 +304,12 @@ lang: ca
     var shareHelpText = {{ site.data[page.lang].admin.promo_form_share_help | jsonify }};
     var shareFoundPrefix = {{ site.data[page.lang].admin.promo_form_share_found_prefix | jsonify }};
     var shareNotFound = {{ site.data[page.lang].admin.promo_form_share_not_found | jsonify }};
+    var shareNotFoundAbs = {{ site.data[page.lang].admin.promo_form_share_not_found_abs | jsonify }};
+    var shareUnavailable = {{ site.data[page.lang].admin.promo_form_share_unavailable | jsonify }};
     var shareInvalid = {{ site.data[page.lang].admin.promo_form_share_invalid | jsonify }};
+    var shareImporting = {{ site.data[page.lang].admin.promo_form_share_importing | jsonify }};
+    var shareImportSuccess = {{ site.data[page.lang].admin.promo_form_share_import_success | jsonify }};
+    var shareImportError = {{ site.data[page.lang].admin.promo_form_share_import_error | jsonify }};
     var titleIdInvalid = {{ site.data[page.lang].admin.promo_form_title_id_invalid | jsonify }};
 
     var apiBase = window.AVOOK_ADMIN_API_BASE;
@@ -528,6 +533,26 @@ lang: ca
       return trimmed.trim();
     }
 
+    function importShareFromAudiobookshelf(code, tokenValue) {
+      if (!code) { return; }
+      setShareHint(shareImporting, "default");
+      requestJson(apiBase + "/api/v1/admin/titles/import", {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + tokenValue,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ share: code })
+      }).then(function(record) {
+        loadTitles(tokenValue);
+        document.getElementById("promo-title-id").value = record.id;
+        handleTitleInputChange();
+        setShareHint(shareImportSuccess + " " + resolveTitleLabel(record) + " (#" + record.id + ")", "success");
+      }).catch(function(error) {
+        setShareHint(shareImportError + " (" + error.message + ")", "error");
+      });
+    }
+
     function handleShareLookup(tokenValue) {
       if (!shareInput) { return; }
       var code = extractShareCode(shareInput.value);
@@ -543,6 +568,22 @@ lang: ca
         handleTitleInputChange();
         setShareHint(shareFoundPrefix + " " + resolveTitleLabel(record) + " (#" + record.id + ")", "success");
       }).catch(function(error) {
+        if (error.message === "INVALID_SHARE_CODE") {
+          setShareHint(shareInvalid, "error");
+          return;
+        }
+        if (error.message === "TITLE_NOT_FOUND_FOR_SHARE") {
+          importShareFromAudiobookshelf(code, tokenValue);
+          return;
+        }
+        if (error.message === "ABS_SHARE_NOT_FOUND") {
+          setShareHint(shareNotFoundAbs, "error");
+          return;
+        }
+        if (error.message === "ABS_UNAVAILABLE" || error.message === "ABS_ERROR") {
+          setShareHint(shareUnavailable + " (" + error.message + ")", "error");
+          return;
+        }
         setShareHint(shareNotFound + " (" + error.message + ")", "error");
       });
     }

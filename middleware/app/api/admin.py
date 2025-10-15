@@ -1,6 +1,6 @@
 from urllib.parse import urlparse, unquote
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlmodel import Session, select
 
 from app.models import (
@@ -16,6 +16,7 @@ from app.models import (
 )
 from app.schemas import (
     AdminDashboard,
+    TitleImportRequest,
     TitleRead,
     UserCreate,
     UserUpdateAdmin,
@@ -31,10 +32,64 @@ from app.schemas import (
 from app.db import get_session
 from app.auth import get_current_config_superuser
 from app.analytics import build_admin_dashboard
+from app.audiobookshelf import (
+    AudiobookshelfClient,
+    AudiobookshelfError,
+    AudiobookshelfNotFound,
+    AudiobookshelfUnavailable,
+)
 from uuid import uuid4, UUID
 from fastapi.responses import StreamingResponse
 import io
 import csv
+
+
+def get_audiobookshelf_client(request: Request) -> AudiobookshelfClient:
+    override = getattr(request.app.state, "abs_client_override", None)
+    if override is not None:
+        return override
+    return AudiobookshelfClient()
+
+
+def _extract_title_metadata(data: dict) -> dict:
+    item = data.get("libraryItem") or {}
+    media = item.get("media") or {}
+    metadata = media.get("metadata") or {}
+
+    title = metadata.get("title") or item.get("title")
+    author = (
+        metadata.get("author")
+        or metadata.get("authorName")
+        or metadata.get("artist")
+        or item.get("author")
+    )
+    language = metadata.get("language") or item.get("language")
+
+    duration_raw = (
+        metadata.get("duration")
+        or media.get("duration")
+        or item.get("duration")
+        or metadata.get("audioDuration")
+    )
+    try:
+        duration = int(float(duration_raw)) if duration_raw is not None else None
+    except (TypeError, ValueError):
+        duration = None
+
+    cover_url = (
+        data.get("coverUrl")
+        or metadata.get("cover")
+        or metadata.get("coverUrl")
+        or media.get("cover")
+    )
+
+    return {
+        "title": title,
+        "author": author,
+        "language": language,
+        "duration_sec": duration,
+        "cover_url": cover_url,
+    }
 
 router = APIRouter(
     tags=["Admin"],
@@ -108,6 +163,66 @@ def read_title_by_share(
         raise HTTPException(status_code=404, detail="TITLE_NOT_FOUND_FOR_SHARE")
 
     return TitleRead.model_validate(title, from_attributes=True)
+
+
+@router.post("/titles/import", response_model=TitleRead)
+def import_title_from_share(
+    payload: TitleImportRequest,
+    db: Session = Depends(get_session),
+    abs_client: AudiobookshelfClient = Depends(get_audiobookshelf_client),
+) -> TitleRead:
+    share_code = _normalise_share_code(payload.share)
+    if not share_code:
+        raise HTTPException(status_code=400, detail="INVALID_SHARE_CODE")
+
+    existing = db.exec(select(Title).where(Title.abs_share_code == share_code)).first()
+
+    try:
+        share_data = abs_client.ensure_share_available(share_code)
+    except AudiobookshelfNotFound as exc:
+        raise HTTPException(status_code=404, detail="ABS_SHARE_NOT_FOUND") from exc
+    except AudiobookshelfUnavailable as exc:
+        raise HTTPException(status_code=502, detail="ABS_UNAVAILABLE") from exc
+    except AudiobookshelfError as exc:
+        raise HTTPException(status_code=500, detail="ABS_ERROR") from exc
+
+    metadata = _extract_title_metadata(share_data)
+
+    def _resolve(attr: str, default=None):
+        override = getattr(payload, attr, None)
+        if override not in (None, ""):
+            return override
+        value = metadata.get(attr)
+        if value not in (None, ""):
+            return value
+        if existing is not None:
+            return getattr(existing, attr)
+        return default
+
+    title_values = {
+        "title": _resolve("title", default=share_code),
+        "author": _resolve("author", default=""),
+        "language": _resolve("language", default="und"),
+        "duration_sec": _resolve("duration_sec", default=0) or 0,
+        "cover_url": _resolve("cover_url"),
+        "price_retail": _resolve("price_retail", default=0.0) or 0.0,
+        "currency": _resolve("currency", default="EUR"),
+        "abs_share_code": share_code,
+    }
+
+    if existing:
+        for key, value in title_values.items():
+            setattr(existing, key, value)
+        db.add(existing)
+        db.commit()
+        db.refresh(existing)
+        return TitleRead.model_validate(existing, from_attributes=True)
+
+    new_title = Title(**title_values)
+    db.add(new_title)
+    db.commit()
+    db.refresh(new_title)
+    return TitleRead.model_validate(new_title, from_attributes=True)
 
 @router.get("/titles/{title_id}", response_model=Title)
 def read_title(title_id: int, db: Session = Depends(get_session)):
@@ -431,3 +546,47 @@ def export_cards_csv(title_id: int, batch: int = None, db: Session = Depends(get
 
     output.seek(0)
     return StreamingResponse(output, media_type="text/csv", headers={"Content-Disposition": f"attachment; filename=cards_export_{title_id}.csv"})
+def get_audiobookshelf_client() -> AudiobookshelfClient:
+    return AudiobookshelfClient()
+
+
+def _extract_title_metadata(data: dict) -> dict:
+    item = data.get("libraryItem") or {}
+    media = item.get("media") or {}
+    metadata = media.get("metadata") or {}
+
+    title = metadata.get("title") or item.get("title")
+    author = (
+        metadata.get("author")
+        or metadata.get("authorName")
+        or metadata.get("artist")
+        or item.get("author")
+    )
+    language = metadata.get("language") or item.get("language")
+
+    duration_raw = (
+        metadata.get("duration")
+        or media.get("duration")
+        or item.get("duration")
+        or metadata.get("audioDuration")
+    )
+    try:
+        duration = int(float(duration_raw)) if duration_raw is not None else None
+    except (TypeError, ValueError):
+        duration = None
+
+    cover_url = (
+        data.get("coverUrl")
+        or metadata.get("cover")
+        or metadata.get("coverUrl")
+        or media.get("cover")
+    )
+
+    return {
+        "title": title,
+        "author": author,
+        "language": language,
+        "duration_sec": duration,
+        "cover_url": cover_url,
+    }
+

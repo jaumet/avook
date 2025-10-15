@@ -14,6 +14,17 @@ from typing import Optional
 from uuid import UUID
 
 
+class TitleImportRequest(BaseModel):
+    share: str
+    title: Optional[str] = None
+    author: Optional[str] = None
+    language: Optional[str] = None
+    duration_sec: Optional[int] = None
+    cover_url: Optional[str] = None
+    price_retail: Optional[float] = None
+    currency: Optional[str] = None
+
+
 class TitleRead(BaseModel):
     id: int
     title: str

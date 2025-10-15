@@ -50,8 +50,27 @@ SQLModel.metadata.create_all(app_db.engine)
 from app.main import app  # noqa: E402
 from app.api.admin import get_current_config_superuser  # noqa: E402
 from app.models import Card, Title, User  # noqa: E402
+from app.audiobookshelf import AudiobookshelfNotFound  # noqa: E402
 
 app.dependency_overrides[get_current_config_superuser] = lambda: {"sub": "tests"}
+
+
+class _FakeAudiobookshelfClient:
+    def __init__(self, data=None):
+        self.data = data or {}
+        self.calls = []
+
+    def ensure_share_available(self, share_code: str):
+        self.calls.append(share_code)
+        if share_code not in self.data:
+            raise AudiobookshelfNotFound("missing")
+        return self.data[share_code]
+
+
+def _override_abs_client(payload):
+    client = _FakeAudiobookshelfClient(payload)
+    app.state.test_abs_client = client
+    app.state.abs_client_override = client
 
 client = TestClient(app)
 
@@ -185,7 +204,67 @@ def test_admin_titles_listing_and_share_lookup():
     assert missing.json()["detail"] == "TITLE_NOT_FOUND_FOR_SHARE"
 
 
+def test_import_title_from_abs_share_creates_record():
+    _seed_data()
+    share_code = "new-share"
+    share_payload = {
+        share_code: {
+            "libraryItem": {
+                "title": "La Punyalada",
+                "media": {
+                    "duration": 1234,
+                    "metadata": {
+                        "title": "La Punyalada",
+                        "author": "Raimon Casellas",
+                        "language": "ca",
+                    },
+                },
+            },
+            "coverUrl": "http://example.test/cover.jpg",
+        }
+    }
+    _override_abs_client(share_payload)
+
+    response = client.post(
+        "/api/v1/admin/titles/import",
+        headers={"Authorization": "Bearer test"},
+        json={"share": share_code},
+    )
+    assert getattr(app.state, "test_abs_client").calls == [share_code]
+    assert response.status_code == 200
+    created = response.json()
+    assert created["abs_share_code"] == share_code
+    assert created["title"] == "La Punyalada"
+    assert created["duration_sec"] == 1234
+    assert created["currency"] == "EUR"
+
+    lookup = client.get(
+        f"/api/v1/admin/titles/by-share/{share_code}",
+        headers={"Authorization": "Bearer test"},
+    )
+    assert lookup.status_code == 200
+    assert lookup.json()["id"] == created["id"]
+
+
+def test_import_title_handles_abs_errors():
+    _seed_data()
+    _override_abs_client({})
+
+    response = client.post(
+        "/api/v1/admin/titles/import",
+        headers={"Authorization": "Bearer test"},
+        json={"share": "missing-share"},
+    )
+    assert getattr(app.state, "test_abs_client").calls == ["missing-share"]
+    assert response.status_code == 404
+    assert response.json()["detail"] == "ABS_SHARE_NOT_FOUND"
+
+
 def teardown_module(_module):
     app.dependency_overrides.pop(get_current_config_superuser, None)
+    if hasattr(app.state, "abs_client_override"):
+        delattr(app.state, "abs_client_override")
+    if hasattr(app.state, "test_abs_client"):
+        delattr(app.state, "test_abs_client")
     if DATABASE_FILE.exists():
         DATABASE_FILE.unlink()
