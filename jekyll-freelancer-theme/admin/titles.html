@@ -1,127 +1,326 @@
 ---
-layout: default
+layout: admin
+lang: ca
 ---
-<section>
-  <div class="container">
-    <div class="row">
-      <div class="col-lg-12 text-center">
-        <h2>Title Management</h2>
-        <hr class="star-primary">
+<div class="row">
+  <div class="col-lg-12 text-center">
+    <h2>{{ site.data[page.lang].admin.titles_page_title }}</h2>
+    <p class="lead">{{ site.data[page.lang].admin.titles_page_intro }}</p>
+    <hr class="star-primary">
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-6">
+    <form id="title-import-form" class="admin-form">
+      <h3>{{ site.data[page.lang].admin.titles_import_heading }}</h3>
+      <p>{{ site.data[page.lang].admin.titles_import_description }}</p>
+      <div class="form-group">
+        <label for="title-share">{{ site.data[page.lang].admin.titles_import_share_label }}</label>
+        <input type="text" id="title-share" class="form-control" placeholder="{{ site.data[page.lang].admin.titles_import_share_placeholder }}" required>
+        <small id="title-share-hint" class="form-text text-muted">{{ site.data[page.lang].admin.titles_share_hint_default }}</small>
       </div>
-    </div>
-    <div class="row">
-      <div class="col-lg-8 col-lg-offset-2">
-        <h3>Create New Title</h3>
-        <form id="createTitleForm">
-          <div class="form-group">
-            <label>Title</label>
-            <input type="text" class="form-control" id="title" required>
-          </div>
-          <div class="form-group">
-            <label>Author</label>
-            <input type="text" class="form-control" id="author" required>
-          </div>
-          <div class="form-group">
-            <label>Language</label>
-            <input type="text" class="form-control" id="language" required>
-          </div>
-          <div class="form-group">
-            <label>Duration (seconds)</label>
-            <input type="number" class="form-control" id="duration_sec" required>
-          </div>
-          <div class="form-group">
-            <label>Retail Price</label>
-            <input type="number" class="form-control" id="price_retail" required>
-          </div>
-          <div class="form-group">
-            <label>Currency</label>
-            <input type="text" class="form-control" id="currency" required>
-          </div>
-          <div class="form-group">
-            <label>ABS Share Code</label>
-            <input type="text" class="form-control" id="abs_share_code">
-          </div>
-          <button type="submit" class="btn btn-primary">Create Title</button>
-        </form>
+      <div class="form-group">
+        <label for="title-custom-label">{{ site.data[page.lang].admin.promo_form_label }}</label>
+        <input type="text" id="title-custom-label" class="form-control" placeholder="{{ site.data[page.lang].admin.promo_form_label_help }}">
+        <small class="form-text text-muted">{{ site.data[page.lang].admin.titles_import_label_hint }}</small>
       </div>
-    </div>
-    <div class="row">
-      <div class="col-lg-12">
-        <h3>Existing Titles</h3>
-        <table class="table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Title</th>
-              <th>Author</th>
-              <th>Language</th>
-              <th>Active</th>
-            </tr>
-          </thead>
-          <tbody id="titles-table-body">
-          </tbody>
-        </table>
+      <div class="form-group">
+        <label for="title-custom-price">{{ site.data[page.lang].admin.titles_import_price_label }}</label>
+        <input type="number" id="title-custom-price" class="form-control" step="0.01" min="0">
+        <small class="form-text text-muted">{{ site.data[page.lang].admin.titles_import_price_hint }}</small>
       </div>
+      <button type="submit" class="btn btn-primary">{{ site.data[page.lang].admin.titles_import_submit }}</button>
+      <button type="button" id="title-refresh" class="btn btn-default">{{ site.data[page.lang].admin.titles_refresh_button }}</button>
+      <div id="title-feedback" class="alert" style="display:none;"></div>
+    </form>
+  </div>
+  <div class="col-lg-6">
+    <div class="callout">
+      <h4>{{ site.data[page.lang].admin.titles_callout_heading }}</h4>
+      <p>{{ site.data[page.lang].admin.titles_callout_copy }}</p>
+      <ul>
+        <li>{{ site.data[page.lang].admin.titles_callout_step_share }}</li>
+        <li>{{ site.data[page.lang].admin.titles_callout_step_import }}</li>
+        <li>{{ site.data[page.lang].admin.titles_callout_step_code }}</li>
+      </ul>
     </div>
   </div>
-</section>
+</div>
+
+<div class="row">
+  <div class="col-lg-12">
+    <h3>{{ site.data[page.lang].admin.titles_table_title }}</h3>
+    <table class="table table-striped table-sm" id="titles-table">
+      <thead>
+        <tr>
+          <th>{{ site.data[page.lang].admin.titles_col_id }}</th>
+          <th>{{ site.data[page.lang].admin.titles_col_title }}</th>
+          <th>{{ site.data[page.lang].admin.titles_col_author }}</th>
+          <th>{{ site.data[page.lang].admin.titles_col_language }}</th>
+          <th>{{ site.data[page.lang].admin.titles_col_duration }}</th>
+          <th>{{ site.data[page.lang].admin.titles_col_share }}</th>
+          <th>{{ site.data[page.lang].admin.titles_col_actions }}</th>
+        </tr>
+      </thead>
+      <tbody id="titles-table-body">
+        <tr><td colspan="7">{{ site.data[page.lang].admin.titles_table_empty }}</td></tr>
+      </tbody>
+    </table>
+    <p class="text-right"><small>{{ site.data[page.lang].admin.titles_last_refreshed }} <span id="titles-updated">—</span></small></p>
+  </div>
+</div>
+
+<style>
+  .callout {
+    border-left: 4px solid #007bff;
+    background: #f9fbff;
+    padding: 16px;
+    border-radius: 4px;
+  }
+  #titles-table code {
+    font-size: 12px;
+  }
+</style>
 
 <script>
   document.addEventListener("DOMContentLoaded", function() {
-    var token = localStorage.getItem("token");
+    var token = localStorage.getItem("su_token");
+    var apiBase = window.AVOOK_ADMIN_API_BASE;
+    if (!apiBase && document.body && document.body.dataset && document.body.dataset.apiBase) {
+      apiBase = document.body.dataset.apiBase;
+    }
+    if (!apiBase) {
+      var host = window.location.hostname || "localhost";
+      var protocol = window.location.protocol || "http:";
+      if (host === "localhost" || host === "127.0.0.1") {
+        apiBase = protocol + "//" + host + ":8000";
+      } else {
+        apiBase = protocol + "//" + host;
+      }
+    }
+    var storedBase = localStorage.getItem("admin_api_base");
+    if (storedBase) {
+      apiBase = storedBase;
+    }
+    var titleForm = document.getElementById("title-import-form");
+    var titleShareInput = document.getElementById("title-share");
+    var titleLabelInput = document.getElementById("title-custom-label");
+    var titlePriceInput = document.getElementById("title-custom-price");
+    var shareHint = document.getElementById("title-share-hint");
+    var feedbackBox = document.getElementById("title-feedback");
+    var tableBody = document.getElementById("titles-table-body");
+    var refreshButton = document.getElementById("title-refresh");
+    var updatedLabel = document.getElementById("titles-updated");
+    var sessionExpiredText = {{ site.data[page.lang].admin.promo_session_expired | jsonify }};
+    var shareLoadingText = {{ site.data[page.lang].admin.titles_share_hint_loading | jsonify }};
+    var shareSuccessText = {{ site.data[page.lang].admin.titles_share_hint_success | jsonify }};
+    var shareErrorText = {{ site.data[page.lang].admin.titles_share_hint_error | jsonify }};
+    var copySuccessText = {{ site.data[page.lang].admin.titles_copy_success | jsonify }};
+    var copyErrorText = {{ site.data[page.lang].admin.titles_copy_error | jsonify }};
+    var copyButtonText = {{ site.data[page.lang].admin.titles_copy_id | jsonify }};
+
     if (!token) {
-      window.location.href = "/login.html";
+      if (feedbackBox) {
+        feedbackBox.textContent = sessionExpiredText;
+        feedbackBox.className = "alert alert-danger";
+        feedbackBox.style.display = "block";
+      }
+      setTimeout(function() { window.location.href = "/su/su.html?expired=1"; }, 1200);
+      return;
     }
 
-    fetch("http://localhost:8000/api/v1/admin/titles", {
-      headers: { "Authorization": "Bearer " + token }
-    }).then(function(response) {
-      if (response.ok) {
-        return response.json();
-      } else {
-        throw new Error("Failed to fetch titles.");
+    function normaliseShare(value) {
+      if (!value) { return ""; }
+      try {
+        var url = new URL(value.trim());
+        return url.pathname.replace(/\/$/, "").split("/").pop();
+      } catch (_) {
+        return value.trim().split("?")[0].split("#")[0].replace(/\/$/, "");
       }
-    }).then(function(titles) {
-      var tableBody = document.getElementById("titles-table-body");
-      titles.forEach(function(title) {
+    }
+
+    function setShareHint(message, state) {
+      if (!shareHint) { return; }
+      var base = "form-text ";
+      if (state === "success") { base += "text-success"; }
+      else if (state === "error") { base += "text-danger"; }
+      else { base += "text-muted"; }
+      shareHint.className = base;
+      shareHint.textContent = message;
+    }
+
+    function showFeedback(message, kind) {
+      if (!feedbackBox) { return; }
+      feedbackBox.textContent = message;
+      feedbackBox.className = "alert alert-" + kind;
+      feedbackBox.style.display = "block";
+    }
+
+    function clearFeedback() {
+      if (!feedbackBox) { return; }
+      feedbackBox.style.display = "none";
+      feedbackBox.textContent = "";
+      feedbackBox.className = "alert";
+    }
+
+    var redirecting = false;
+    function handleUnauthorized() {
+      if (!redirecting) {
+        redirecting = true;
+        localStorage.removeItem("su_token");
+        showFeedback(sessionExpiredText, "danger");
+        setTimeout(function() { window.location.href = "/su/su.html?expired=1"; }, 1200);
+      }
+    }
+
+    function requestJson(url, options) {
+      return fetch(url, options || {}).catch(function() {
+        var networkError = new Error("NETWORK_ERROR");
+        networkError.status = 0;
+        throw networkError;
+      }).then(function(response) {
+        if (!response.ok) {
+          return response.json().catch(function() { return {}; }).then(function(data) {
+            var detail = data.detail || response.statusText || ("HTTP " + response.status);
+            var error = new Error(detail);
+            error.status = response.status;
+            throw error;
+          });
+        }
+        return response.status === 204 ? null : response.json();
+      }).catch(function(error) {
+        if (error.status === 401) {
+          handleUnauthorized();
+          throw error;
+        }
+        if (error.status === 0) {
+          showFeedback({{ site.data[page.lang].admin.api_network_error | jsonify }}, "danger");
+        }
+        throw error;
+      });
+    }
+
+    function renderTable(items) {
+      tableBody.innerHTML = "";
+      if (!items || items.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="7">{{ site.data[page.lang].admin.titles_table_empty }}</td></tr>';
+        return;
+      }
+      items.forEach(function(record) {
         var row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${title.id}</td>
-          <td>${title.title}</td>
-          <td>${title.author}</td>
-          <td>${title.language}</td>
-          <td>${title.active}</td>
-        `;
+        var idCell = document.createElement("td");
+        idCell.innerHTML = '<code>' + record.id + '</code>';
+        row.appendChild(idCell);
+
+        var titleCell = document.createElement("td");
+        titleCell.textContent = record.title || "—";
+        row.appendChild(titleCell);
+
+        var authorCell = document.createElement("td");
+        authorCell.textContent = record.author || "—";
+        row.appendChild(authorCell);
+
+        var languageCell = document.createElement("td");
+        languageCell.textContent = (record.language || "—").toUpperCase();
+        row.appendChild(languageCell);
+
+        var durationCell = document.createElement("td");
+        var minutes = record.duration_sec ? Math.max(1, Math.round(record.duration_sec / 60)) : 0;
+        durationCell.textContent = minutes ? minutes + ' min' : '—';
+        row.appendChild(durationCell);
+
+        var shareCell = document.createElement("td");
+        shareCell.innerHTML = record.abs_share_code ? '<code>' + record.abs_share_code + '</code>' : '—';
+        row.appendChild(shareCell);
+
+        var actionsCell = document.createElement("td");
+        var copyButton = document.createElement("button");
+        copyButton.type = "button";
+        copyButton.className = "btn btn-link btn-xs";
+        copyButton.dataset.id = record.id;
+        copyButton.textContent = copyButtonText;
+        actionsCell.appendChild(copyButton);
+        row.appendChild(actionsCell);
+
         tableBody.appendChild(row);
       });
-    });
+      updatedLabel.textContent = new Date().toLocaleString();
+    }
 
-    document.getElementById("createTitleForm").addEventListener("submit", function(event) {
-      event.preventDefault();
-      var titleData = {
-        title: document.getElementById("title").value,
-        author: document.getElementById("author").value,
-        language: document.getElementById("language").value,
-        duration_sec: parseInt(document.getElementById("duration_sec").value),
-        price_retail: parseFloat(document.getElementById("price_retail").value),
-        currency: document.getElementById("currency").value,
-        abs_share_code: document.getElementById("abs_share_code").value,
-      };
-
-      fetch("http://localhost:8000/api/v1/admin/titles", {
-        method: "POST",
-        headers: {
-          "Authorization": "Bearer " + token,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(titleData)
-      }).then(function(response) {
-        if (response.ok) {
-          location.reload();
-        } else {
-          alert("Failed to create title.");
-        }
+    function loadTitles() {
+      requestJson(apiBase + "/api/v1/admin/titles", {
+        headers: { "Authorization": "Bearer " + token }
+      }).then(function(items) {
+        renderTable(items);
+        clearFeedback();
+      }).catch(function(error) {
+        if (error.status === 401) { return; }
+        showFeedback(error.message, "danger");
       });
-    });
+    }
+
+    if (refreshButton) {
+      refreshButton.addEventListener("click", function() {
+        loadTitles();
+      });
+    }
+
+    if (titleForm) {
+      titleForm.addEventListener("submit", function(event) {
+        event.preventDefault();
+        clearFeedback();
+        var shareCode = normaliseShare(titleShareInput.value);
+        if (!shareCode) {
+          setShareHint(shareErrorText, "error");
+          return;
+        }
+        setShareHint(shareLoadingText, "default");
+        var payload = { share: shareCode };
+        if (titleLabelInput.value.trim()) {
+          payload.title = titleLabelInput.value.trim();
+        }
+        if (titlePriceInput.value) {
+          payload.price_retail = parseFloat(titlePriceInput.value);
+          payload.currency = "EUR";
+        }
+        requestJson(apiBase + "/api/v1/admin/titles/import", {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer " + token,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        }).then(function(record) {
+          titleForm.reset();
+          setShareHint(shareSuccessText + " (#" + record.id + ")", "success");
+          showFeedback({{ site.data[page.lang].admin.titles_import_feedback_success | jsonify }} + " (#" + record.id + ")", "success");
+          loadTitles();
+        }).catch(function(error) {
+          if (error.status === 401) { return; }
+          setShareHint(shareErrorText + " (" + error.message + ")", "error");
+          showFeedback({{ site.data[page.lang].admin.titles_import_feedback_error | jsonify }} + " (" + error.message + ")", "danger");
+        });
+      });
+    }
+
+    if (tableBody) {
+      tableBody.addEventListener("click", function(event) {
+        var button = event.target.closest("button[data-id]");
+        if (!button) { return; }
+        var id = button.dataset.id;
+        if (!navigator.clipboard) {
+          showFeedback(copyErrorText, "danger");
+          return;
+        }
+        navigator.clipboard.writeText(id).then(function() {
+          showFeedback(copySuccessText.replace("{id}", id), "success");
+        }).catch(function() {
+          showFeedback(copyErrorText, "danger");
+        });
+      });
+    }
+
+    loadTitles();
   });
 </script>
