@@ -50,7 +50,10 @@ SQLModel.metadata.create_all(app_db.engine)
 from app.main import app  # noqa: E402
 from app.api.admin import get_current_config_superuser  # noqa: E402
 from app.models import Card, Title, User  # noqa: E402
-from app.audiobookshelf import AudiobookshelfNotFound  # noqa: E402
+from app.audiobookshelf import (  # noqa: E402
+    AudiobookshelfNotFound,
+    AudiobookshelfUnavailable,
+)
 
 app.dependency_overrides[get_current_config_superuser] = lambda: {"sub": "tests"}
 
@@ -258,6 +261,53 @@ def test_import_title_handles_abs_errors():
     assert getattr(app.state, "test_abs_client").calls == ["missing-share"]
     assert response.status_code == 404
     assert response.json()["detail"] == "ABS_SHARE_NOT_FOUND"
+
+
+def test_import_title_falls_back_to_share_base_url():
+    _seed_data()
+
+    share_code = "fallback-share"
+    share_url = "http://localhost:13378/audiobookshelf/share/fallback-share"
+
+    class FallbackAudiobookshelfClient:
+        def __init__(self, base_url="http://abs", calls=None):
+            self.base_url = base_url.rstrip("/")
+            self.calls = calls if calls is not None else []
+            self.data = {
+                "http://localhost:13378/audiobookshelf": {
+                    share_code: {
+                        "libraryItem": {
+                            "title": "Fallback title",
+                            "media": {"metadata": {"title": "Fallback title"}},
+                        }
+                    }
+                }
+            }
+
+        def ensure_share_available(self, candidate: str):
+            self.calls.append((self.base_url, candidate))
+            base_payload = self.data.get(self.base_url, {})
+            if candidate in base_payload:
+                return base_payload[candidate]
+            raise AudiobookshelfUnavailable("unreachable")
+
+        def with_base_url(self, base_url: str):
+            return FallbackAudiobookshelfClient(base_url, calls=self.calls)
+
+    fallback_client = FallbackAudiobookshelfClient()
+    app.state.abs_client_override = fallback_client
+
+    response = client.post(
+        "/api/v1/admin/titles/import",
+        headers={"Authorization": "Bearer test"},
+        json={"share": share_url},
+    )
+
+    assert response.status_code == 200
+    assert fallback_client.calls == [
+        ("http://abs", share_code),
+        ("http://localhost:13378/audiobookshelf", share_code),
+    ]
 
 
 def teardown_module(_module):

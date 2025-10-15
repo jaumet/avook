@@ -151,6 +151,19 @@ def _normalise_share_code(value: str) -> str:
     return candidate.strip()
 
 
+def _derive_share_base_url(raw: str) -> str:
+    parsed = urlparse(raw or "")
+    if not (parsed.scheme and parsed.netloc):
+        return ""
+
+    path = parsed.path or ""
+    base_path = path.split("/share", 1)[0].rstrip("/")
+
+    if base_path:
+        return f"{parsed.scheme}://{parsed.netloc}{base_path}"
+    return f"{parsed.scheme}://{parsed.netloc}"
+
+
 @router.get("/titles/by-share/{share_code:path}", response_model=TitleRead)
 def read_title_by_share(
     share_code: str, db: Session = Depends(get_session)
@@ -169,6 +182,8 @@ def read_title_by_share(
 @router.post("/titles/import", response_model=TitleRead)
 def import_title_from_share(
     payload: TitleImportRequest,
+
+    request: Request,
     db: Session = Depends(get_session),
     abs_client: AudiobookshelfClient = Depends(get_audiobookshelf_client),
 ) -> TitleRead:
@@ -178,12 +193,24 @@ def import_title_from_share(
 
     existing = db.exec(select(Title).where(Title.abs_share_code == share_code)).first()
 
+    share_base_url = _derive_share_base_url(payload.share)
+
     try:
         share_data = abs_client.ensure_share_available(share_code)
     except AudiobookshelfNotFound as exc:
         raise HTTPException(status_code=404, detail="ABS_SHARE_NOT_FOUND") from exc
     except AudiobookshelfUnavailable as exc:
-        raise HTTPException(status_code=502, detail="ABS_UNAVAILABLE") from exc
+        fallback_url = share_base_url.strip()
+        normalised_current = abs_client.base_url.rstrip("/")
+        if not fallback_url or fallback_url.rstrip("/") == normalised_current:
+            raise HTTPException(status_code=502, detail="ABS_UNAVAILABLE") from exc
+
+        fallback_client = abs_client.with_base_url(fallback_url)
+        try:
+            share_data = fallback_client.ensure_share_available(share_code)
+        except AudiobookshelfUnavailable as fallback_exc:
+            raise HTTPException(status_code=502, detail="ABS_UNAVAILABLE") from fallback_exc
+        request.app.state.abs_client_override = fallback_client
     except AudiobookshelfError as exc:
         raise HTTPException(status_code=500, detail="ABS_ERROR") from exc
 
@@ -573,48 +600,9 @@ def export_cards_csv(title_id: int, batch: int = None, db: Session = Depends(get
         ])
 
     output.seek(0)
-    return StreamingResponse(output, media_type="text/csv", headers={"Content-Disposition": f"attachment; filename=cards_export_{title_id}.csv"})
-def get_audiobookshelf_client() -> AudiobookshelfClient:
-    return AudiobookshelfClient()
-
-
-def _extract_title_metadata(data: dict) -> dict:
-    item = data.get("libraryItem") or {}
-    media = item.get("media") or {}
-    metadata = media.get("metadata") or {}
-
-    title = metadata.get("title") or item.get("title")
-    author = (
-        metadata.get("author")
-        or metadata.get("authorName")
-        or metadata.get("artist")
-        or item.get("author")
+    return StreamingResponse(
+        output,
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=cards_export_{title_id}.csv"},
     )
-    language = metadata.get("language") or item.get("language")
-
-    duration_raw = (
-        metadata.get("duration")
-        or media.get("duration")
-        or item.get("duration")
-        or metadata.get("audioDuration")
-    )
-    try:
-        duration = int(float(duration_raw)) if duration_raw is not None else None
-    except (TypeError, ValueError):
-        duration = None
-
-    cover_url = (
-        data.get("coverUrl")
-        or metadata.get("cover")
-        or metadata.get("coverUrl")
-        or media.get("cover")
-    )
-
-    return {
-        "title": title,
-        "author": author,
-        "language": language,
-        "duration_sec": duration,
-        "cover_url": cover_url,
-    }
 

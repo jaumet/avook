@@ -124,6 +124,20 @@ class AudiobookshelfClient:
             headers["Authorization"] = f"Bearer {self.api_token}"
         return headers
 
+    def with_base_url(self, base_url: str) -> "AudiobookshelfClient":
+        """Return a copy of the client that targets ``base_url``."""
+
+        clone = AudiobookshelfClient(
+            base_url=base_url,
+            api_token=self.api_token,
+            username=self.username,
+            password=self.password,
+            timeout=self.timeout,
+            cache_namespace=self.cache_namespace,
+            cache_ttl=self.cache_ttl,
+        )
+        return clone
+
     def _absolute(self, value: Optional[str]) -> Optional[str]:
         """Return an absolute URL for ``value`` if it is provided."""
 
