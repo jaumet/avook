@@ -14,3 +14,4 @@ pandas
 ace_tools
 redis
 fakeredis
+segno

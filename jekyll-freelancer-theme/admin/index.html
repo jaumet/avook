@@ -118,6 +118,7 @@ lang: ca
           <label for="promo-share">{{ site.data[page.lang].admin.promo_form_share }}</label>
           <input type="text" id="promo-share" class="form-control" placeholder="https://…/share/XXXXXX">
           <small id="promo-share-hint" class="form-text text-muted">{{ site.data[page.lang].admin.promo_form_share_help }}</small>
+          <small class="form-text text-muted"><a href="/admin/titles.html" target="_blank" rel="noopener">{{ site.data[page.lang].admin.promo_form_title_manager_hint }}</a></small>
         </div>
         <div class="form-group">
           <label for="promo-label">{{ site.data[page.lang].admin.promo_form_label }}</label>
@@ -192,10 +193,11 @@ lang: ca
             <th>{{ site.data[page.lang].admin.qr_table_target }}</th>
             <th>{{ site.data[page.lang].admin.qr_table_campaign }}</th>
             <th>{{ site.data[page.lang].admin.qr_table_scans }}</th>
+            <th>{{ site.data[page.lang].admin.qr_table_actions }}</th>
           </tr>
         </thead>
         <tbody id="qr-table-body">
-          <tr><td colspan="4">{{ site.data[page.lang].admin.qr_empty_state }}</td></tr>
+          <tr><td colspan="5">{{ site.data[page.lang].admin.qr_empty_state }}</td></tr>
         </tbody>
       </table>
     </div>
@@ -311,6 +313,13 @@ lang: ca
     var shareImportSuccess = {{ site.data[page.lang].admin.promo_form_share_import_success | jsonify }};
     var shareImportError = {{ site.data[page.lang].admin.promo_form_share_import_error | jsonify }};
     var titleIdInvalid = {{ site.data[page.lang].admin.promo_form_title_id_invalid | jsonify }};
+    var sessionExpiredText = {{ site.data[page.lang].admin.promo_session_expired | jsonify }};
+    var qrDownloadLabel = {{ site.data[page.lang].admin.qr_download_label | jsonify }};
+    var qrDownloadError = {{ site.data[page.lang].admin.qr_download_error | jsonify }};
+    var qrDeleteLabel = {{ site.data[page.lang].admin.qr_delete_label | jsonify }};
+    var qrDeleteConfirm = {{ site.data[page.lang].admin.qr_delete_confirm | jsonify }};
+    var qrDeleteSuccess = {{ site.data[page.lang].admin.qr_delete_success | jsonify }};
+    var qrDeleteError = {{ site.data[page.lang].admin.qr_delete_error | jsonify }};
 
     var apiBase = window.AVOOK_ADMIN_API_BASE;
     if (!apiBase && document.body && document.body.dataset && document.body.dataset.apiBase) {
@@ -371,16 +380,41 @@ lang: ca
 
     function requestJson(url, options) {
       return fetch(url, options || {}).catch(function() {
-        throw new Error(networkErrorText);
+        var err = new Error(networkErrorText);
+        err.status = 0;
+        throw err;
       }).then(function(response) {
         if (!response.ok) {
           return response.json().catch(function() { return {}; }).then(function(data) {
             var detail = data.detail || response.statusText || ("HTTP " + response.status);
-            throw new Error(detail);
+            var err = new Error(detail);
+            err.status = response.status;
+            err.detail = data.detail || null;
+            throw err;
           });
+        }
+        if (response.status === 204) {
+          return null;
         }
         return response.json();
       });
+    }
+
+    var redirectingForAuth = false;
+    function handleUnauthorized(error) {
+      if (error && error.status === 401 && !redirectingForAuth) {
+        redirectingForAuth = true;
+        localStorage.removeItem("su_token");
+        if (errorBox) {
+          errorBox.textContent = sessionExpiredText;
+          errorBox.style.display = "block";
+        }
+        setTimeout(function() {
+          window.location.href = "/su/su.html?expired=1";
+        }, 1200);
+        return true;
+      }
+      return error && error.status === 401;
     }
 
     function showFeedback(box, message, kind) {
@@ -422,19 +456,99 @@ lang: ca
       if (!qrTableBody) { return; }
       qrTableBody.innerHTML = "";
       if (!items || items.length === 0) {
-        qrTableBody.innerHTML = '<tr><td colspan="4">' + qrEmptyText + '</td></tr>';
+        qrTableBody.innerHTML = '<tr><td colspan="5">' + qrEmptyText + '</td></tr>';
         return;
       }
       items.forEach(function(item) {
         var scansLabel = item.scan_count + (item.last_scanned_at ? " (" + new Date(item.last_scanned_at).toLocaleString() + ")" : "");
         var row = document.createElement("tr");
-        var targetCell = '<a href="' + item.target_url + '" target="_blank" rel="noopener">' + item.target_url + '</a>';
-        row.innerHTML =
-          "<td>" + item.slug + "</td>" +
-          "<td>" + targetCell + "</td>" +
-          "<td>" + (item.campaign || "—") + "</td>" +
-          "<td>" + scansLabel + "</td>";
+
+        var slugCell = document.createElement("td");
+        slugCell.textContent = item.slug;
+        row.appendChild(slugCell);
+
+        var targetCell = document.createElement("td");
+        var link = document.createElement("a");
+        link.href = item.target_url;
+        link.target = "_blank";
+        link.rel = "noopener";
+        link.textContent = item.target_url;
+        targetCell.appendChild(link);
+        row.appendChild(targetCell);
+
+        var campaignCell = document.createElement("td");
+        campaignCell.textContent = item.campaign || "—";
+        row.appendChild(campaignCell);
+
+        var scansCell = document.createElement("td");
+        scansCell.textContent = scansLabel;
+        row.appendChild(scansCell);
+
+        var actionsCell = document.createElement("td");
+        actionsCell.innerHTML =
+          '<button type="button" class="btn btn-link qr-action" data-action="download" data-slug="' + item.slug + '">' + qrDownloadLabel + '</button>' +
+          '<button type="button" class="btn btn-link text-danger qr-action" data-action="delete" data-slug="' + item.slug + '">' + qrDeleteLabel + '</button>';
+        row.appendChild(actionsCell);
+
         qrTableBody.appendChild(row);
+      });
+    }
+
+    function downloadQr(slug) {
+      if (!slug) { return; }
+      clearFeedback(qrFeedback);
+      fetch(apiBase + "/api/v1/admin/qr/custom/" + encodeURIComponent(slug) + "/svg", {
+        headers: { "Authorization": "Bearer " + token }
+      }).then(function(response) {
+        if (!response.ok) {
+          return response.json().catch(function() { return {}; }).then(function(data) {
+            var detail = data.detail || response.statusText || ("HTTP " + response.status);
+            var err = new Error(detail);
+            err.status = response.status;
+            throw err;
+          });
+        }
+        return response.blob();
+      }).then(function(blob) {
+        if (!blob) { return; }
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement("a");
+        link.href = url;
+        link.download = slug + ".svg";
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(function() {
+          URL.revokeObjectURL(url);
+          link.remove();
+        }, 0);
+      }).catch(function(error) {
+        if (handleUnauthorized(error)) { return; }
+        showFeedback(qrFeedback, qrDownloadError + " (" + error.message + ")", "danger");
+      });
+    }
+
+    function deleteQr(slug) {
+      if (!slug) { return; }
+      if (!window.confirm(qrDeleteConfirm)) { return; }
+      clearFeedback(qrFeedback);
+      fetch(apiBase + "/api/v1/admin/qr/custom/" + encodeURIComponent(slug), {
+        method: "DELETE",
+        headers: { "Authorization": "Bearer " + token }
+      }).then(function(response) {
+        if (response.status === 204) {
+          showFeedback(qrFeedback, qrDeleteSuccess, "success");
+          loadCustomQrs(token);
+          return;
+        }
+        return response.json().catch(function() { return {}; }).then(function(data) {
+          var detail = data.detail || response.statusText || ("HTTP " + response.status);
+          var err = new Error(detail);
+          err.status = response.status;
+          throw err;
+        });
+      }).catch(function(error) {
+        if (handleUnauthorized(error)) { return; }
+        showFeedback(qrFeedback, qrDeleteError + " (" + error.message + ")", "danger");
       });
     }
 
@@ -444,6 +558,7 @@ lang: ca
       }).then(function(items) {
         renderPromoTable(items);
       }).catch(function(error) {
+        if (handleUnauthorized(error)) { return; }
         showFeedback(promoFeedback, error.message, "danger");
       });
     }
@@ -454,6 +569,7 @@ lang: ca
       }).then(function(items) {
         renderQrTable(items);
       }).catch(function(error) {
+        if (handleUnauthorized(error)) { return; }
         showFeedback(qrFeedback, error.message, "danger");
       });
     }
@@ -484,6 +600,7 @@ lang: ca
           setShareHint(shareHelpText, "default");
         }
       }).catch(function(error) {
+        if (handleUnauthorized(error)) { return; }
         if (shareHint) {
           setShareHint(titleListError + " (" + error.message + ")", "error");
         }
@@ -549,6 +666,7 @@ lang: ca
         handleTitleInputChange();
         setShareHint(shareImportSuccess + " " + resolveTitleLabel(record) + " (#" + record.id + ")", "success");
       }).catch(function(error) {
+        if (handleUnauthorized(error)) { return; }
         setShareHint(shareImportError + " (" + error.message + ")", "error");
       });
     }
@@ -568,6 +686,7 @@ lang: ca
         handleTitleInputChange();
         setShareHint(shareFoundPrefix + " " + resolveTitleLabel(record) + " (#" + record.id + ")", "success");
       }).catch(function(error) {
+        if (handleUnauthorized(error)) { return; }
         if (error.message === "INVALID_SHARE_CODE") {
           setShareHint(shareInvalid, "error");
           return;
@@ -656,6 +775,7 @@ lang: ca
           }
           loadPromoCodes(token);
         }).catch(function(error) {
+          if (handleUnauthorized(error)) { return; }
           showFeedback(promoFeedback, error.message, "danger");
         });
       });
@@ -688,8 +808,23 @@ lang: ca
           qrForm.reset();
           loadCustomQrs(token);
         }).catch(function(error) {
+          if (handleUnauthorized(error)) { return; }
           showFeedback(qrFeedback, error.message, "danger");
         });
+      });
+    }
+
+    if (qrTableBody) {
+      qrTableBody.addEventListener("click", function(event) {
+        var button = event.target.closest("button.qr-action");
+        if (!button) { return; }
+        var slug = button.dataset.slug;
+        var action = button.dataset.action;
+        if (action === "download") {
+          downloadQr(slug);
+        } else if (action === "delete") {
+          deleteQr(slug);
+        }
       });
     }
 
@@ -740,6 +875,7 @@ lang: ca
       loadCustomQrs(token);
       content.style.display = "block";
     }).catch(function(error) {
+      if (handleUnauthorized(error)) { return; }
       errorBox.textContent = {{ site.data[page.lang].admin.load_error | jsonify }} + " (" + error.message + ")";
       errorBox.style.display = "block";
     });

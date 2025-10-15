@@ -1,7 +1,7 @@
 from urllib.parse import urlparse, unquote
 
-from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlmodel import Session, select
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from sqlmodel import Session, select, delete
 
 from app.models import (
     Title,
@@ -42,6 +42,55 @@ from uuid import uuid4, UUID
 from fastapi.responses import StreamingResponse
 import io
 import csv
+import segno
+
+
+def get_audiobookshelf_client(request: Request) -> AudiobookshelfClient:
+    override = getattr(request.app.state, "abs_client_override", None)
+    if override is not None:
+        return override
+    return AudiobookshelfClient()
+
+
+def _extract_title_metadata(data: dict) -> dict:
+    item = data.get("libraryItem") or {}
+    media = item.get("media") or {}
+    metadata = media.get("metadata") or {}
+
+    title = metadata.get("title") or item.get("title")
+    author = (
+        metadata.get("author")
+        or metadata.get("authorName")
+        or metadata.get("artist")
+        or item.get("author")
+    )
+    language = metadata.get("language") or item.get("language")
+
+    duration_raw = (
+        metadata.get("duration")
+        or media.get("duration")
+        or item.get("duration")
+        or metadata.get("audioDuration")
+    )
+    try:
+        duration = int(float(duration_raw)) if duration_raw is not None else None
+    except (TypeError, ValueError):
+        duration = None
+
+    cover_url = (
+        data.get("coverUrl")
+        or metadata.get("cover")
+        or metadata.get("coverUrl")
+        or media.get("cover")
+    )
+
+    return {
+        "title": title,
+        "author": author,
+        "language": language,
+        "duration_sec": duration,
+        "cover_url": cover_url,
+    }
 
 
 def get_audiobookshelf_client(request: Request) -> AudiobookshelfClient:
@@ -474,6 +523,33 @@ def get_custom_qr(slug: str, db: Session = Depends(get_session)) -> CustomQrDeta
         **base.model_dump(),
         events=event_reads,
     )
+
+
+@router.get("/qr/custom/{slug}/svg")
+def download_custom_qr_svg(slug: str, db: Session = Depends(get_session)) -> Response:
+    slug_normalised = slug.strip().lower()
+    record = db.get(CustomQr, slug_normalised)
+    if not record:
+        raise HTTPException(status_code=404, detail="CUSTOM_QR_NOT_FOUND")
+
+    qr = segno.make(record.target_url, error="h")
+    buffer = io.BytesIO()
+    qr.save(buffer, kind="svg", xmldecl=False)
+    buffer.seek(0)
+    return Response(content=buffer.read(), media_type="image/svg+xml")
+
+
+@router.delete("/qr/custom/{slug}", status_code=204)
+def delete_custom_qr(slug: str, db: Session = Depends(get_session)) -> Response:
+    slug_normalised = slug.strip().lower()
+    record = db.get(CustomQr, slug_normalised)
+    if not record:
+        raise HTTPException(status_code=404, detail="CUSTOM_QR_NOT_FOUND")
+
+    db.exec(delete(QrScanEvent).where(QrScanEvent.slug == record.slug))
+    db.delete(record)
+    db.commit()
+    return Response(status_code=204)
 
 @router.get("/batches", response_model=list[Batch])
 def read_batches(db: Session = Depends(get_session)):

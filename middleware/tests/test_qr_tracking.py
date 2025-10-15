@@ -112,6 +112,48 @@ def test_custom_qr_creation_and_tracking():
         assert events[1].source is None
 
 
+def test_custom_qr_svg_and_deletion():
+    payload = {
+        "slug": "launch-day",
+        "target_url": "https://audiovook.test/launch",
+    }
+
+    create = client.post(
+        "/api/v1/admin/qr/custom",
+        json=payload,
+        headers={"Authorization": "Bearer test"},
+    )
+    assert create.status_code == 200
+
+    svg_response = client.get(
+        f"/api/v1/admin/qr/custom/{payload['slug']}/svg",
+        headers={"Authorization": "Bearer test"},
+    )
+    assert svg_response.status_code == 200
+    assert svg_response.headers["content-type"] == "image/svg+xml"
+    assert "<svg" in svg_response.text
+
+    delete = client.delete(
+        f"/api/v1/admin/qr/custom/{payload['slug']}",
+        headers={"Authorization": "Bearer test"},
+    )
+    assert delete.status_code == 204
+
+    follow_up = client.get(
+        f"/api/v1/admin/qr/custom/{payload['slug']}",
+        headers={"Authorization": "Bearer test"},
+    )
+    assert follow_up.status_code == 404
+
+    with Session(app_db.engine) as session:
+        record = session.get(CustomQr, payload["slug"])
+        assert record is None
+        scans = session.exec(
+            select(QrScanEvent).where(QrScanEvent.slug == payload["slug"])
+        ).all()
+        assert scans == []
+
+
 def teardown_module(_module):
     app.dependency_overrides.pop(get_current_config_superuser, None)
     client.close()
