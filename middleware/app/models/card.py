@@ -12,6 +12,10 @@ class Card(SQLModel, table=True):
     retail_state: str = Field(default="warehouse")
     store_id: Optional[int] = Field(default=None, foreign_key="store.id")
     batch_id: Optional[int] = Field(default=None, foreign_key="batch.id")
+    promo_code: Optional[str] = Field(
+        default=None, foreign_key="promo_code.code", index=True
+    )
+    campaign: Optional[str] = None
     claimed_at: Optional[datetime] = None
     lent_at: Optional[datetime] = None
     updated_at: Optional[datetime] = Field(default_factory=datetime.utcnow, nullable=False)

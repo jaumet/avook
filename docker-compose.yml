@@ -33,6 +33,16 @@ services:
       - db
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
+  nginx:
+    image: nginx:1.25-alpine
+    depends_on:
+      - middleware
+      - audiobookshelf
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+
   jekyll:
     image: jekyll/jekyll:4.2.2
     command: jekyll serve --livereload --watch --drafts --host 0.0.0.0
