@@ -23,6 +23,7 @@ class TitleImportRequest(BaseModel):
     cover_url: Optional[str] = None
     price_retail: Optional[float] = None
     currency: Optional[str] = None
+    allow_manual: bool = False
 
 
 class TitleRead(BaseModel):

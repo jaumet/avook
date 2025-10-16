@@ -289,6 +289,8 @@ def import_title_from_share(
 
     share_base_url = _derive_share_base_url(payload.share)
 
+    manual_allowed = bool(getattr(payload, "allow_manual", False))
+
     try:
         share_data = abs_client.ensure_share_available(share_code)
     except (AudiobookshelfNotFound, AudiobookshelfUnavailable) as exc:
@@ -309,13 +311,22 @@ def import_title_from_share(
             request.app.state.abs_client_override = fallback_client
             break
         else:
-            if isinstance(last_error, AudiobookshelfNotFound):
-                raise HTTPException(status_code=404, detail="ABS_SHARE_NOT_FOUND") from last_error
-            raise HTTPException(status_code=502, detail="ABS_UNAVAILABLE") from last_error
+            if manual_allowed:
+                share_data = {}
+            else:
+                if isinstance(last_error, AudiobookshelfNotFound):
+                    raise HTTPException(status_code=404, detail="ABS_SHARE_NOT_FOUND") from last_error
+                raise HTTPException(status_code=502, detail="ABS_UNAVAILABLE") from last_error
     except AudiobookshelfNotFound as exc:
-        raise HTTPException(status_code=404, detail="ABS_SHARE_NOT_FOUND") from exc
+        if manual_allowed:
+            share_data = {}
+        else:
+            raise HTTPException(status_code=404, detail="ABS_SHARE_NOT_FOUND") from exc
     except AudiobookshelfError as exc:
-        raise HTTPException(status_code=500, detail="ABS_ERROR") from exc
+        if manual_allowed:
+            share_data = {}
+        else:
+            raise HTTPException(status_code=500, detail="ABS_ERROR") from exc
 
     metadata = _extract_title_metadata(share_data)
 

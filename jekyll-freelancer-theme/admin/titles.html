@@ -21,6 +21,13 @@ lang: ca
         <small id="title-share-hint" class="form-text text-muted">{{ site.data[page.lang].admin.titles_share_hint_default }}</small>
       </div>
       <div class="form-group">
+        <div class="form-check">
+          <input type="checkbox" id="title-allow-manual" class="form-check-input">
+          <label class="form-check-label" for="title-allow-manual">{{ site.data[page.lang].admin.titles_manual_checkbox_label }}</label>
+        </div>
+        <small class="form-text text-muted">{{ site.data[page.lang].admin.titles_manual_checkbox_hint }}</small>
+      </div>
+      <div class="form-group">
         <label for="title-custom-label">{{ site.data[page.lang].admin.promo_form_label }}</label>
         <input type="text" id="title-custom-label" class="form-control" placeholder="{{ site.data[page.lang].admin.promo_form_label_help }}">
         <small class="form-text text-muted">{{ site.data[page.lang].admin.titles_import_label_hint }}</small>
@@ -107,6 +114,7 @@ lang: ca
     var titleShareInput = document.getElementById("title-share");
     var titleLabelInput = document.getElementById("title-custom-label");
     var titlePriceInput = document.getElementById("title-custom-price");
+    var manualCheckbox = document.getElementById("title-allow-manual");
     var shareHint = document.getElementById("title-share-hint");
     var feedbackBox = document.getElementById("title-feedback");
     var tableBody = document.getElementById("titles-table-body");
@@ -116,6 +124,9 @@ lang: ca
     var shareLoadingText = {{ site.data[page.lang].admin.titles_share_hint_loading | jsonify }};
     var shareSuccessText = {{ site.data[page.lang].admin.titles_share_hint_success | jsonify }};
     var shareErrorText = {{ site.data[page.lang].admin.titles_share_hint_error | jsonify }};
+    var manualPromptText = {{ site.data[page.lang].admin.titles_manual_prompt | jsonify }};
+    var manualRequiredText = {{ site.data[page.lang].admin.titles_manual_required | jsonify }};
+    var manualSuccessText = {{ site.data[page.lang].admin.titles_manual_success | jsonify }};
     var copySuccessText = {{ site.data[page.lang].admin.titles_copy_success | jsonify }};
     var copyErrorText = {{ site.data[page.lang].admin.titles_copy_error | jsonify }};
     var copyButtonText = {{ site.data[page.lang].admin.titles_copy_id | jsonify }};
@@ -275,6 +286,11 @@ lang: ca
           setShareHint(shareErrorText, "error");
           return;
         }
+        if (manualCheckbox && manualCheckbox.checked && !titleLabelInput.value.trim()) {
+          setShareHint(shareErrorText, "error");
+          showFeedback(manualRequiredText, "danger");
+          return;
+        }
         setShareHint(shareLoadingText, "default");
         var payload = { share: shareCode };
         if (titleLabelInput.value.trim()) {
@@ -283,6 +299,9 @@ lang: ca
         if (titlePriceInput.value) {
           payload.price_retail = parseFloat(titlePriceInput.value);
           payload.currency = "EUR";
+        }
+        if (manualCheckbox && manualCheckbox.checked) {
+          payload.allow_manual = true;
         }
         requestJson(apiBase + "/api/v1/admin/titles/import", {
           method: "POST",
@@ -294,10 +313,19 @@ lang: ca
         }).then(function(record) {
           titleForm.reset();
           setShareHint(shareSuccessText + " (#" + record.id + ")", "success");
-          showFeedback({{ site.data[page.lang].admin.titles_import_feedback_success | jsonify }} + " (#" + record.id + ")", "success");
+          var successMessage = {{ site.data[page.lang].admin.titles_import_feedback_success | jsonify }} + " (#" + record.id + ")";
+          if (manualCheckbox && manualCheckbox.checked) {
+            successMessage = manualSuccessText.replace("{id}", record.id);
+          }
+          showFeedback(successMessage, "success");
           loadTitles();
         }).catch(function(error) {
           if (error.status === 401) { return; }
+          if (manualCheckbox && !manualCheckbox.checked && error.message === "ABS_UNAVAILABLE") {
+            setShareHint(shareErrorText + " (" + error.message + ")", "error");
+            showFeedback(manualPromptText, "warning");
+            return;
+          }
           setShareHint(shareErrorText + " (" + error.message + ")", "error");
           showFeedback({{ site.data[page.lang].admin.titles_import_feedback_error | jsonify }} + " (" + error.message + ")", "danger");
         });

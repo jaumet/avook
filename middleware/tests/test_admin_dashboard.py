@@ -405,6 +405,48 @@ def test_import_title_uses_configured_fallbacks(monkeypatch):
     assert ("http://lan:13378", share_code) in fallback_client.calls
 
 
+def test_import_title_allows_manual_creation_when_abs_down():
+    _seed_data()
+
+    share_code = "manual-share"
+
+    class DownAudiobookshelfClient:
+        def __init__(self, base_url="http://abs", calls=None):
+            self.base_url = base_url.rstrip("/")
+            self.calls = [] if calls is None else calls
+
+        def ensure_share_available(self, candidate: str):
+            self.calls.append((self.base_url, candidate))
+            raise AudiobookshelfUnavailable("offline")
+
+        def with_base_url(self, base_url: str):
+            return DownAudiobookshelfClient(base_url, calls=self.calls)
+
+    down_client = DownAudiobookshelfClient()
+    app.state.abs_client_override = down_client
+
+    response = client.post(
+        "/api/v1/admin/titles/import",
+        headers={"Authorization": "Bearer test"},
+        json={
+            "share": share_code,
+            "title": "La Punyalada (manual)",
+            "author": "Raimon Casellas",
+            "language": "ca",
+            "duration_sec": 3600,
+            "allow_manual": True,
+        },
+    )
+
+    assert response.status_code == 200
+    created = response.json()
+    assert created["abs_share_code"] == share_code
+    assert created["title"] == "La Punyalada (manual)"
+    assert created["author"] == "Raimon Casellas"
+    assert created["language"] == "ca"
+    assert down_client.calls
+
+
 def teardown_module(_module):
     app.dependency_overrides.pop(get_current_config_superuser, None)
     if hasattr(app.state, "abs_client_override"):
