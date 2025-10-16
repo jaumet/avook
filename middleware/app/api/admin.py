@@ -1,13 +1,96 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, select
-from app.models import Title, User, Card, Store, Batch
-from app.schemas import UserCreate, UserUpdateAdmin
+from urllib.parse import urlparse, unquote
+
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from sqlmodel import Session, select, delete
+
+from app.models import (
+    Title,
+    User,
+    Card,
+    Store,
+    Batch,
+    PromoCode,
+    PromoRedemption,
+    CustomQr,
+    QrScanEvent,
+)
+from app.schemas import (
+    AdminDashboard,
+    TitleImportRequest,
+    TitleRead,
+    UserCreate,
+    UserUpdateAdmin,
+    PromoCodeCreate,
+    PromoCodeRead,
+    PromoCodeDetail,
+    PromoRedemptionRead,
+    CustomQrCreate,
+    CustomQrRead,
+    CustomQrDetail,
+    QrScanEventRead,
+)
 from app.db import get_session
 from app.auth import get_current_config_superuser
+from app.analytics import build_admin_dashboard
+from app.audiobookshelf import (
+    AudiobookshelfClient,
+    AudiobookshelfError,
+    AudiobookshelfNotFound,
+    AudiobookshelfUnavailable,
+)
 from uuid import uuid4, UUID
 from fastapi.responses import StreamingResponse
 import io
 import csv
+import segno
+
+
+def get_audiobookshelf_client(request: Request) -> AudiobookshelfClient:
+    override = getattr(request.app.state, "abs_client_override", None)
+    if override is not None:
+        return override
+    return AudiobookshelfClient()
+
+
+def _extract_title_metadata(data: dict) -> dict:
+    item = data.get("libraryItem") or {}
+    media = item.get("media") or {}
+    metadata = media.get("metadata") or {}
+
+    title = metadata.get("title") or item.get("title")
+    author = (
+        metadata.get("author")
+        or metadata.get("authorName")
+        or metadata.get("artist")
+        or item.get("author")
+    )
+    language = metadata.get("language") or item.get("language")
+
+    duration_raw = (
+        metadata.get("duration")
+        or media.get("duration")
+        or item.get("duration")
+        or metadata.get("audioDuration")
+    )
+    try:
+        duration = int(float(duration_raw)) if duration_raw is not None else None
+    except (TypeError, ValueError):
+        duration = None
+
+    cover_url = (
+        data.get("coverUrl")
+        or metadata.get("cover")
+        or metadata.get("coverUrl")
+        or media.get("cover")
+    )
+
+    return {
+        "title": title,
+        "author": author,
+        "language": language,
+        "duration_sec": duration,
+        "cover_url": cover_url,
+    }
 
 router = APIRouter(
     tags=["Admin"],
@@ -22,6 +105,13 @@ def admin_root():
 def admin_ping():
     return {"ok": True}
 
+
+@router.get("/dashboard", response_model=AdminDashboard)
+def get_dashboard(db: Session = Depends(get_session)):
+    """Return aggregated metrics for the administration panel."""
+
+    return build_admin_dashboard(db)
+
 @router.post("/titles", response_model=Title)
 def create_title(title: Title, db: Session = Depends(get_session)):
     db.add(title)
@@ -29,13 +119,178 @@ def create_title(title: Title, db: Session = Depends(get_session)):
     db.refresh(title)
     return title
 
-@router.get("/titles", response_model=list[Title])
-def read_titles(search: str = "", active: bool = True, db: Session = Depends(get_session)):
-    query = select(Title).where(Title.active == active)
+@router.get("/titles", response_model=list[TitleRead])
+def read_titles(
+    search: str = "",
+    active: bool = True,
+    db: Session = Depends(get_session),
+) -> list[TitleRead]:
+    query = select(Title)
+    if active is not None:
+        query = query.where(Title.active == active)
     if search:
         query = query.where(Title.title.contains(search))
-    titles = db.exec(query).all()
-    return titles
+    titles = db.exec(query.order_by(Title.title.asc())).all()
+    return [TitleRead.model_validate(row, from_attributes=True) for row in titles]
+
+
+def _normalise_share_code(value: str) -> str:
+    raw = unquote(value or "").strip()
+    if not raw:
+        return ""
+
+    parsed = urlparse(raw)
+    if parsed.scheme and parsed.netloc:
+        candidate = parsed.path
+    else:
+        candidate = raw
+
+    candidate = candidate.split("?")[0].split("#")[0].rstrip("/")
+    if "/" in candidate:
+        candidate = candidate.rsplit("/", 1)[-1]
+    return candidate.strip()
+
+
+def _derive_share_base_url(raw: str) -> str:
+    parsed = urlparse(raw or "")
+    if not (parsed.scheme and parsed.netloc):
+        return ""
+
+    path = parsed.path or ""
+    base_path = path.split("/share", 1)[0].rstrip("/")
+
+    if base_path:
+        return f"{parsed.scheme}://{parsed.netloc}{base_path}"
+    return f"{parsed.scheme}://{parsed.netloc}"
+
+
+def _derive_container_share_base_url(primary_base: str, share_base: str) -> str | None:
+    """Return a share base URL reachable from the middleware container.
+
+    When the administrator pastes a public share link (for example pointing to
+    ``localhost``) the middleware running in Docker cannot reach that host.
+    Re-use the path component of the share URL but swap the host for the
+    container's configured base so we end up with something like
+    ``http://audiobookshelf/audiobookshelf``.
+    """
+
+    if not primary_base or not share_base:
+        return None
+
+    primary = urlparse(primary_base)
+    share = urlparse(share_base)
+
+    if not primary.scheme or not primary.netloc:
+        return None
+
+    target = primary._replace(path=share.path, params="", query="", fragment="")
+    candidate = target.geturl().rstrip("/")
+
+    return candidate if candidate else None
+
+
+@router.get("/titles/by-share/{share_code:path}", response_model=TitleRead)
+def read_title_by_share(
+    share_code: str, db: Session = Depends(get_session)
+) -> TitleRead:
+    normalised = _normalise_share_code(share_code)
+    if not normalised:
+        raise HTTPException(status_code=400, detail="INVALID_SHARE_CODE")
+
+    title = db.exec(select(Title).where(Title.abs_share_code == normalised)).first()
+    if not title:
+        raise HTTPException(status_code=404, detail="TITLE_NOT_FOUND_FOR_SHARE")
+
+    return TitleRead.model_validate(title, from_attributes=True)
+
+
+@router.post("/titles/import", response_model=TitleRead)
+def import_title_from_share(
+    payload: TitleImportRequest,
+    request: Request,
+    db: Session = Depends(get_session),
+    abs_client: AudiobookshelfClient = Depends(get_audiobookshelf_client),
+) -> TitleRead:
+    share_code = _normalise_share_code(payload.share)
+    if not share_code:
+        raise HTTPException(status_code=400, detail="INVALID_SHARE_CODE")
+
+    existing = db.exec(select(Title).where(Title.abs_share_code == share_code)).first()
+
+    share_base_url = _derive_share_base_url(payload.share)
+
+    try:
+        share_data = abs_client.ensure_share_available(share_code)
+    except AudiobookshelfNotFound as exc:
+        raise HTTPException(status_code=404, detail="ABS_SHARE_NOT_FOUND") from exc
+    except AudiobookshelfUnavailable as exc:
+        fallback_candidates = []
+
+        fallback_url = share_base_url.strip()
+        normalised_current = abs_client.base_url.rstrip("/")
+
+        if fallback_url and fallback_url.rstrip("/") != normalised_current:
+            fallback_candidates.append(fallback_url)
+
+            derived = _derive_container_share_base_url(
+                primary_base=normalised_current, share_base=fallback_url
+            )
+            if derived and derived not in fallback_candidates and derived != normalised_current:
+                fallback_candidates.append(derived)
+
+        last_error: Exception | None = exc
+
+        for candidate in fallback_candidates:
+            fallback_client = abs_client.with_base_url(candidate)
+            try:
+                share_data = fallback_client.ensure_share_available(share_code)
+            except AudiobookshelfUnavailable as fallback_exc:
+                last_error = fallback_exc
+                continue
+            request.app.state.abs_client_override = fallback_client
+            break
+        else:
+            raise HTTPException(status_code=502, detail="ABS_UNAVAILABLE") from last_error
+    except AudiobookshelfError as exc:
+        raise HTTPException(status_code=500, detail="ABS_ERROR") from exc
+
+    metadata = _extract_title_metadata(share_data)
+
+    def _resolve(attr: str, default=None):
+        override = getattr(payload, attr, None)
+        if override not in (None, ""):
+            return override
+        value = metadata.get(attr)
+        if value not in (None, ""):
+            return value
+        if existing is not None:
+            return getattr(existing, attr)
+        return default
+
+    title_values = {
+        "title": _resolve("title", default=share_code),
+        "author": _resolve("author", default=""),
+        "language": _resolve("language", default="und"),
+        "duration_sec": _resolve("duration_sec", default=0) or 0,
+        "cover_url": _resolve("cover_url"),
+        "price_retail": _resolve("price_retail", default=0.0) or 0.0,
+        "currency": _resolve("currency", default="EUR"),
+        "abs_share_code": share_code,
+    }
+
+    if existing:
+        for key, value in title_values.items():
+            setattr(existing, key, value)
+        db.add(existing)
+        db.commit()
+        db.refresh(existing)
+        return TitleRead.model_validate(existing, from_attributes=True)
+
+    new_title = Title(**title_values)
+    db.add(new_title)
+    db.commit()
+    db.refresh(new_title)
+    return TitleRead.model_validate(new_title, from_attributes=True)
 
 @router.get("/titles/{title_id}", response_model=Title)
 def read_title(title_id: int, db: Session = Depends(get_session)):
@@ -150,6 +405,171 @@ def delete_store(store_id: int, db: Session = Depends(get_session)):
     db.commit()
     return {"ok": True}
 
+
+def _normalise_code(value: str) -> str:
+    return value.strip().upper()
+
+
+@router.post("/promo-codes", response_model=PromoCodeRead)
+def create_promo_code(
+    payload: PromoCodeCreate, db: Session = Depends(get_session)
+) -> PromoCodeRead:
+    code = _normalise_code(payload.code)
+    if db.get(PromoCode, code):
+        raise HTTPException(status_code=400, detail="PROMO_CODE_EXISTS")
+
+    promo = PromoCode(
+        code=code,
+        title_id=payload.title_id,
+        label=payload.label,
+        kind=payload.kind,
+        campaign=payload.campaign,
+        notes=payload.notes,
+        max_uses=payload.max_uses,
+        expires_at=payload.expires_at,
+    )
+    db.add(promo)
+    db.commit()
+    db.refresh(promo)
+    remaining = (
+        max(promo.max_uses - promo.usage_count, 0)
+        if promo.max_uses is not None
+        else None
+    )
+    promo_read = PromoCodeRead.model_validate(promo, from_attributes=True)
+    promo_read.remaining_uses = remaining
+    return promo_read
+
+
+@router.get("/promo-codes", response_model=list[PromoCodeRead])
+def list_promo_codes(db: Session = Depends(get_session)) -> list[PromoCodeRead]:
+    promos = (
+        db.exec(select(PromoCode).order_by(PromoCode.created_at.desc())).all()
+    )
+    results: list[PromoCodeRead] = []
+    for promo in promos:
+        remaining = (
+            max(promo.max_uses - promo.usage_count, 0)
+            if promo.max_uses is not None
+            else None
+        )
+        promo_read = PromoCodeRead.model_validate(promo, from_attributes=True)
+        promo_read.remaining_uses = remaining
+        results.append(promo_read)
+    return results
+
+
+@router.get("/promo-codes/{code}", response_model=PromoCodeDetail)
+def get_promo_code(code: str, db: Session = Depends(get_session)) -> PromoCodeDetail:
+    promo = db.get(PromoCode, _normalise_code(code))
+    if not promo:
+        raise HTTPException(status_code=404, detail="PROMO_CODE_NOT_FOUND")
+
+    redemptions = (
+        db.exec(
+            select(PromoRedemption)
+            .where(PromoRedemption.promo_code_code == promo.code)
+            .order_by(PromoRedemption.redeemed_at.desc())
+        ).all()
+    )
+    remaining = (
+        max(promo.max_uses - promo.usage_count, 0)
+        if promo.max_uses is not None
+        else None
+    )
+    promo_read = PromoCodeRead.model_validate(promo, from_attributes=True)
+    promo_read.remaining_uses = remaining
+    redemption_reads = [
+        PromoRedemptionRead.model_validate(r, from_attributes=True)
+        for r in redemptions
+    ]
+    return PromoCodeDetail(
+        **promo_read.model_dump(),
+        redemptions=redemption_reads,
+    )
+
+
+@router.post("/qr/custom", response_model=CustomQrRead)
+def create_custom_qr(
+    payload: CustomQrCreate, db: Session = Depends(get_session)
+) -> CustomQrRead:
+    slug = payload.slug.strip().lower()
+    if db.get(CustomQr, slug):
+        raise HTTPException(status_code=400, detail="CUSTOM_QR_EXISTS")
+
+    record = CustomQr(
+        slug=slug,
+        target_url=payload.target_url,
+        title_id=payload.title_id,
+        label=payload.label,
+        campaign=payload.campaign,
+        notes=payload.notes,
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return CustomQrRead.model_validate(record, from_attributes=True)
+
+
+@router.get("/qr/custom", response_model=list[CustomQrRead])
+def list_custom_qr(db: Session = Depends(get_session)) -> list[CustomQrRead]:
+    records = (
+        db.exec(select(CustomQr).order_by(CustomQr.created_at.desc())).all()
+    )
+    return [CustomQrRead.model_validate(row, from_attributes=True) for row in records]
+
+
+@router.get("/qr/custom/{slug}", response_model=CustomQrDetail)
+def get_custom_qr(slug: str, db: Session = Depends(get_session)) -> CustomQrDetail:
+    record = db.get(CustomQr, slug.strip().lower())
+    if not record:
+        raise HTTPException(status_code=404, detail="CUSTOM_QR_NOT_FOUND")
+
+    events = (
+        db.exec(
+            select(QrScanEvent)
+            .where(QrScanEvent.slug == record.slug)
+            .order_by(QrScanEvent.scanned_at.desc())
+            .limit(100)
+        ).all()
+    )
+    base = CustomQrRead.model_validate(record, from_attributes=True)
+    event_reads = [
+        QrScanEventRead.model_validate(event, from_attributes=True)
+        for event in events
+    ]
+    return CustomQrDetail(
+        **base.model_dump(),
+        events=event_reads,
+    )
+
+
+@router.get("/qr/custom/{slug}/svg")
+def download_custom_qr_svg(slug: str, db: Session = Depends(get_session)) -> Response:
+    slug_normalised = slug.strip().lower()
+    record = db.get(CustomQr, slug_normalised)
+    if not record:
+        raise HTTPException(status_code=404, detail="CUSTOM_QR_NOT_FOUND")
+
+    qr = segno.make(record.target_url, error="h")
+    buffer = io.BytesIO()
+    qr.save(buffer, kind="svg", xmldecl=False)
+    buffer.seek(0)
+    return Response(content=buffer.read(), media_type="image/svg+xml")
+
+
+@router.delete("/qr/custom/{slug}", status_code=204)
+def delete_custom_qr(slug: str, db: Session = Depends(get_session)) -> Response:
+    slug_normalised = slug.strip().lower()
+    record = db.get(CustomQr, slug_normalised)
+    if not record:
+        raise HTTPException(status_code=404, detail="CUSTOM_QR_NOT_FOUND")
+
+    db.exec(delete(QrScanEvent).where(QrScanEvent.slug == record.slug))
+    db.delete(record)
+    db.commit()
+    return Response(status_code=204)
+
 @router.get("/batches", response_model=list[Batch])
 def read_batches(db: Session = Depends(get_session)):
     batches = db.exec(select(Batch)).all()
@@ -220,4 +640,9 @@ def export_cards_csv(title_id: int, batch: int = None, db: Session = Depends(get
         ])
 
     output.seek(0)
-    return StreamingResponse(output, media_type="text/csv", headers={"Content-Disposition": f"attachment; filename=cards_export_{title_id}.csv"})
+    return StreamingResponse(
+        output,
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=cards_export_{title_id}.csv"},
+    )
+
