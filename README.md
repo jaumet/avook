@@ -48,9 +48,6 @@ Services:
 If your Audiobookshelf server protects the share metadata API, set
 `ABS_USERNAME` and `ABS_PASSWORD` in `.env`. The middleware will log in with
 those credentials and reuse the issued token for admin imports and proxy checks.
-When Audiobookshelf sits on a different network segment, populate
-`ABS_SHARE_FALLBACK_BASES` with additional base URLs (comma separated) the
-importer should try—for example `http://192.168.1.138:13378`.
 
 ## 🌐 PWA & mobile compatibility
 
