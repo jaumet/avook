@@ -168,26 +168,76 @@ class AudiobookshelfClient:
             if cached:
                 return cached
 
-        response = self._request(f"api/shares/{share_code}")
-        if response.status_code == 404:
+        attempted_not_found = False
+        last_error_status: Optional[int] = None
+
+        # Audiobookshelf exposes share metadata through two endpoints.  The
+        # authenticated ``/api/shares`` route is preferred because it returns
+        # richer metadata, but self-hosted installations often disable the
+        # public API or require admin authentication.  When the primary call
+        # fails due to lack of credentials we fall back to the public share
+        # endpoint that powers the hosted share pages.
+        for path, kind in (
+            (f"api/shares/{share_code}", "admin"),
+            (f"api/public/share/{share_code}", "public"),
+        ):
+            response = self._request(path)
+
+            if response.status_code == 404:
+                attempted_not_found = True
+                continue
+
+            if response.status_code in {401, 403} and kind == "admin":
+                # Authenticated route rejected our request; try the public API
+                # without surfacing an error yet.
+                last_error_status = response.status_code
+                continue
+
+            if response.status_code >= 400:
+                last_error_status = response.status_code
+                continue
+
+            if "application/json" in response.headers.get("content-type", ""):
+                payload = response.json()
+            else:  # pragma: no cover - non JSON response
+                payload = {"raw": response.text}
+
+            if isinstance(payload, dict):
+                # Some responses wrap the share metadata under a "share" key
+                # (public API) while others return it at the top level (admin
+                # API).  Normalise both forms to the same dictionary.
+                candidate = payload.get("share")
+                if isinstance(candidate, dict):
+                    payload = candidate
+
+                # Occasionally the public endpoint nests the share data inside
+                # a ``data`` key; handle that gracefully as well.
+                candidate = payload.get("data") if isinstance(payload, dict) else None
+                if isinstance(candidate, dict) and "libraryItem" in candidate:
+                    payload = candidate
+            else:
+                payload = {"raw": payload}
+
+            data: Dict[str, Any] = payload  # type: ignore[assignment]
+
+            # Normalise URLs so downstream consumers always receive absolute URLs.
+            for key in ("streamUrl", "shareUrl", "webUrl", "coverUrl"):
+                if key in data:
+                    data[key] = self._absolute(data[key])
+
+            if cache:
+                cache.set_json(cache_key, data, ttl=self.cache_ttl)
+            return data
+
+        if attempted_not_found and last_error_status in {None, 404}:
             raise AudiobookshelfNotFound(f"Share {share_code!r} was not found")
-        if response.status_code >= 400:
-            raise AudiobookshelfUnavailable(
-                f"Audiobookshelf responded with status {response.status_code}"
-            )
 
-        if "application/json" in response.headers.get("content-type", ""):
-            data: Dict[str, Any] = response.json()
-        else:
-            data = {"raw": response.text}
-
-        # Normalise URLs so downstream consumers always receive absolute URLs.
-        for key in ("streamUrl", "shareUrl", "webUrl", "coverUrl"):
-            if key in data:
-                data[key] = self._absolute(data[key])
-        if cache:
-            cache.set_json(cache_key, data, ttl=self.cache_ttl)
-        return data
+        status_msg = (
+            f"Audiobookshelf responded with status {last_error_status}"
+            if last_error_status
+            else "Audiobookshelf returned an empty response"
+        )
+        raise AudiobookshelfUnavailable(status_msg)
 
     def health(self) -> Dict[str, Any]:
         """Fetch the Audiobookshelf health endpoint.
