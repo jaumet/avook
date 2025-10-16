@@ -52,7 +52,11 @@ internal hostname that can reach Audiobookshelf (for example
 If your Audiobookshelf instance requires authentication to access the share
 metadata API, provide the admin credentials via `ABS_USERNAME` and
 `ABS_PASSWORD`. The middleware will log in automatically, cache the issued
-token, and reuse it for subsequent metadata lookups.
+token, and reuse it for subsequent metadata lookups. When Audiobookshelf is
+reachable through multiple addresses (for example, a LAN IP and the container
+hostname), specify the extra candidates via `ABS_SHARE_FALLBACK_BASES`
+(comma-separated). The admin importer will iterate over these URLs whenever the
+primary host is unreachable so imports continue to succeed.
 
 ## Customising CORS for clients
 

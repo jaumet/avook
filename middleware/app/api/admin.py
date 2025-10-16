@@ -1,4 +1,5 @@
-from urllib.parse import urlparse, unquote
+import os
+from urllib.parse import unquote, urlparse, urlunparse
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlmodel import Session, select, delete
@@ -189,6 +190,75 @@ def _derive_container_share_base_url(primary_base: str, share_base: str) -> str 
     return candidate if candidate else None
 
 
+def _build_share_fallback_candidates(
+    primary_base: str, share_base: str, request: Request
+) -> list[str]:
+    """Return candidate base URLs to retry when Audiobookshelf is unavailable."""
+
+    def _normalise(value: str | None) -> str:
+        if not value:
+            return ""
+        return value.strip().rstrip("/")
+
+    primary = _normalise(primary_base)
+    candidates: list[str] = []
+
+    def _append(value: str | None) -> None:
+        normalised = _normalise(value)
+        if not normalised or normalised == primary:
+            return
+        if normalised not in candidates:
+            candidates.append(normalised)
+
+    env_fallbacks = os.getenv("ABS_SHARE_FALLBACK_BASES", "")
+    for raw in env_fallbacks.split(","):
+        _append(raw)
+
+    _append(share_base)
+
+    share = urlparse(share_base)
+    primary_parsed = urlparse(primary_base)
+
+    if share.scheme and share.netloc:
+        share_root = urlunparse(share._replace(path="", params="", query="", fragment=""))
+        _append(share_root)
+    else:
+        share_root = ""
+
+    share_path = share.path.rstrip("/") if share.path else ""
+
+    derived = _derive_container_share_base_url(primary_base, share_base)
+    _append(derived)
+
+    if share_path and share_root:
+        _append(urlunparse(share._replace(path=share_path, params="", query="", fragment="")))
+
+    if share_path and primary_parsed.scheme and primary_parsed.netloc:
+        swapped = primary_parsed._replace(
+            path=share_path, params="", query="", fragment=""
+        )
+        _append(urlunparse(swapped))
+
+    if share.scheme:
+        host_port = f":{share.port}" if share.port else ""
+        if share.hostname in {"localhost", "127.0.0.1"}:
+            for internal_host in ("audiobookshelf", "host.docker.internal"):
+                _append(f"{share.scheme}://{internal_host}{host_port}")
+                _append(f"{share.scheme}://{internal_host}")
+                if share_path:
+                    _append(f"{share.scheme}://{internal_host}{host_port}{share_path}")
+                    _append(f"{share.scheme}://{internal_host}{share_path}")
+
+        client_host = request.client.host if request.client else ""
+        if client_host:
+            base = f"{share.scheme}://{client_host}{host_port}"
+            _append(base)
+            if share_path:
+                _append(f"{base}{share_path}")
+
+    return candidates
+
+
 @router.get("/titles/by-share/{share_code:path}", response_model=TitleRead)
 def read_title_by_share(
     share_code: str, db: Session = Depends(get_session)
@@ -221,22 +291,11 @@ def import_title_from_share(
 
     try:
         share_data = abs_client.ensure_share_available(share_code)
-    except AudiobookshelfNotFound as exc:
-        raise HTTPException(status_code=404, detail="ABS_SHARE_NOT_FOUND") from exc
-    except AudiobookshelfUnavailable as exc:
-        fallback_candidates = []
-
-        fallback_url = share_base_url.strip()
+    except (AudiobookshelfNotFound, AudiobookshelfUnavailable) as exc:
         normalised_current = abs_client.base_url.rstrip("/")
-
-        if fallback_url and fallback_url.rstrip("/") != normalised_current:
-            fallback_candidates.append(fallback_url)
-
-            derived = _derive_container_share_base_url(
-                primary_base=normalised_current, share_base=fallback_url
-            )
-            if derived and derived not in fallback_candidates and derived != normalised_current:
-                fallback_candidates.append(derived)
+        fallback_candidates = _build_share_fallback_candidates(
+            normalised_current, share_base_url, request
+        )
 
         last_error: Exception | None = exc
 
@@ -244,13 +303,17 @@ def import_title_from_share(
             fallback_client = abs_client.with_base_url(candidate)
             try:
                 share_data = fallback_client.ensure_share_available(share_code)
-            except AudiobookshelfUnavailable as fallback_exc:
+            except (AudiobookshelfUnavailable, AudiobookshelfNotFound) as fallback_exc:
                 last_error = fallback_exc
                 continue
             request.app.state.abs_client_override = fallback_client
             break
         else:
+            if isinstance(last_error, AudiobookshelfNotFound):
+                raise HTTPException(status_code=404, detail="ABS_SHARE_NOT_FOUND") from last_error
             raise HTTPException(status_code=502, detail="ABS_UNAVAILABLE") from last_error
+    except AudiobookshelfNotFound as exc:
+        raise HTTPException(status_code=404, detail="ABS_SHARE_NOT_FOUND") from exc
     except AudiobookshelfError as exc:
         raise HTTPException(status_code=500, detail="ABS_ERROR") from exc
 

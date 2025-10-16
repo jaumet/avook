@@ -59,15 +59,19 @@ app.dependency_overrides[get_current_config_superuser] = lambda: {"sub": "tests"
 
 
 class _FakeAudiobookshelfClient:
-    def __init__(self, data=None):
+    def __init__(self, data=None, base_url="http://abs", calls=None):
         self.data = data or {}
-        self.calls = []
+        self.calls = [] if calls is None else calls
+        self.base_url = base_url.rstrip("/")
 
     def ensure_share_available(self, share_code: str):
         self.calls.append(share_code)
         if share_code not in self.data:
             raise AudiobookshelfNotFound("missing")
         return self.data[share_code]
+
+    def with_base_url(self, base_url: str):
+        return _FakeAudiobookshelfClient(self.data, base_url=base_url, calls=self.calls)
 
 
 def _override_abs_client(payload):
@@ -304,11 +308,101 @@ def test_import_title_falls_back_to_share_base_url():
     )
 
     assert response.status_code == 200
-    assert fallback_client.calls == [
+    assert fallback_client.calls[:4] == [
         ("http://abs", share_code),
         ("http://localhost:13378/audiobookshelf", share_code),
+        ("http://localhost:13378", share_code),
         ("http://abs/audiobookshelf", share_code),
     ]
+    assert len(fallback_client.calls) == 4
+
+
+def test_import_title_recovers_from_initial_not_found_base():
+    _seed_data()
+
+    share_code = "missing-on-primary"
+    share_url = "http://localhost:13378/audiobookshelf/share/missing-on-primary"
+
+    class NotFoundFallbackClient:
+        def __init__(self, base_url="http://abs", calls=None):
+            self.base_url = base_url.rstrip("/")
+            self.calls = calls if calls is not None else []
+
+        def ensure_share_available(self, candidate: str):
+            self.calls.append((self.base_url, candidate))
+            if self.base_url == "http://abs":
+                raise AudiobookshelfNotFound("not found on primary")
+            if self.base_url == "http://abs/audiobookshelf":
+                return {
+                    "libraryItem": {
+                        "title": "Recovered title",
+                        "media": {"metadata": {"title": "Recovered title"}},
+                    }
+                }
+            raise AudiobookshelfUnavailable("unreachable fallback")
+
+        def with_base_url(self, base_url: str):
+            return NotFoundFallbackClient(base_url, calls=self.calls)
+
+    fallback_client = NotFoundFallbackClient()
+    app.state.abs_client_override = fallback_client
+
+    response = client.post(
+        "/api/v1/admin/titles/import",
+        headers={"Authorization": "Bearer test"},
+        json={"share": share_url},
+    )
+
+    assert response.status_code == 200
+    assert ("http://abs/audiobookshelf", share_code) in fallback_client.calls
+    # The primary request should have been attempted before the successful fallback.
+    assert fallback_client.calls[0] == ("http://abs", share_code)
+
+
+def test_import_title_uses_configured_fallbacks(monkeypatch):
+    _seed_data()
+
+    share_code = "env-share"
+    share_url = "http://localhost:13378/audiobookshelf/share/env-share"
+
+    class EnvFallbackAudiobookshelfClient:
+        def __init__(self, base_url="http://abs", calls=None):
+            self.base_url = base_url.rstrip("/")
+            self.calls = calls if calls is not None else []
+            self.data = {
+                "http://lan:13378": {
+                    share_code: {
+                        "libraryItem": {
+                            "title": "LAN fallback title",
+                            "media": {"metadata": {"title": "LAN fallback title"}},
+                        }
+                    }
+                }
+            }
+
+        def ensure_share_available(self, candidate: str):
+            self.calls.append((self.base_url, candidate))
+            payload = self.data.get(self.base_url, {})
+            if candidate in payload:
+                return payload[candidate]
+            raise AudiobookshelfUnavailable("unreachable")
+
+        def with_base_url(self, base_url: str):
+            return EnvFallbackAudiobookshelfClient(base_url, calls=self.calls)
+
+    monkeypatch.setenv("ABS_SHARE_FALLBACK_BASES", "http://lan:13378")
+
+    fallback_client = EnvFallbackAudiobookshelfClient()
+    app.state.abs_client_override = fallback_client
+
+    response = client.post(
+        "/api/v1/admin/titles/import",
+        headers={"Authorization": "Bearer test"},
+        json={"share": share_url},
+    )
+
+    assert response.status_code == 200
+    assert ("http://lan:13378", share_code) in fallback_client.calls
 
 
 def teardown_module(_module):
