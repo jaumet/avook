@@ -1,113 +1,104 @@
-# 🧠 Audiovook Middleware — Auditoria Tècnica
+# 🧠 Audiovook Middleware
 
-## 🎯 Objectiu
-Aquest document ofereix una visió tècnica del **middleware Audiovook**, el sistema intermediari que connecta els usuaris, les targetes físiques (QR) i el reproductor Audiobookshelf.  
-El projecte s'ha analitzat a partir de l'estructura actual del repositori (`DEV-local-working-senseABS.zip`).
+Audiovook Middleware is a FastAPI application that brokers access between physical audiobook cards, mobile/PWA clients, and an Audiobookshelf instance. It centralises authentication, lending, promo campaigns, QR tracking, and monitoring for the Audiovook platform.
 
----
+## ✨ Key capabilities
 
-## 🧱 Arquitectura General
+- **User access & lending** — Claim QR cards, lend titles, and enforce one-device playback with automatic expiry.
+- **Secure playback** — Generate signed URLs and validate them through an NGINX auth proxy before handing off to Audiobookshelf.
+- **Caching & backups** — Redis-backed metadata cache and an automated JSON backup scheduler for redundancy.
+- **Monitoring & localisation** — Structured logs, request telemetry, and translated status messaging (CA/ES/EN).
+- **Admin tooling** — Dashboard metrics, promo code management, and QR tracking utilities for marketing teams.
 
-```
-[Usuari / App / Web]
-        │
-        ▼
-[ API Audiovook Middleware ]
-        │
-        ├── Autenticació JWT
-        ├── Control de targetes (claim / lend / play)
-        ├── Gestió de préstecs
-        ├── Generació d’URL temporal signada
-        ▼
-[ Audiobookshelf Backend ]
-        │
-        └── Stream d’àudio segur
-```
-
----
-
-## 📂 Estructura principal
-
-| Directori / Fitxer | Descripció | Estat |
-|--------------------|-------------|--------|
-| `app/` | Arrel de l’aplicació FastAPI | ✔️ |
-| `app/models/` | Models SQLModel per a `user`, `abook`, `claim`, `play_session`, etc. | ✔️ |
-| `app/routers/` | Rutes d’API: registre, login, claim, lend, play-auth, etc. | ⚙️ |
-| `app/schemas/` | Schemes Pydantic per validació d’entrades/sortides | ✔️ |
-| `app/core/` | Configuració bàsica: JWT, seguretat, dependències | ⚙️ |
-| `db.py` | Connexió PostgreSQL + dependències SQLAlchemy | ✔️ |
-| `main.py` | Punt d’entrada FastAPI amb inclusió de routers | ✔️ |
-| `tests/` | Tests parcials d’endpoints | ⚙️ |
-| `Dockerfile`, `docker-compose.yml` | Contenidors de backend, db i ABS | ✔️ |
-| `docs/` | Fitxers complementaris i esquema de flux | ✔️ |
-| `audiobookshelf/` | Exclòs del ZIP (fora d’aquesta auditoria) | — |
-
----
-
-## 📊 Estat funcional (resum)
-
-| Component | Funcionalitat | Estat |
-|------------|----------------|--------|
-| Base de dades (PostgreSQL) | Esquema complet (`users`, `abooks`, `listening_progress`, etc.) | ✔️ |
-| Autenticació JWT (bcrypt + tokens) | Login i protecció de rutes | ✔️ |
-| Endpoint `/register` | Alta d’usuaris | ✔️ |
-| Endpoint `/login` | Retorna JWT vàlid | ✔️ |
-| Endpoint `/abook/:qr/claim` | Reclama una targeta | ✔️ |
-| Endpoint `/abook/:qr/lend` | Cedeix un llibre temporalment | ⚙️ (necessita validació extra) |
-| Endpoint `/abook/:qr/stop-lend` | Finalitza préstec | ⚙️ |
-| Endpoint `/abook/:qr/play-auth` | Genera URL signada per a streaming | ⚙️ |
-| Endpoint `/abook/:qr/progress` | Desa i consulta posició d’escolta | ✔️ |
-| Integració Audiobookshelf | Via NGINX i signed URLs | ⏳ pendent |
-| Logs / monitoratge | Implementació bàsica | ⚙️ |
-| Tests automatitzats | Existents però incomplets | ⚙️ |
-
----
-
-## 🧩 Flux d’interacció (simplificat)
+## 🏗️ Architecture overview
 
 ```
-Usuari escaneja QR
+[Client / PWA / Mobile]
         │
         ▼
-API Audiovook:
-   - Valida JWT
-   - Comprova propietari / préstec
-   - Retorna signed URL temporal
+[ Audiovook Middleware API ]
         │
+        ├── Authentication & lending workflows
+        ├── Promo codes and QR tracking
+        ├── Proxy validator for signed playback URLs
         ▼
-NGINX Reverse Proxy
-   - Valida token
-   - Redirigeix a Audiobookshelf
-        │
-        ▼
-Audiobookshelf
-   - Serveix stream d’àudio
+[ NGINX Validation Proxy ] ──▶ [ Audiobookshelf ]
 ```
 
----
+## 🚀 Getting started
 
-## 🔐 Seguretat
+The repository ships with a Docker Compose stack that includes PostgreSQL, the middleware API, Audiobookshelf, the validation proxy, and the public Jekyll site.
 
-- Tots els endpoints protegits amb JWT (Bearer token)
-- Hash de contrasenyes amb bcrypt
-- URLs signades amb caducitat
-- Cap accés directe a Audiobookshelf sense validació prèvia
+```bash
+docker compose up --build
+```
 
----
+Services:
 
-## 🧾 Recomanacions següents
+| Service | URL | Notes |
+|---------|-----|-------|
+| Middleware API | http://localhost:8000 | FastAPI app with OpenAPI docs at `/docs` |
+| NGINX proxy | http://localhost:8080 | Validates signed playback URLs before streaming |
+| Audiobookshelf | http://localhost:13378 | Reference audio backend |
+| Jekyll site | http://localhost:4000 | Public site and admin UI |
+| PostgreSQL | localhost:5432 | Default database (`avook`/`avookpass`) |
 
-1. Completar lògica de **lend/stop-lend** amb validacions addicionals.
-2. Implementar capa **NGINX reverse proxy** amb verificació de token signat.
-3. Afegir **tests unitaris i integració** (pytest + coverage).
-4. Definir **mecanismes d’error i logs** centralitzats.
-5. Preparar **documentació OpenAPI (Swagger)** neta.
-6. Afegir un mòdul d’**administració bàsic** (estadístiques, control de préstecs).
+> ℹ️ See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for detailed deployment notes and environment variable guidance.
 
----
+If your Audiobookshelf server protects the share metadata API, set
+`ABS_USERNAME` and `ABS_PASSWORD` in `.env`. The middleware will log in with
+those credentials and reuse the issued token for admin imports and proxy checks.
+When Audiobookshelf sits on a different network segment, populate
+`ABS_SHARE_FALLBACK_BASES` with additional base URLs (comma separated) the
+importer should try—for example `http://192.168.1.138:13378`.
 
-## 📋 Fitxers associats
+## 🌐 PWA & mobile compatibility
 
-- `CHECKLIST_middleware.md` → Seguiment detallat de fases i tasques.
-- `roadmap_middleware.md` → Roadmap estratègic complet.
-- `July25-Dev-plan.txt` → Disseny de base de dades i endpoints.
+The middleware exposes granular CORS controls to accommodate progressive web apps and native wrappers:
+
+- Common local dev origins (`http://localhost:3000`, `http://localhost:5173`, etc.) are enabled out of the box.
+- Define `CORS_ALLOW_ORIGINS` in the `.env` file to whitelist production domains (comma-separated).
+- Signed playback URLs include all metadata required by `<audio>` elements and native media players on iOS/Android.
+
+See [`docs/CLIENT_COMPATIBILITY.md`](docs/CLIENT_COMPATIBILITY.md) for a full checklist covering service workers, deep links, and error mapping.
+
+## 🛡️ Proxy validation flow
+
+1. Clients request playback from `/api/v1/abook/{qr}/play-auth` (or `/api/v1/play-auth/{qr}`) providing a `device_id`.
+2. The middleware records a `PlaySession` and returns a signed URL pointing at the proxy (`http://localhost:8080/stream/...`).
+3. NGINX calls `/api/v1/proxy/validate` via `auth_request` to confirm the signature, device, and Audiobookshelf share availability.
+4. Valid requests are proxied to Audiobookshelf; failures return appropriate HTTP status codes without exposing the upstream.
+
+The stock proxy configuration lives at [`nginx/conf.d/middleware.conf`](nginx/conf.d/middleware.conf) and can be adapted for production domains or TLS.
+
+## 🧩 Feature modules
+
+- `app/analytics.py` — Aggregates lending and activation metrics for the admin dashboard.
+- `app/audiobookshelf.py` — Lightweight client for Audiobookshelf share validation.
+- `app/cache.py` — Redis helpers with namespaced keys for share metadata.
+- `app/backup.py` — Asynchronous scheduler that exports JSON backups periodically.
+- `app/i18n.py` — Translation loader for CA/ES/EN locales.
+- `app/monitoring.py` — Structured logging and request timing middleware.
+
+Tests covering these modules live under `middleware/tests/`.
+
+## ✅ Development checklist
+
+Progress across the middleware roadmap is tracked in [`CHECKLIST_middleware.md`](CHECKLIST_middleware.md). All phase objectives and general tasks are now complete, including the new validation proxy, client compatibility review, and documentation refresh.
+
+## 📚 Documentation
+
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — Running the stack and configuring NGINX/CORS.
+- [`docs/CLIENT_COMPATIBILITY.md`](docs/CLIENT_COMPATIBILITY.md) — Guidance for PWAs and mobile apps.
+
+Additional background materials such as historical notes and roadmap documents remain available in the repository root.
+
+## 🧪 Testing
+
+Execute the test suite inside the middleware container:
+
+```bash
+PYTHONPATH=middleware pytest
+```
+
+Some integration tests rely on PostgreSQL and Redis being available; ensure the Docker Compose stack is running when executing them locally.
