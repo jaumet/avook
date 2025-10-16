@@ -274,11 +274,11 @@ def test_import_title_falls_back_to_share_base_url():
             self.base_url = base_url.rstrip("/")
             self.calls = calls if calls is not None else []
             self.data = {
-                "http://localhost:13378/audiobookshelf": {
+                "http://abs/audiobookshelf": {
                     share_code: {
                         "libraryItem": {
-                            "title": "Fallback title",
-                            "media": {"metadata": {"title": "Fallback title"}},
+                            "title": "Container fallback title",
+                            "media": {"metadata": {"title": "Container fallback title"}},
                         }
                     }
                 }
@@ -307,6 +307,7 @@ def test_import_title_falls_back_to_share_base_url():
     assert fallback_client.calls == [
         ("http://abs", share_code),
         ("http://localhost:13378/audiobookshelf", share_code),
+        ("http://abs/audiobookshelf", share_code),
     ]
 
 

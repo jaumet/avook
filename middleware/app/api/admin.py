@@ -164,6 +164,31 @@ def _derive_share_base_url(raw: str) -> str:
     return f"{parsed.scheme}://{parsed.netloc}"
 
 
+def _derive_container_share_base_url(primary_base: str, share_base: str) -> str | None:
+    """Return a share base URL reachable from the middleware container.
+
+    When the administrator pastes a public share link (for example pointing to
+    ``localhost``) the middleware running in Docker cannot reach that host.
+    Re-use the path component of the share URL but swap the host for the
+    container's configured base so we end up with something like
+    ``http://audiobookshelf/audiobookshelf``.
+    """
+
+    if not primary_base or not share_base:
+        return None
+
+    primary = urlparse(primary_base)
+    share = urlparse(share_base)
+
+    if not primary.scheme or not primary.netloc:
+        return None
+
+    target = primary._replace(path=share.path, params="", query="", fragment="")
+    candidate = target.geturl().rstrip("/")
+
+    return candidate if candidate else None
+
+
 @router.get("/titles/by-share/{share_code:path}", response_model=TitleRead)
 def read_title_by_share(
     share_code: str, db: Session = Depends(get_session)
@@ -199,17 +224,33 @@ def import_title_from_share(
     except AudiobookshelfNotFound as exc:
         raise HTTPException(status_code=404, detail="ABS_SHARE_NOT_FOUND") from exc
     except AudiobookshelfUnavailable as exc:
+        fallback_candidates = []
+
         fallback_url = share_base_url.strip()
         normalised_current = abs_client.base_url.rstrip("/")
-        if not fallback_url or fallback_url.rstrip("/") == normalised_current:
-            raise HTTPException(status_code=502, detail="ABS_UNAVAILABLE") from exc
 
-        fallback_client = abs_client.with_base_url(fallback_url)
-        try:
-            share_data = fallback_client.ensure_share_available(share_code)
-        except AudiobookshelfUnavailable as fallback_exc:
-            raise HTTPException(status_code=502, detail="ABS_UNAVAILABLE") from fallback_exc
-        request.app.state.abs_client_override = fallback_client
+        if fallback_url and fallback_url.rstrip("/") != normalised_current:
+            fallback_candidates.append(fallback_url)
+
+            derived = _derive_container_share_base_url(
+                primary_base=normalised_current, share_base=fallback_url
+            )
+            if derived and derived not in fallback_candidates and derived != normalised_current:
+                fallback_candidates.append(derived)
+
+        last_error: Exception | None = exc
+
+        for candidate in fallback_candidates:
+            fallback_client = abs_client.with_base_url(candidate)
+            try:
+                share_data = fallback_client.ensure_share_available(share_code)
+            except AudiobookshelfUnavailable as fallback_exc:
+                last_error = fallback_exc
+                continue
+            request.app.state.abs_client_override = fallback_client
+            break
+        else:
+            raise HTTPException(status_code=502, detail="ABS_UNAVAILABLE") from last_error
     except AudiobookshelfError as exc:
         raise HTTPException(status_code=500, detail="ABS_ERROR") from exc
 
