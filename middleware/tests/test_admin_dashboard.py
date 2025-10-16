@@ -357,6 +357,12 @@ def test_import_title_uses_configured_fallbacks(monkeypatch):
 
     assert response.status_code == 200
     assert ("http://lan:13378", share_code) in fallback_client.calls
+=======
+    assert fallback_client.calls == [
+        ("http://abs", share_code),
+        ("http://localhost:13378/audiobookshelf", share_code),
+        ("http://abs/audiobookshelf", share_code),
+    ]
 
 
 def teardown_module(_module):
